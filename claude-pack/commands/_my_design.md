@@ -1,8 +1,8 @@
 # Design Command
 
 **Purpose:** Technical design for code implementation
-**Input:** Spec document (`.project/active/{feature-name}/spec.md`), research findings
-**Output:** `.project/active/{feature-name}/design.md`
+**Input:** Spec document (`.project/active/{feature-name}/_my_spec.md`), research findings
+**Output:** `.project/active/{feature-name}/_my_design.md`
 
 ## Overview
 
@@ -66,12 +66,12 @@ CYCLE:
 1. **Read context**:
    - Check `CLAUDE.md` for project-specific conventions, patterns, and commands
    - Check any project documentation referenced in CLAUDE.md
-   - Feature spec: `.project/active/{feature-name}/spec.md` (read FULLY)
+   - Feature spec: `.project/active/{feature-name}/_my_spec.md` (read FULLY)
      - Pay special attention to **Business Goals** - your design must serve these
      - Note all requirements and acceptance criteria
-   - Related research files in `.project/research/` (if they exist)
+   - Related research files in `.project/_my_research/` (if they exist)
 
-2. **Create design file** at `.project/active/{feature-name}/design.md`:
+2. **Create design file** at `.project/active/{feature-name}/_my_design.md`:
    - Get metadata:
      ```bash
      echo "Date: $(date '+%Y-%m-%d %H:%M:%S %Z')"
@@ -212,7 +212,7 @@ CYCLE:
    - **"Potential Risks"**: What could go wrong, mitigation strategies
    - **"Integration Strategy"**: How this fits into existing workflows, what it complements/replaces
    - **"Validation Approach"**: Testing strategy, success criteria, manual verification steps
-   - **"Next Steps"**: Typically `/implement` or `/plan` for implementation after approval
+   - **"Next Steps"**: Typically `/_my_implement` or `/_my_plan` for implementation after approval
 
 2. **Review complete document**:
    - All spec requirements addressed
@@ -266,7 +266,7 @@ CYCLE:
 [Testing strategy, success criteria]
 
 ---
-Next Step: After approval → `/implement` or `/plan`
+Next Step: After approval → `/_my_implement` or `/_my_plan`
 ```
 
 ## Guidelines
@@ -293,7 +293,7 @@ Next Step: After approval → `/implement` or `/plan`
 - **Minimize redundancy**: Use references instead of duplicating information
 
 ### Error Handling
-- If spec doesn't exist: STOP and ask user to create it (suggest `/spec`)
+- If spec doesn't exist: STOP and ask user to create it (suggest `/_my_spec`)
 - If approach uncertain: Present options to user
 - If codebase integration unclear: Use Explore subagent
 
@@ -310,7 +310,7 @@ Next Step: After approval → `/implement` or `/plan`
 ---
 
 **Related Commands:**
-- Before design: `/research` or `/spec`
-- After design: `/implement` or `/plan` for implementation
+- Before design: `/_my_research` or `/_my_spec`
+- After design: `/_my_implement` or `/_my_plan` for implementation
 
 **Last Updated**: 2025-12-31

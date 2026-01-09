@@ -236,8 +236,8 @@ Documentation: .project/active/{feature-name}/{timestamp}-quality-fixes.md
 
 ## Related Commands
 
-- Before quality check → `/implement` (complete feature first)
+- Before quality check → `/_my_implement` (complete feature first)
 - After quality check → Commit clean code, create PR
-- If major issues found → `/design` or `/plan` (may need design changes)
+- If major issues found → `/_my_design` or `/_my_plan` (may need design changes)
 
 **Last Updated:** 2025-12-31

@@ -6,13 +6,13 @@ description: Find and display relevant project management context
 
 Quickly locate and display project management context based on what you need.
 
-**Usage**: `/project-find [topic]`
+**Usage**: `/_my_project_find [topic]`
 
 ---
 
 ## Topics
 
-### `/project-find current` or `/project-find now`
+### `/_my_project_find current` or `/_my_project_find now`
 
 Show what's being worked on right now.
 
@@ -24,7 +24,7 @@ Show what's being worked on right now.
 
 ---
 
-### `/project-find backlog` or `/project-find next`
+### `/_my_project_find backlog` or `/_my_project_find next`
 
 Show what's planned and prioritized.
 
@@ -36,7 +36,7 @@ Show what's planned and prioritized.
 
 ---
 
-### `/project-find epic [name]`
+### `/_my_project_find epic [name]`
 
 Show details of a specific epic.
 
@@ -48,7 +48,7 @@ Show details of a specific epic.
 
 ---
 
-### `/project-find item [name]`
+### `/_my_project_find item [name]`
 
 Show details of a specific work item.
 
@@ -63,7 +63,7 @@ Show details of a specific work item.
 
 ---
 
-### `/project-find history` or `/project-find done`
+### `/_my_project_find history` or `/_my_project_find done`
 
 Show completed work.
 
@@ -75,7 +75,7 @@ Show completed work.
 
 ---
 
-### `/project-find blockers`
+### `/_my_project_find blockers`
 
 Show any blockers or issues.
 
@@ -88,7 +88,7 @@ Show any blockers or issues.
 
 ---
 
-### `/project-find context` (default)
+### `/_my_project_find context` (default)
 
 General orientation - show everything needed to get started.
 
@@ -132,10 +132,10 @@ General orientation - show everything needed to get started.
 
 ## Tips
 
-- Use `/project-find current` at the start of each session
-- Use `/project-find backlog` when deciding what to work on next
-- Use `/project-find context` for full orientation
-- Combine with `/project-manage` for deeper analysis
+- Use `/_my_project_find current` at the start of each session
+- Use `/_my_project_find backlog` when deciding what to work on next
+- Use `/_my_project_find context` for full orientation
+- Combine with `/_my_project_manage` for deeper analysis
 
 ---
 

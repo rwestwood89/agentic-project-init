@@ -4,8 +4,8 @@ Review an autocompact capture and create a structured memory file.
 
 ## Usage
 
-- `/review-compact` — process the most recent pending capture
-- `/review-compact path/to/metadata.md` — process a specific capture
+- `/_my_review_compact` — process the most recent pending capture
+- `/_my_review_compact path/to/metadata.md` — process a specific capture
 
 ## Instructions
 

@@ -309,7 +309,7 @@ def main():
         index = load_index()
         transcript_paths = list(index.get("transcripts", {}).keys())
         if not transcript_paths:
-            print("No indexed transcripts. Use /memorize to index a transcript.", file=sys.stderr)
+            print("No indexed transcripts. Use /_my_memorize to index a transcript.", file=sys.stderr)
             sys.exit(1)
     elif args.transcript:
         # Single transcript

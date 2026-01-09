@@ -126,7 +126,7 @@ Parse the user's request and route to the appropriate action:
 
    ## Merge Instructions
    Before merging back to origin branch, run:
-   `/git-manage prepare-merge`
+   `/_my_git_manage prepare-merge`
 
    This will restore origin files to avoid conflicts, while preserving
    your worktree progress for manual reconciliation.
@@ -162,7 +162,7 @@ Parse the user's request and route to the appropriate action:
      cd ../{repo-name}-{branch-name}
      claude
      ```
-   - Note: "When ready to merge, run `/git-manage prepare-merge` first"
+   - Note: "When ready to merge, run `/_my_git_manage prepare-merge` first"
 
 ---
 
@@ -215,8 +215,8 @@ Parse the user's request and route to the appropriate action:
 5. **Report status**:
    - Confirm origin files restored
    - Confirm worktree progress saved in `_worktree_*.md` files
-   - Instruct: "Now merge from the main repo using `/git-manage merge`"
-   - Note: "After merge, run `/git-manage reconcile` to integrate worktree progress"
+   - Instruct: "Now merge from the main repo using `/_my_git_manage merge`"
+   - Note: "After merge, run `/_my_git_manage reconcile` to integrate worktree progress"
 
 ---
 
@@ -226,7 +226,7 @@ Parse the user's request and route to the appropriate action:
 
 **Prerequisites**:
 - Must be run FROM the main repo (not the worktree)
-- The worktree should have run `/git-manage prepare-merge` first
+- The worktree should have run `/_my_git_manage prepare-merge` first
 
 **Process**:
 
@@ -237,7 +237,7 @@ Parse the user's request and route to the appropriate action:
    git show {branch-name}:.project/active/_worktree_CURRENT_WORK.md 2>/dev/null || \
    git show {branch-name}:.project/backlog/_worktree_BACKLOG.md 2>/dev/null
    ```
-   - If not found, warn user: "Run `/git-manage prepare-merge` in the worktree first"
+   - If not found, warn user: "Run `/_my_git_manage prepare-merge` in the worktree first"
 
 3. **Gather context** before merging:
 
@@ -292,7 +292,7 @@ Parse the user's request and route to the appropriate action:
 8. **Report result**:
    - Confirm successful merge
    - Show merged commits
-   - **Important**: Remind user to run `/git-manage reconcile {branch-name}` to integrate worktree progress
+   - **Important**: Remind user to run `/_my_git_manage reconcile {branch-name}` to integrate worktree progress
 
 ---
 
@@ -347,7 +347,7 @@ Parse the user's request and route to the appropriate action:
 
 7. **Report completion**:
    - Confirm all files reconciled
-   - Suggest: "You can now remove the worktree with `/git-manage remove {branch-name}`"
+   - Suggest: "You can now remove the worktree with `/_my_git_manage remove {branch-name}`"
 
 ---
 
@@ -488,12 +488,12 @@ This section documents how project management files are handled across worktrees
 
 | Step | Where | Command |
 |------|-------|---------|
-| Create worktree | Main repo | `/git-manage create worktree for {epic}` |
+| Create worktree | Main repo | `/_my_git_manage create worktree for {epic}` |
 | Work on epic | Worktree | Normal development |
-| Prepare for merge | Worktree | `/git-manage prepare-merge` |
-| Merge | Main repo | `/git-manage merge {branch}` |
-| Reconcile | Main repo | `/git-manage reconcile` |
-| Cleanup | Main repo | `/git-manage remove {branch}` |
+| Prepare for merge | Worktree | `/_my_git_manage prepare-merge` |
+| Merge | Main repo | `/_my_git_manage merge {branch}` |
+| Reconcile | Main repo | `/_my_git_manage reconcile` |
+| Cleanup | Main repo | `/_my_git_manage remove {branch}` |
 
 ---
 
@@ -510,8 +510,8 @@ Read project management files to understand:
 
 Key files to consult:
 - `.project/active/CURRENT_WORK.md`
-- `.project/active/{feature}/spec.md`
-- `.project/active/{feature}/design.md`
+- `.project/active/{feature}/_my_spec.md`
+- `.project/active/{feature}/_my_design.md`
 - `.project/backlog/BACKLOG.md`
 
 ### 2. Analyze the Conflict
@@ -527,7 +527,7 @@ For each conflicted file:
 ### 3. Recommend Resolution
 
 Based on project context:
-- Reference relevant specs/designs to justify recommendation
+- Reference relevant specs/_my_designs to justify recommendation
 - Explain trade-offs if applicable
 - Present clear options to user
 
@@ -554,7 +554,7 @@ After user confirms:
 - Ask for confirmation before irreversible operations
 
 ### Integration with Project Management
-- This command works alongside `/project-manage`
+- This command works alongside `/_my_project_manage`
 - Reference the same documentation structure
 - Update project files when significant git operations complete
 

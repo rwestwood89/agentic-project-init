@@ -1,5 +1,5 @@
 #!/bin/bash
-# Capture a conversation transcript for later review with /memorize
+# Capture a conversation transcript for later review with /_my_memorize
 #
 # Usage:
 #   ./capture.sh <transcript_path> [source]
@@ -71,7 +71,7 @@ $TRANSCRIPT_PATH
 
 ## Memory
 
-_Not yet processed. Run \`/memorize\` to create memory artifact._
+_Not yet processed. Run \`/_my_memorize\` to create memory artifact._
 EOF
 
 # Update index.json

@@ -2,7 +2,7 @@
 
 **Purpose:** Feature requirements definition with business goals and acceptance criteria
 **Input:** Feature ideas, user stories, requirements, optional research reference
-**Output:** `.project/active/{feature-name}/spec.md`
+**Output:** `.project/active/{feature-name}/_my_spec.md`
 
 ## Overview
 
@@ -30,7 +30,7 @@ Use standard definitions throughout:
 1. **Read User's Request Completely**
    - Read the user's message carefully, multiple times if needed
    - Note EVERY detail they provide - nothing should be lost
-   - If user mentions research, read `.project/research/{file}` FULLY
+   - If user mentions research, read `.project/_my_research/{file}` FULLY
    - If user mentions existing code/files, read them FULLY
 
 2. **Check Project Context** (if relevant)
@@ -122,7 +122,7 @@ Use standard definitions throughout:
 
 4. **Write Spec**
 
-   Write to `.project/active/{feature-name}/spec.md` using this template:
+   Write to `.project/active/{feature-name}/_my_spec.md` using this template:
 
    ```markdown
    # Spec: [Feature Name]
@@ -207,13 +207,13 @@ Use standard definitions throughout:
 
    ## Related Artifacts
 
-   - **Research:** `.project/research/{file}.md` (if exists)
-   - **Design:** `.project/active/{feature-name}/design.md` (to be created)
+   - **Research:** `.project/_my_research/{file}.md` (if exists)
+   - **Design:** `.project/active/{feature-name}/_my_design.md` (to be created)
    - **Epic:** `.project/backlog/BACKLOG.md` (if related)
 
    ---
 
-   **Next Steps:** After approval, proceed to `/design`
+   **Next Steps:** After approval, proceed to `/_my_design`
    ```
 
 5. **Internal Review**
@@ -251,7 +251,7 @@ Use standard definitions throughout:
 ---
 
 **Related Commands:**
-- Before spec: `/research` for exploration
-- After spec: `/design` for technical design
+- Before spec: `/_my_research` for exploration
+- After spec: `/_my_design` for technical design
 
 **Last Updated**: 2025-12-31

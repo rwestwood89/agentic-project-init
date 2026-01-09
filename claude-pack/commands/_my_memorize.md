@@ -5,9 +5,9 @@ Create a structured memory artifact from a conversation transcript. Can be calle
 ## Usage
 
 ```
-/memorize                           # process most recent pending capture
-/memorize <transcript-path>         # memorize a specific transcript
-/memorize <capture-file>            # process a specific capture file
+/_my_memorize                           # process most recent pending capture
+/_my_memorize <transcript-path>         # memorize a specific transcript
+/_my_memorize <capture-file>            # process a specific capture file
 ```
 
 ## Instructions

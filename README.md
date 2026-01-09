@@ -1,472 +1,315 @@
-# Claude Agentic Templates
+# Agentic Project Init
 
-A reusable template repository for Claude Code configurations and project management workflows. This enables you to maintain a single source of truth for your agentic coding workflow across multiple projects.
+A reusable template repository for Claude Code configurations and project management workflows. Clone once, use everywhere - commands are available globally via symlinks to `~/.claude/`.
 
 ## What's Included
 
 ### `claude-pack/` - Claude Code Configuration
 
-Everything that goes into `.claude/` via symlinks:
+Everything that gets symlinked to `~/.claude/`:
 
-- **commands/** - Custom slash commands (memory management, project management)
-- **hooks/** - Event hooks (capture, transcript parsing)
+- **commands/** - Custom slash commands (`/_my_research`, `/_my_spec`, `/_my_design`, etc.)
+- **hooks/** - Event hooks (transcript capture, memory management)
 - **agents/** - Autonomous subprocesses for complex tasks
 - **skills/** - Specialized capabilities and domain knowledge
 - **rules/** - Project guidelines and coding standards
 
 ### `project-pack/` - Project Management Template
 
-Copied to `.project/` in target projects (not symlinked, so each project has its own).
+Copied to `.project/` in target projects:
 
-### `.claude/` - Symlinks for Development
+- **CURRENT_WORK.md** - Track active work
+- **backlog/** - Planned features and tasks
+- **active/** - In-progress specs, designs, and plans
+- **completed/** - Finished work
+- **memories/** - Conversation summaries and learnings
+- **research/** - Research notes and findings
+- **reports/** - Generated reports
 
-This repo uses symlinks to `claude-pack/` so we test what we ship:
-- `.claude/commands` -> `../claude-pack/commands`
-- `.claude/hooks` -> `../claude-pack/hooks`
-- `.claude/agents` -> `../claude-pack/agents`
+### `scripts/` - Setup Scripts
 
-### `.project/` - This Repo's Project Management
-
-Contains actual work items for developing the templates (not distributed).
-
-### `scripts/` - Automation Scripts
-- **init-project.sh** - Initialize templates in a new project
-- **update-templates.sh** - Sync latest template changes
-
-### `docs/` - Documentation
-- **STRUCTURE.md** - Explains how this repo is organized
-
-## Strategy: Git Submodule + Symlinks
-
-This repository uses a **validated approach** where:
-
-1. The template repo is added as a git submodule to your project
-2. Symlinks connect your project's `.claude/` to the submodule
-3. Changes to templates automatically sync across all projects
-4. Each project can pin to specific template versions
-
-**Validated:** Custom commands, skills, agents, and rules all work correctly through symlinks ✅
+- **setup-global.sh** - One-time global installation to `~/.claude/`
+- **init-project.sh** - Per-project initialization
+- **uninstall-global.sh** - Remove global installation
+- **uninstall-project.sh** - Remove from a project
 
 ## Quick Start
 
-### Initial Setup (Do Once)
-
-1. **Create and publish this template repository:**
+### Step 1: Clone This Repository (Once)
 
 ```bash
-cd /path/to/agentic-project-init
-git init
-git add .
-git commit -m "Initial commit: Claude agentic templates"
-git remote add origin git@github.com:yourusername/claude-agentic-templates.git
-git push -u origin main
+# Clone to a permanent location
+git clone https://github.com/yourusername/agentic-project-init.git ~/agentic-project-init
 ```
 
-2. **Update the repository URL in the init script:**
-
-Edit `scripts/init-project.sh` and update:
-```bash
-TEMPLATE_REPO_URL="git@github.com:yourusername/claude-agentic-templates.git"
-```
-
-### Using Templates in a New Project
-
-1. **Navigate to your project directory:**
+### Step 2: Run Global Setup (Once)
 
 ```bash
-cd /path/to/my-new-project
-git init  # if not already a git repo
+cd ~/agentic-project-init
+./scripts/setup-global.sh
 ```
 
-2. **Download and run the init script:**
+This creates symlinks in `~/.claude/` pointing to the commands, hooks, agents, skills, and rules.
+
+### Step 3: Initialize Projects (Each Project)
 
 ```bash
-# Option A: Download directly
-curl -O https://raw.githubusercontent.com/yourusername/claude-agentic-templates/main/scripts/init-project.sh
-chmod +x init-project.sh
-./init-project.sh
-
-# Option B: Clone and copy
-git clone git@github.com:yourusername/claude-agentic-templates.git /tmp/templates
-cp /tmp/templates/scripts/init-project.sh .
-./init-project.sh
+cd /path/to/your-project
+~/agentic-project-init/scripts/init-project.sh
 ```
 
-3. **Commit the setup:**
+This copies the `.project/` template for project-specific state.
+
+### Step 4: Use Commands
+
+Restart Claude Code, then use commands with the `_my_` prefix:
+
+```
+/_my_research    - Research a topic
+/_my_spec        - Create a specification
+/_my_design      - Create a design document
+/_my_plan        - Create an implementation plan
+/_my_implement   - Execute an implementation plan
+/_my_code_review - Review code against spec/design
+...
+```
+
+## Command Reference
+
+| Command | Description |
+|---------|-------------|
+| `/_my_research` | Research a topic and save findings |
+| `/_my_spec` | Create a feature specification |
+| `/_my_design` | Create a technical design |
+| `/_my_plan` | Create an implementation plan |
+| `/_my_implement` | Execute a plan with validation |
+| `/_my_code_review` | Review code against requirements |
+| `/_my_code_quality` | Run automated quality checks |
+| `/_my_quick_edit` | Fast, focused code changes |
+| `/_my_project_manage` | Manage project workflow |
+| `/_my_project_find` | Find project artifacts |
+| `/_my_git_manage` | Git workflow management |
+| `/_my_capture` | Capture conversation for later |
+| `/_my_memorize` | Create memory from capture |
+| `/_my_recall` | Search past conversations |
+| `/_my_review_compact` | Review before compaction |
+
+## Script Reference
+
+### setup-global.sh
+
+One-time installation of commands to `~/.claude/`.
 
 ```bash
-git add .
-git commit -m "Add Claude agentic templates"
+./scripts/setup-global.sh [--dry-run]
 ```
 
-4. **Restart Claude Code:**
+**Options:**
+- `--dry-run` - Show what would be done without making changes
 
-Exit and restart Claude Code to discover new commands, skills, and agents.
+**What it does:**
+- Creates `~/.claude/{commands,agents,hooks,skills,rules}/` directories
+- Symlinks all files from `claude-pack/` to `~/.claude/`
+- Configures hooks in `~/.claude/settings.json`
+- Stores source location in `~/.claude/.agentic-pack-source`
+
+### init-project.sh
+
+Initialize a project with the `.project/` template.
+
+```bash
+./scripts/init-project.sh [options]
+```
+
+**Options:**
+- `--dry-run` - Show what would be done without making changes
+- `--no-track` - Add `.project` to `.gitignore` (don't commit project state)
+- `--include-claude` - Copy (vendor) commands to `.claude/` instead of using global
+- `--source <path>` - Override source location
+
+**Modes:**
+
+| Mode | Commands From | .project/ |
+|------|---------------|-----------|
+| Default | `~/.claude/` (global) | Tracked in git |
+| `--no-track` | `~/.claude/` (global) | Not tracked |
+| `--include-claude` | `.claude/` (vendored) | Tracked in git |
+
+**Note:** `--no-track` and `--include-claude` cannot be used together.
+
+### uninstall-global.sh
+
+Remove global installation from `~/.claude/`.
+
+```bash
+./scripts/uninstall-global.sh
+```
+
+**What it does:**
+- Removes symlinks pointing to this repository (preserves user files)
+- Cleans hook configuration from `settings.json`
+- Removes metadata files
+
+### uninstall-project.sh
+
+Remove `.project/` and vendored content from a project.
+
+```bash
+./scripts/uninstall-project.sh [--force]
+```
+
+**Options:**
+- `--force` - Skip confirmation prompt
+
+**What it does:**
+- Removes `.project/` directory
+- Cleans `.project` from `.gitignore` if present
+- If vendored, removes agentic-pack files from `.claude/` (preserves user files)
 
 ## Project Structure After Init
 
 ```
-my-project/
-├── .claude/
-│   ├── commands/    -> ../claude-templates/claude-pack/commands/  (symlink)
-│   ├── hooks/       -> ../claude-templates/claude-pack/hooks/     (symlink)
-│   ├── agents/      -> ../claude-templates/claude-pack/agents/    (symlink)
-│   ├── skills/      -> ../claude-templates/claude-pack/skills/    (symlink)
-│   └── rules/       -> ../claude-templates/claude-pack/rules/     (symlink)
-├── .project/                 (copied from project-pack/)
+your-project/
+├── .project/                    (copied, project-specific)
 │   ├── CURRENT_WORK.md
-│   ├── backlog/
 │   ├── active/
+│   ├── backlog/
 │   ├── completed/
 │   ├── memories/
 │   ├── research/
 │   └── reports/
-├── claude-templates/         (git submodule)
-│   ├── claude-pack/          (commands, hooks, agents, skills, rules)
-│   ├── project-pack/         (project management template)
-│   └── scripts/
 └── [your project files]
+
+~/.claude/                       (symlinked, shared globally)
+├── commands/
+│   ├── _my_research.md -> /path/to/agentic-project-init/claude-pack/commands/_my_research.md
+│   └── ...
+├── agents/
+├── hooks/
+├── skills/
+├── rules/
+└── settings.json
 ```
 
-**Note**: `.claude/` contents are symlinked (shared across projects), while `.project/` is copied (project-specific content).
+## Updating
 
-## Syncing Template Updates
-
-### When You Improve a Template
-
-1. **Make changes in any project:**
+To get the latest commands and templates:
 
 ```bash
-cd my-project/claude-templates
-# Edit files in claude-pack/
-git add .
-git commit -m "Improve code review command"
-git push origin main
+cd ~/agentic-project-init
+git pull
 ```
 
-2. **Update other projects:**
+Changes are instantly available via symlinks - no need to re-run setup.
+
+## Vendoring (Self-Contained Projects)
+
+For projects that need to be fully self-contained (e.g., to share with others who don't have global setup):
 
 ```bash
-cd my-other-project
-./claude-templates/scripts/update-templates.sh
-# or manually:
-cd claude-templates
-git pull origin main
+./scripts/init-project.sh --include-claude
 ```
 
-3. **Restart Claude Code** to pick up changes.
+This copies all commands to `.claude/` in the project. The project works independently of the global installation.
 
-### Automatic Sync
+## Migration from Submodule Approach
 
-Changes appear instantly via symlinks! No need to copy files.
+If you previously used the git submodule approach:
 
-Just `git pull` in the submodule to get latest template updates.
-
-## Customization Strategies
-
-### Per-Project Branches (Recommended)
-
-The best way to customize templates for a specific project while maintaining sync capability:
+### Step 1: Remove Submodule
 
 ```bash
-cd my-project/claude-templates
-
-# Create a project-specific branch
-git checkout -b my-project-customizations
-
-# Make your tweaks
-vim claude-pack/commands/review.md
-git add .
-git commit -m "Customize review command for this project"
-
-# Record this branch in the parent project
-cd ..
-git add claude-templates
-git commit -m "Pin submodule to project-specific branch"
+cd your-project
+git submodule deinit claude-templates
+git rm claude-templates
+rm -rf .git/modules/claude-templates
 ```
 
-**Syncing upstream changes to your branch:**
+### Step 2: Remove Old Symlinks
 
 ```bash
-cd claude-templates
-git fetch origin main
-git merge origin/main
-# Resolve any conflicts, then commit
-
-cd ..
-git add claude-templates
-git commit -m "Merge latest template updates"
+rm -rf .claude/commands .claude/hooks .claude/agents .claude/skills .claude/rules
 ```
 
-**Contributing customizations back to main:**
+### Step 3: Run New Setup
 
 ```bash
-cd claude-templates
+# Global setup (once)
+~/agentic-project-init/scripts/setup-global.sh
 
-# Option 1: Cherry-pick specific commits
-git checkout main
-git cherry-pick <commit-hash>
-git push origin main
-git checkout my-project-customizations
-
-# Option 2: Merge everything back
-git checkout main
-git merge my-project-customizations
-git push origin main
-git checkout my-project-customizations
+# Project init (if .project/ doesn't exist)
+~/agentic-project-init/scripts/init-project.sh
 ```
 
-### Per-Project Overrides (Break Symlink)
+### Step 4: Update Command References
 
-If a project needs completely independent configuration that won't sync:
+Commands now use `_my_` prefix:
 
-```bash
-# Remove symlink and create local copy
-rm .claude/commands
-cp -r claude-templates/claude-pack/commands .claude/commands
+| Old | New |
+|-----|-----|
+| `/research` | `/_my_research` |
+| `/spec` | `/_my_spec` |
+| `/design` | `/_my_design` |
+| `/plan` | `/_my_plan` |
+| `/implement` | `/_my_implement` |
+| `/code-review` | `/_my_code_review` |
+| `/code-quality` | `/_my_code_quality` |
+| etc. | etc. |
 
-# Now edit .claude/commands/ locally
-# This project won't receive template updates for commands
-```
+## Why the `_my_` Prefix?
 
-### Shared + Local Mix
-
-Keep some configs shared, others local:
-
-```bash
-.claude/
-├── commands/    -> ../claude-templates/claude-pack/commands/  (shared)
-├── skills/      -> ../claude-templates/claude-pack/skills/    (shared)
-├── agents/      (local directory - project-specific)
-└── rules/       (local directory - project-specific)
-```
-
-### Version Pinning
-
-Pin a project to a specific template version:
-
-```bash
-cd my-project/claude-templates
-git checkout v1.2.3  # or specific commit hash
-cd ..
-git add claude-templates
-git commit -m "Pin templates to v1.2.3"
-```
-
-## Advanced: Multiple Template Sets
-
-Organize templates by project type:
-
-```
-claude-templates/
-├── base/         (universal configs)
-├── python/       (Python-specific)
-├── javascript/   (JS-specific)
-└── scripts/
-
-# In init script, symlink selectively:
-ln -s ../claude-templates/base/claude-pack/commands .claude/commands
-ln -s ../claude-templates/python/claude-pack/rules .claude/rules
-```
+The `_my_` prefix:
+1. Prevents conflicts with project-local commands
+2. Clearly identifies these as user-level commands
+3. Groups them together in command listings
+4. Follows Claude Code's convention for user commands
 
 ## Troubleshooting
 
 ### Commands Not Appearing
 
-**Symptom:** New commands don't show up in Claude Code
+1. Restart Claude Code completely
+2. Verify symlinks exist: `ls -la ~/.claude/commands/`
+3. Check symlink targets: `readlink ~/.claude/commands/_my_research.md`
 
-**Solutions:**
-1. Restart Claude Code completely (exit and reopen)
-2. Verify symlink: `ls -la .claude/commands`
-3. Check file permissions: `ls -l claude-templates/claude-pack/commands/`
+### "Cannot determine source location" Error
 
-### Symlink Issues
-
-**Symptom:** Symlinks broken or pointing to wrong location
-
-**Solutions:**
+Run global setup first, or specify source:
 ```bash
-# Check symlink target
-readlink .claude/commands
-
-# Recreate symlink
-rm .claude/commands
-ln -s ../claude-templates/claude-pack/commands .claude/commands
+./scripts/init-project.sh --source ~/agentic-project-init
 ```
 
-### Git Submodule Not Updating
+### Broken Symlinks
 
-**Symptom:** `git pull` doesn't update submodule
-
-**Solutions:**
+If the source repository was moved:
 ```bash
-# Update submodule manually
-git submodule update --remote
-
-# Or configure automatic updates
-git config submodule.recurse true
+# Uninstall and reinstall
+./scripts/uninstall-global.sh
+cd /new/location/agentic-project-init
+./scripts/setup-global.sh
 ```
 
-### Merge Conflicts in Submodule
+### Hook Not Running
 
-**Symptom:** Submodule has merge conflicts
-
-**Solutions:**
-```bash
-cd claude-templates
-git status
-# Resolve conflicts
-git add .
-git commit
-cd ..
-git add claude-templates
-git commit
+Check `~/.claude/settings.json` has the PreCompact hook configured:
+```json
+{
+  "hooks": {
+    "PreCompact": [
+      {
+        "matcher": "auto",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/path/to/.claude/hooks/precompact-capture.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
 ```
-
-### Submodule in Detached HEAD State
-
-**Symptom:** After cloning or updating, `cd claude-templates && git status` shows "HEAD detached"
-
-**Explanation:** This is normal. Git submodules track a specific commit, not a branch. For most workflows this is fine.
-
-**If you need to work on a branch:**
-```bash
-cd claude-templates
-
-# Check out the branch you want
-git checkout main
-# or your project-specific branch:
-git checkout my-project-customizations
-
-# Now you can make commits normally
-```
-
-### Collaborator Doesn't Have Submodule Contents
-
-**Symptom:** After cloning, the `claude-templates/` directory is empty
-
-**Solution:** Submodules must be explicitly initialized:
-```bash
-# If already cloned:
-git submodule update --init --recursive
-
-# Or clone with submodules in one step:
-git clone --recurse-submodules <repo-url>
-```
-
-## Best Practices
-
-### 1. Start Simple
-Begin with a few essential commands and rules. Expand as you discover patterns.
-
-### 2. Document Everything
-Add clear descriptions to all commands, skills, and agents. Future you will thank you.
-
-### 3. Version Your Templates
-Use git tags for major template changes:
-```bash
-git tag -a v1.0.0 -m "Initial stable release"
-git push origin v1.0.0
-```
-
-### 4. Review Before Syncing
-Always review template changes before pulling into active projects.
-
-### 5. Test in One Project First
-When making significant template changes, test in one project before syncing everywhere.
-
-### 6. Keep Templates Generic
-Avoid project-specific details in shared templates. Use template variables or placeholders.
-
-## Examples
-
-### Example: Creating a Code Review Command
-
-```bash
-# Edit in any project
-vim claude-templates/claude-pack/commands/review.md
-```
-
-```markdown
----
-description: Perform comprehensive code review
----
-
-Review the changes in this pull request with focus on:
-
-1. Code quality and maintainability
-2. Security vulnerabilities
-3. Performance considerations
-4. Test coverage
-5. Documentation completeness
-
-Provide specific, actionable feedback.
-```
-
-```bash
-# Commit and push
-cd claude-templates
-git add claude-pack/commands/review.md
-git commit -m "Add code review command"
-git push origin main
-
-# Update other projects
-cd ~/other-project
-cd claude-templates && git pull origin main
-# Changes appear instantly via symlink!
-```
-
-### Example: Architecture Decision Template
-
-Create `.project/architecture/ADR-001-example.md`:
-
-```markdown
-# ADR-001: Use PostgreSQL for Primary Database
-
-**Date:** 2024-01-15
-**Status:** Accepted
-
-## Context
-We need a reliable database for our application with strong ACID guarantees.
-
-## Decision
-We will use PostgreSQL as our primary database.
-
-## Consequences
-
-### Positive
-- Strong ACID compliance
-- Rich ecosystem and tooling
-- JSON support for flexible schemas
-
-### Negative
-- Requires more operational overhead than managed services
-- Scaling requires careful planning
-
-## Alternatives Considered
-- MongoDB: Rejected due to ACID requirements
-- MySQL: Rejected due to PostgreSQL's superior JSON support
-```
-
-## Contributing to Templates
-
-If you're using this across a team:
-
-1. Create feature branches for significant changes
-2. Open PRs for team review
-3. Use semantic versioning for releases
-4. Document breaking changes in commit messages
-
-## Resources
-
-- [Claude Code Documentation](https://github.com/anthropics/claude-code)
-- [Git Submodules Tutorial](https://git-scm.com/book/en/v2/Git-Tools-Submodules)
-- [Architecture Decision Records](https://adr.github.io/)
 
 ## License
 
 MIT License - Customize as needed for your organization.
-
----
-
-**Happy Coding with Claude!** 🚀
