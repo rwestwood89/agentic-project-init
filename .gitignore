@@ -1,0 +1,18 @@
+# Development artifacts - not part of the template
+artifacts/
+
+# Claude files for THIS repo (not distributed)
+CLAUDE.md
+.claude/settings.local.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+.project/memories

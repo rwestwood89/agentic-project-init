@@ -1,0 +1,280 @@
+#!/bin/bash
+# run-doc-stage: Iterative document writing with review loop
+#
+# Chains two Claude Code sessions:
+#   1. Writer session: Creates/updates a document
+#   2. Reviewer session: Reviews and provides feedback
+# Loops until reviewer outputs "DONE" or max iterations reached.
+#
+# Usage:
+#   run-doc-stage --writer-prompt <file> --doc-output <file> \
+#                 --reviewer-prompt <file> --review-output <file> \
+#                 [--max-iterations N] [--allowed-tools TOOLS]
+
+set -e
+
+# Defaults
+MAX_ITERATIONS=5
+ALLOWED_TOOLS="Read,Write,Edit,Glob,Grep"
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+usage() {
+  cat <<EOF
+Usage: $(basename "$0") [OPTIONS]
+
+Required:
+  --writer-prompt FILE      Markdown file with the initial writer prompt
+  --doc-output FILE         Path where the document should be written
+  --reviewer-prompt FILE    Markdown file with the reviewer prompt
+  --review-output FILE      Path where the review should be written
+
+Optional:
+  --max-iterations N        Maximum revision cycles (default: $MAX_ITERATIONS)
+  --allowed-tools TOOLS     Comma-separated tools to allow (default: $ALLOWED_TOOLS)
+  --verbose                 Show full Claude output
+  --dry-run                 Print commands without executing
+  -h, --help                Show this help message
+
+Example:
+  $(basename "$0") \\
+    --writer-prompt prompts/spec-writer.md \\
+    --doc-output specs/my-spec.md \\
+    --reviewer-prompt prompts/spec-reviewer.md \\
+    --review-output specs/my-spec-review.md
+EOF
+  exit 1
+}
+
+log_info() { echo -e "${BLUE}[INFO]${NC} $1"; }
+log_success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
+log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
+log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
+
+# Parse arguments
+WRITER_PROMPT=""
+DOC_OUTPUT=""
+REVIEWER_PROMPT=""
+REVIEW_OUTPUT=""
+VERBOSE=false
+DRY_RUN=false
+
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --writer-prompt)
+      WRITER_PROMPT="$2"
+      shift 2
+      ;;
+    --doc-output)
+      DOC_OUTPUT="$2"
+      shift 2
+      ;;
+    --reviewer-prompt)
+      REVIEWER_PROMPT="$2"
+      shift 2
+      ;;
+    --review-output)
+      REVIEW_OUTPUT="$2"
+      shift 2
+      ;;
+    --max-iterations)
+      MAX_ITERATIONS="$2"
+      shift 2
+      ;;
+    --allowed-tools)
+      ALLOWED_TOOLS="$2"
+      shift 2
+      ;;
+    --verbose)
+      VERBOSE=true
+      shift
+      ;;
+    --dry-run)
+      DRY_RUN=true
+      shift
+      ;;
+    -h|--help)
+      usage
+      ;;
+    *)
+      log_error "Unknown option: $1"
+      usage
+      ;;
+  esac
+done
+
+# Validate required arguments
+if [[ -z "$WRITER_PROMPT" || -z "$DOC_OUTPUT" || -z "$REVIEWER_PROMPT" || -z "$REVIEW_OUTPUT" ]]; then
+  log_error "Missing required arguments"
+  usage
+fi
+
+# Validate files exist
+if [[ ! -f "$WRITER_PROMPT" ]]; then
+  log_error "Writer prompt file not found: $WRITER_PROMPT"
+  exit 1
+fi
+
+if [[ ! -f "$REVIEWER_PROMPT" ]]; then
+  log_error "Reviewer prompt file not found: $REVIEWER_PROMPT"
+  exit 1
+fi
+
+# Create output directories if needed
+mkdir -p "$(dirname "$DOC_OUTPUT")"
+mkdir -p "$(dirname "$REVIEW_OUTPUT")"
+
+# Build reviewer suffix instruction
+REVIEWER_SUFFIX="
+
+IMPORTANT: After writing your review to $REVIEW_OUTPUT:
+- If there are NO remaining issues and the document is ready, output exactly 'DONE' on its own line at the end.
+- Otherwise, output 'NEEDS_REVISION' on its own line at the end."
+
+run_claude() {
+  local prompt="$1"
+  local resume_id="$2"
+  local capture_session="$3"
+
+  local cmd="claude -p"
+  local args=(
+    "--output-format" "json"
+    "--allowedTools" "$ALLOWED_TOOLS"
+  )
+
+  if [[ -n "$resume_id" ]]; then
+    args+=("--resume" "$resume_id")
+  fi
+
+  if $DRY_RUN; then
+    log_info "[DRY RUN] Would execute: claude -p \"<prompt>\" ${args[*]}"
+    echo '{"session_id": "dry-run-session", "result": "DONE"}'
+    return
+  fi
+
+  result=$(claude -p "$prompt" "${args[@]}" 2>&1)
+
+  if $VERBOSE; then
+    echo "$result" | jq -r '.result // empty' 2>/dev/null || true
+  fi
+
+  echo "$result"
+}
+
+extract_session_id() {
+  echo "$1" | jq -r '.session_id // empty'
+}
+
+extract_result() {
+  echo "$1" | jq -r '.result // empty'
+}
+
+check_done() {
+  local result="$1"
+  echo "$result" | grep -q "DONE"
+}
+
+# Main execution
+iteration=0
+
+echo ""
+echo "========================================"
+echo "  Document Stage: Iterative Refinement"
+echo "========================================"
+echo "Writer prompt:   $WRITER_PROMPT"
+echo "Doc output:      $DOC_OUTPUT"
+echo "Reviewer prompt: $REVIEWER_PROMPT"
+echo "Review output:   $REVIEW_OUTPUT"
+echo "Max iterations:  $MAX_ITERATIONS"
+echo "========================================"
+echo ""
+
+# Step 1: Initial document creation
+log_info "Iteration $iteration: Creating initial document..."
+writer_prompt_content=$(cat "$WRITER_PROMPT")
+writer_result=$(run_claude "$writer_prompt_content" "" true)
+session1_id=$(extract_session_id "$writer_result")
+
+if [[ -z "$session1_id" || "$session1_id" == "null" ]]; then
+  log_error "Failed to capture writer session ID"
+  exit 1
+fi
+log_success "Writer session started (ID: ${session1_id:0:8}...)"
+
+# Step 2: Initial review
+log_info "Iteration $iteration: Running initial review..."
+reviewer_prompt_content=$(cat "$REVIEWER_PROMPT")
+reviewer_result=$(run_claude "${reviewer_prompt_content}${REVIEWER_SUFFIX}" "" true)
+session2_id=$(extract_session_id "$reviewer_result")
+review_text=$(extract_result "$reviewer_result")
+
+if [[ -z "$session2_id" || "$session2_id" == "null" ]]; then
+  log_error "Failed to capture reviewer session ID"
+  exit 1
+fi
+log_success "Reviewer session started (ID: ${session2_id:0:8}...)"
+
+# Check if approved on first pass
+if check_done "$review_text"; then
+  log_success "Document approved on first pass!"
+  echo ""
+  echo "========================================"
+  echo "  Complete: 0 revisions needed"
+  echo "  Document: $DOC_OUTPUT"
+  echo "  Review:   $REVIEW_OUTPUT"
+  echo "========================================"
+  exit 0
+fi
+
+log_warn "Reviewer requested revisions"
+
+# Iterative refinement loop
+while [[ $iteration -lt $MAX_ITERATIONS ]]; do
+  ((iteration++))
+  echo ""
+  log_info "Iteration $iteration: Incorporating feedback..."
+
+  # Resume writer session to incorporate feedback
+  incorporate_prompt="Review the feedback in $REVIEW_OUTPUT and update $DOC_OUTPUT accordingly. Address each point raised by the reviewer."
+  writer_result=$(run_claude "$incorporate_prompt" "$session1_id" false)
+  log_success "Writer updated document"
+
+  # Resume reviewer session to re-review
+  log_info "Iteration $iteration: Re-reviewing document..."
+  rereview_prompt="The document at $DOC_OUTPUT has been updated based on your feedback. Please review it again.
+
+If ALL your previous concerns have been addressed and there are no new issues, update $REVIEW_OUTPUT to reflect approval and output exactly 'DONE' on its own line.
+Otherwise, update $REVIEW_OUTPUT with remaining/new feedback and output 'NEEDS_REVISION'."
+
+  reviewer_result=$(run_claude "$rereview_prompt" "$session2_id" false)
+  review_text=$(extract_result "$reviewer_result")
+
+  # Check exit condition
+  if check_done "$review_text"; then
+    echo ""
+    log_success "Document approved after $iteration revision(s)!"
+    echo ""
+    echo "========================================"
+    echo "  Complete: $iteration revision(s)"
+    echo "  Document: $DOC_OUTPUT"
+    echo "  Review:   $REVIEW_OUTPUT"
+    echo "========================================"
+    exit 0
+  fi
+
+  log_warn "Reviewer requested more changes (iteration $iteration/$MAX_ITERATIONS)"
+done
+
+echo ""
+log_error "Max iterations ($MAX_ITERATIONS) reached without approval"
+echo "========================================"
+echo "  Status: INCOMPLETE"
+echo "  Document: $DOC_OUTPUT"
+echo "  Review:   $REVIEW_OUTPUT (contains outstanding feedback)"
+echo "========================================"
+exit 1
