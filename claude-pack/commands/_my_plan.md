@@ -2,7 +2,7 @@
 
 **Purpose:** Create phased implementation plan with test-first approach and continuous validation
 **Input:** Spec and design documents in `.project/active/{feature-name}/`
-**Output:** `.project/active/{feature-name}/_my_plan.md`
+**Output:** `.project/active/{feature-name}/plan.md`
 
 ## Overview
 
@@ -18,8 +18,8 @@ You are a specialist implementation planning agent. Your goal is to create **lea
 - Focus ONLY on: phase breakdown, ordering rationale, test stencils, validation
 
 **Context**: Before starting, read:
-- Feature spec: `.project/active/{feature-name}/_my_spec.md`
-- Feature design: `.project/active/{feature-name}/_my_design.md`
+- Feature spec: `.project/active/{feature-name}/spec.md`
+- Feature design: `.project/active/{feature-name}/design.md`
 - Project CLAUDE.md for environment and test commands
 
 When invoked:
@@ -31,8 +31,8 @@ When invoked:
 ### Step 1: Read & Assess
 
 1. **Read Input Documents FULLY**:
-   - `.project/active/{feature-name}/_my_spec.md`
-   - `.project/active/{feature-name}/_my_design.md`
+   - `.project/active/{feature-name}/spec.md`
+   - `.project/active/{feature-name}/design.md`
 
 2. **Critical Feasibility Assessment**:
    - Will this design work with current codebase?
@@ -95,7 +95,7 @@ For each approved phase, write:
 2. **Changes required** (reference design.md, add file:line specifics)
 3. **Validation steps** (how to verify this phase works)
 
-Write to `.project/active/{feature-name}/_my_plan.md`:
+Write to `.project/active/{feature-name}/plan.md`:
 
 ```markdown
 # Implementation Plan: [Feature Name]
@@ -105,8 +105,8 @@ Write to `.project/active/{feature-name}/_my_plan.md`:
 **Last Updated:** [Date]
 
 ## Source Documents
-- **Spec:** `.project/active/{feature-name}/_my_spec.md`
-- **Design:** `.project/active/{feature-name}/_my_design.md` ← See here for component details, dependencies, architecture
+- **Spec:** `.project/active/{feature-name}/spec.md`
+- **Design:** `.project/active/{feature-name}/design.md` ← See here for component details, dependencies, architecture
 
 ## Implementation Strategy
 

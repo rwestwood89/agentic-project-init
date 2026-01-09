@@ -61,10 +61,7 @@ When the user invokes this command, they wish to abbreviate this process. Your g
 
 Get metadata:
 ```bash
-echo "Date: $(date '+%Y-%m-%d %H:%M:%S %Z')"
-echo "Branch: $(git branch --show-current 2>/dev/null || echo 'N/A')"
-echo "User: $(git config --get user.name 2>/dev/null || echo 'N/A')"
-echo "Commit: $(git rev-parse --short HEAD 2>/dev/null || echo 'N/A')"
+.project/scripts/get-metadata.sh
 ```
 
 Write to `.project/active/{feature-name}/change.md`:

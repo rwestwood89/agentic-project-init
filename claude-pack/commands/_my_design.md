@@ -1,8 +1,8 @@
 # Design Command
 
 **Purpose:** Technical design for code implementation
-**Input:** Spec document (`.project/active/{feature-name}/_my_spec.md`), research findings
-**Output:** `.project/active/{feature-name}/_my_design.md`
+**Input:** Spec document (`.project/active/{feature-name}/spec.md`), research findings
+**Output:** `.project/active/{feature-name}/design.md`
 
 ## Overview
 
@@ -66,17 +66,15 @@ CYCLE:
 1. **Read context**:
    - Check `CLAUDE.md` for project-specific conventions, patterns, and commands
    - Check any project documentation referenced in CLAUDE.md
-   - Feature spec: `.project/active/{feature-name}/_my_spec.md` (read FULLY)
+   - Feature spec: `.project/active/{feature-name}/spec.md` (read FULLY)
      - Pay special attention to **Business Goals** - your design must serve these
      - Note all requirements and acceptance criteria
-   - Related research files in `.project/_my_research/` (if they exist)
+   - Related research files in `.project/research/` (if they exist)
 
-2. **Create design file** at `.project/active/{feature-name}/_my_design.md`:
+2. **Create design file** at `.project/active/{feature-name}/design.md`:
    - Get metadata:
      ```bash
-     echo "Date: $(date '+%Y-%m-%d %H:%M:%S %Z')"
-     echo "Branch: $(git branch --show-current 2>/dev/null || echo 'N/A')"
-     echo "User: $(git config --get user.name 2>/dev/null || echo 'N/A')"
+     .project/scripts/get-metadata.sh
      ```
    - Add header (feature name, status: Draft, owner, dates, git info)
    - Add overview (1-2 sentence summary from spec)

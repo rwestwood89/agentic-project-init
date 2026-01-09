@@ -37,8 +37,8 @@ Read project management files in this order:
    - `.project/backlog/BACKLOG.md` - Epic priorities
 
 2. **Active Work** (if any):
-   - `.project/active/*/_my_plan.md` - Current implementation plans
-   - `.project/active/*/_my_spec.md` - What's being built
+   - `.project/active/*/plan.md` - Current implementation plans
+   - `.project/active/*/spec.md` - What's being built
 
 3. **History**:
    - `.project/completed/CHANGELOG.md` - What's been done

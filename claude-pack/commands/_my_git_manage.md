@@ -510,8 +510,8 @@ Read project management files to understand:
 
 Key files to consult:
 - `.project/active/CURRENT_WORK.md`
-- `.project/active/{feature}/_my_spec.md`
-- `.project/active/{feature}/_my_design.md`
+- `.project/active/{feature}/spec.md`
+- `.project/active/{feature}/design.md`
 - `.project/backlog/BACKLOG.md`
 
 ### 2. Analyze the Conflict

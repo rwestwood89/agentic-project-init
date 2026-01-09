@@ -18,6 +18,7 @@ NC='\033[0m'
 DRY_RUN=false
 NO_TRACK=false
 INCLUDE_CLAUDE=false
+FORCE_UPDATE=false
 SOURCE_DIR=""
 
 # Parse arguments
@@ -26,6 +27,7 @@ while [[ $# -gt 0 ]]; do
         --dry-run) DRY_RUN=true; shift ;;
         --no-track) NO_TRACK=true; shift ;;
         --include-claude) INCLUDE_CLAUDE=true; shift ;;
+        --force) FORCE_UPDATE=true; shift ;;
         --source) SOURCE_DIR="$2"; shift 2 ;;
         -h|--help)
             echo "Usage: $0 [options]"
@@ -34,10 +36,14 @@ while [[ $# -gt 0 ]]; do
             echo "  --dry-run        Show what would be done without making changes"
             echo "  --no-track       Add .project to .gitignore (don't track in git)"
             echo "  --include-claude Copy claude-pack/ to .claude/ (vendor commands)"
+            echo "  --force          Update template files (preserves user data)"
             echo "  --source <path>  Override source location"
             echo "  -h, --help       Show this help message"
             echo ""
             echo "Note: --no-track and --include-claude cannot be used together."
+            echo ""
+            echo "The --force option updates documentation and templates but never touches:"
+            echo "  CURRENT_WORK.md, backlog/BACKLOG.md, completed/CHANGELOG.md, memories/index.json"
             exit 0
             ;;
         *) echo -e "${RED}Unknown option: $1${NC}"; exit 1 ;;
@@ -107,34 +113,80 @@ add_to_gitignore() {
     fi
 }
 
+# Files that contain user data - NEVER overwrite these
+USER_DATA_FILES=(
+    "CURRENT_WORK.md"
+    "backlog/BACKLOG.md"
+    "completed/CHANGELOG.md"
+    "memories/index.json"
+)
+
+# Check if a file is user data (protected from --force)
+is_user_data() {
+    local file="$1"
+    for protected in "${USER_DATA_FILES[@]}"; do
+        if [ "$file" = "$protected" ]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+# Copy a single file with force/skip logic
+copy_file() {
+    local src="$1"
+    local dest="$2"
+    local rel_path="$3"  # For display and user data check
+
+    if [ -e "$dest" ]; then
+        if is_user_data "$rel_path"; then
+            # Never touch user data
+            if [ "$FORCE_UPDATE" = true ]; then
+                echo -e "${YELLOW}  ⚠ Protected (user data): $rel_path${NC}"
+            fi
+            return
+        elif [ "$FORCE_UPDATE" = true ]; then
+            # Force update template file
+            if [ "$DRY_RUN" = true ]; then
+                echo -e "${BLUE}[DRY RUN] Would update: $rel_path${NC}"
+            else
+                cp "$src" "$dest"
+                echo -e "${GREEN}  ✓ Updated: $rel_path${NC}"
+            fi
+        fi
+        # If exists and not force, skip silently
+    else
+        # File doesn't exist, copy it
+        if [ "$DRY_RUN" = true ]; then
+            echo -e "${BLUE}[DRY RUN] Would add: $rel_path${NC}"
+        else
+            mkdir -p "$(dirname "$dest")"
+            cp "$src" "$dest"
+            echo -e "${GREEN}  ✓ Added: $rel_path${NC}"
+        fi
+    fi
+}
+
 # Copy .project/ with merge strategy
 echo "Setting up .project/..."
 
 copy_project_pack() {
     if [ -d ".project" ]; then
-        echo -e "${YELLOW}  .project/ exists, merging missing components...${NC}"
+        if [ "$FORCE_UPDATE" = true ]; then
+            echo -e "${YELLOW}  .project/ exists, updating templates (preserving user data)...${NC}"
+        else
+            echo -e "${YELLOW}  .project/ exists, merging missing components...${NC}"
+        fi
 
-        # Copy missing top-level items
-        for item in "$PROJECT_PACK"/*; do
-            basename=$(basename "$item")
-            target=".project/$basename"
-
-            if [ ! -e "$target" ]; then
-                if [ "$DRY_RUN" = true ]; then
-                    echo -e "${BLUE}[DRY RUN] Would copy: $basename${NC}"
-                else
-                    if [ -d "$item" ]; then
-                        cp -r "$item" "$target"
-                    else
-                        cp "$item" "$target"
-                    fi
-                    echo -e "${GREEN}  ✓ Added: $basename${NC}"
-                fi
-            fi
-        done
+        # Process all files recursively
+        while IFS= read -r -d '' src_file; do
+            rel_path="${src_file#$PROJECT_PACK/}"
+            dest_file=".project/$rel_path"
+            copy_file "$src_file" "$dest_file" "$rel_path"
+        done < <(find "$PROJECT_PACK" -type f -print0)
 
         # Ensure required subdirectories exist
-        for dir in research reports memories active completed backlog; do
+        for dir in research reports memories active completed backlog scripts; do
             if [ ! -d ".project/$dir" ]; then
                 if [ "$DRY_RUN" = true ]; then
                     echo -e "${BLUE}[DRY RUN] Would create: .project/$dir/${NC}"
@@ -149,7 +201,7 @@ copy_project_pack() {
             echo -e "${BLUE}[DRY RUN] Would copy project-pack/ to .project/${NC}"
         else
             cp -r "$PROJECT_PACK" .project
-            mkdir -p .project/research .project/reports .project/memories
+            mkdir -p .project/research .project/reports .project/memories .project/scripts
             echo -e "${GREEN}  ✓ Created .project/${NC}"
         fi
     fi

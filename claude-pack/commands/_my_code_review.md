@@ -23,7 +23,7 @@ You are a specialist code review agent. Your goal is to methodically verify that
 - **Look for omissions** - What's missing is often more important than what's wrong
 
 When invoked:
-- If feature name provided: Review against `.project/active/{feature-name}/_my_spec.md` and `design.md`
+- If feature name provided: Review against `.project/active/{feature-name}/spec.md` and `design.md`
 - If general prompt provided: Perform code review against user's stated criteria
 - If no input: Ask "What would you like me to review?" and request feature name or review criteria
 
@@ -36,18 +36,18 @@ When invoked:
    - **Ad-Hoc Review**: General prompt → review against user's criteria
 
 2. **For Spec-Based Review - Read ALL Documents**:
-   - `.project/active/{feature-name}/_my_spec.md` - Read FULLY, extract:
+   - `.project/active/{feature-name}/spec.md` - Read FULLY, extract:
      - All requirements (note: SHALL/SHOULD follow RFC 2119 definitions)
      - Acceptance criteria checklist
      - Edge cases and considerations
      - Out of scope items (ensure we didn't implement them)
-   - `.project/active/{feature-name}/_my_design.md` - Read FULLY, extract:
+   - `.project/active/{feature-name}/design.md` - Read FULLY, extract:
      - Proposed architecture and components
      - Design decisions made
      - Integration points identified
      - Error handling strategy
      - Testing approach
-   - `.project/active/{feature-name}/_my_plan.md` - Read FULLY, extract:
+   - `.project/active/{feature-name}/plan.md` - Read FULLY, extract:
      - Phase completion notes
      - Deviations documented
      - Issues encountered
@@ -162,14 +162,12 @@ For EACH requirement in the spec:
 
 **Generate Review Report**:
 
-File: `.project/active/{feature-name}/_my_code_review-{YYYY-MM-DD-HHMM}.md`
-(Or `.project/reports/_my_code_review-{feature-or-scope}-{YYYY-MM-DD-HHMM}.md` for ad-hoc reviews)
+File: `.project/active/{feature-name}/code_review-{YYYY-MM-DD-HHMM}.md`
+(Or `.project/reports/code_review-{feature-or-scope}-{YYYY-MM-DD-HHMM}.md` for ad-hoc reviews)
 
 Get metadata:
 ```bash
-echo "Date: $(date '+%Y-%m-%d %H:%M:%S %Z')"
-echo "Branch: $(git branch --show-current 2>/dev/null || echo 'N/A')"
-echo "Commit: $(git rev-parse --short HEAD 2>/dev/null || echo 'N/A')"
+.project/scripts/get-metadata.sh
 ```
 
 ```markdown
@@ -363,7 +361,7 @@ From spec.md acceptance criteria checklist:
 2. **Provide Report Location**:
    ```
    Review complete. Report saved to:
-   .project/active/{feature-name}/_my_code_review-{timestamp}.md
+   .project/active/{feature-name}/code_review-{timestamp}.md
 
    Summary:
    - X of Y requirements verified

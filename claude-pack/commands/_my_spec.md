@@ -2,7 +2,7 @@
 
 **Purpose:** Feature requirements definition with business goals and acceptance criteria
 **Input:** Feature ideas, user stories, requirements, optional research reference
-**Output:** `.project/active/{feature-name}/_my_spec.md`
+**Output:** `.project/active/{feature-name}/spec.md`
 
 ## Overview
 
@@ -30,7 +30,7 @@ Use standard definitions throughout:
 1. **Read User's Request Completely**
    - Read the user's message carefully, multiple times if needed
    - Note EVERY detail they provide - nothing should be lost
-   - If user mentions research, read `.project/_my_research/{file}` FULLY
+   - If user mentions research, read `.project/research/{file}` FULLY
    - If user mentions existing code/files, read them FULLY
 
 2. **Check Project Context** (if relevant)
@@ -103,9 +103,7 @@ Use standard definitions throughout:
 
 1. **Get Metadata**
    ```bash
-   echo "Date: $(date '+%Y-%m-%d %H:%M:%S %Z')"
-   echo "Branch: $(git branch --show-current 2>/dev/null || echo 'N/A')"
-   echo "User: $(git config --get user.name 2>/dev/null || echo 'N/A')"
+   .project/scripts/get-metadata.sh
    ```
 
 2. **Create Feature Directory**
@@ -122,7 +120,7 @@ Use standard definitions throughout:
 
 4. **Write Spec**
 
-   Write to `.project/active/{feature-name}/_my_spec.md` using this template:
+   Write to `.project/active/{feature-name}/spec.md` using this template:
 
    ```markdown
    # Spec: [Feature Name]
@@ -207,8 +205,8 @@ Use standard definitions throughout:
 
    ## Related Artifacts
 
-   - **Research:** `.project/_my_research/{file}.md` (if exists)
-   - **Design:** `.project/active/{feature-name}/_my_design.md` (to be created)
+   - **Research:** `.project/research/{file}.md` (if exists)
+   - **Design:** `.project/active/{feature-name}/design.md` (to be created)
    - **Epic:** `.project/backlog/BACKLOG.md` (if related)
 
    ---

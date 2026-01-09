@@ -2,7 +2,7 @@
 
 **Purpose:** Deep codebase exploration and feasibility analysis
 **Input:** Topic, rough idea, or area of investigation
-**Output:** `.project/_my_research/{YYYYMMDD-HHMMSS}_{topic-kebab-case}.md`
+**Output:** `.project/research/{YYYYMMDD-HHMMSS}_{topic-kebab-case}.md`
 
 ## Overview
 
@@ -23,7 +23,7 @@ When invoked:
 
 1. **Read Project Context** - Read CLAUDE.md and any referenced project documentation
 2. **Read Referenced Files Completely** - If user mentions specific files, read them FULLY
-3. **Check Existing Research** - Search `.project/_my_research/` for related topics
+3. **Check Existing Research** - Search `.project/research/` for related topics
 4. **Create Research Plan** - Use TodoWrite to track subtasks
 
 ### Stage 2: Parallel Research
@@ -45,7 +45,7 @@ Spawn appropriate agents:
 
 ### Stage 4: Document Creation
 
-Create research document at `.project/_my_research/{YYYYMMDD-HHMMSS}_{topic-kebab-case}.md`:
+Create research document at `.project/research/{YYYYMMDD-HHMMSS}_{topic-kebab-case}.md`:
 
 ```markdown
 ---
@@ -106,7 +106,7 @@ last_updated: [YYYY-MM-DD]
 Present summary:
 ```
 Research complete! I've created a comprehensive analysis at:
-`.project/_my_research/{filename}`
+`.project/research/{filename}`
 
 Key findings:
 - {major insight 1}

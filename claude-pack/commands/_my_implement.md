@@ -1,7 +1,7 @@
 # Implement Command
 
 **Purpose:** Execute approved implementation plan with understanding and validation
-**Input:** `.project/active/{feature-name}/_my_plan.md` (plus design.md, spec.md)
+**Input:** `.project/active/{feature-name}/plan.md` (plus design.md, spec.md)
 **Output:** Code changes, updated plan with progress
 
 ## Overview
@@ -23,12 +23,12 @@ When invoked:
 
 **This stage is MANDATORY. Do not skip to implementation.**
 
-1. **Read Design Document**: `.project/active/{feature-name}/_my_design.md` FULLY
+1. **Read Design Document**: `.project/active/{feature-name}/design.md` FULLY
    - Understand the architecture and component relationships
    - Understand WHY decisions were made (check Design Decisions section)
    - Note the integration points and patterns to follow
 
-2. **Read Spec Document**: `.project/active/{feature-name}/_my_spec.md` FULLY
+2. **Read Spec Document**: `.project/active/{feature-name}/spec.md` FULLY
    - Understand the business goals and success criteria
    - Note all requirements (distinguish user-provided vs inferred)
    - Understand acceptance criteria
@@ -50,7 +50,7 @@ When invoked:
 
 ### Stage 1: Plan Analysis & Scope Confirmation
 
-1. **Read Plan**: `.project/active/{feature-name}/_my_plan.md` FULLY
+1. **Read Plan**: `.project/active/{feature-name}/plan.md` FULLY
 2. **Check Progress**: Look for existing checkmarks
 3. **Confirm Scope** - ALWAYS ask unless user specified:
    ```

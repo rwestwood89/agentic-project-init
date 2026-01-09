@@ -98,14 +98,40 @@ Items within an epic use hierarchical numbering:
 
 ## Commands
 
-| Command | When to Use |
-|---------|-------------|
-| `/project-manage` | Status review, update BACKLOG, reorganize priorities |
-| `/project-find` | Quick lookup of project context |
-| `/spec` | Create specification for current item |
-| `/design` | Research codebase, create design doc |
-| `/implement` | Execute implementation plan |
-| `/review` | Review work at any stage |
+### Development Workflow
+
+| Command | Purpose |
+|---------|---------|
+| `/_my_research` | Deep codebase exploration and feasibility analysis |
+| `/_my_spec` | Feature requirements definition with business goals |
+| `/_my_design` | Technical design for code implementation |
+| `/_my_plan` | Create phased implementation plan with tests |
+| `/_my_implement` | Execute approved plan with validation |
+| `/_my_quick_edit` | Fast changes that don't need full workflow |
+
+### Review & Quality
+
+| Command | Purpose |
+|---------|---------|
+| `/_my_code_review` | Audit implementation against spec/design |
+| `/_my_code_quality` | Run comprehensive quality checks |
+
+### Project Management
+
+| Command | Purpose |
+|---------|---------|
+| `/_my_project_manage` | Status review, gap analysis, backlog management |
+| `/_my_project_find` | Quick lookup of project context |
+| `/_my_git_manage` | Git workflow, worktrees, conflict resolution |
+
+### Memory & Context
+
+| Command | Purpose |
+|---------|---------|
+| `/_my_capture` | Mark conversation for later memorization |
+| `/_my_memorize` | Create structured memory from capture |
+| `/_my_recall` | Search past conversations |
+| `/_my_review_compact` | Review before compaction |
 
 ---
 
