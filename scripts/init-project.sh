@@ -297,6 +297,29 @@ if [ "$INCLUDE_CLAUDE" = true ]; then
         if [ "$DRY_RUN" != true ]; then
             echo "vendored" > ".claude/.agentic-pack-vendored"
         fi
+
+        # Write hook paths config for vendored installation
+        local hooks_dir
+        hooks_dir="$(pwd)/.claude/hooks"
+
+        if [ "$DRY_RUN" = true ]; then
+            echo -e "${BLUE}[DRY RUN] Would write hook paths to .claude/.hook-paths.json${NC}"
+        else
+            cat > ".claude/.hook-paths.json" << EOF
+{
+  "version": 1,
+  "resolved_at": "$(date -Iseconds)",
+  "source": "vendored",
+  "hooks": {
+    "query-transcript": "$hooks_dir/query-transcript.py",
+    "parse-transcript": "$hooks_dir/parse-transcript.py",
+    "capture": "$hooks_dir/capture.sh",
+    "precompact-capture": "$hooks_dir/precompact-capture.sh"
+  }
+}
+EOF
+            echo -e "${GREEN}  ✓ Created hook paths config${NC}"
+        fi
     }
     copy_claude_pack
 fi

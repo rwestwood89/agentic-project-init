@@ -122,6 +122,10 @@ if [ "$HAS_VENDORED" = true ]; then
     rm -f .claude/.agentic-pack-vendored
     echo -e "${GREEN}  ✓ Removed vendor marker${NC}"
 
+    # Remove hook paths config
+    rm -f .claude/.hook-paths.json
+    echo -e "${GREEN}  ✓ Removed hook paths config${NC}"
+
     # Remove settings.json backup if it exists
     rm -f .claude/settings.json.bak
 

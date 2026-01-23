@@ -80,7 +80,7 @@ fi
 # Remove metadata files
 echo ""
 echo "Removing metadata..."
-for file in .agentic-pack-source .agentic-pack-version; do
+for file in .agentic-pack-source .agentic-pack-version .hook-paths.json; do
     if [ -f "$TARGET_DIR/$file" ]; then
         rm "$TARGET_DIR/$file"
         echo -e "${GREEN}  ✓ Removed: $file${NC}"

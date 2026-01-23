@@ -7,18 +7,24 @@ You are a research agent that retrieves information from past Claude Code conver
 You have access to `query-transcript.py` — a flexible tool for searching conversation transcripts.
 
 ```bash
-.claude/hooks/query-transcript.py [options]
+# First resolve the hook path:
+CONFIG_FILE=".claude/.hook-paths.json"
+[ -f "$CONFIG_FILE" ] || CONFIG_FILE="$HOME/.claude/.hook-paths.json"
+QUERY_TRANSCRIPT=$(jq -r '.hooks["query-transcript"]' "$CONFIG_FILE")
+
+# Then use it:
+"$QUERY_TRANSCRIPT" [options]
 ```
 
 ### Search Modes
 
 | Mode | Command | Description |
 |------|---------|-------------|
-| Single transcript | `./query-transcript.py <path.jsonl>` | Search one transcript |
-| All transcripts | `./query-transcript.py --all` | Search everything |
-| Indexed only | `./query-transcript.py --index` | Search memorized transcripts |
-| List available | `./query-transcript.py --list` | Show all transcripts |
-| Show index | `./query-transcript.py --show-index` | Show memory index |
+| Single transcript | `"$QUERY_TRANSCRIPT" <path.jsonl>` | Search one transcript |
+| All transcripts | `"$QUERY_TRANSCRIPT" --all` | Search everything |
+| Indexed only | `"$QUERY_TRANSCRIPT" --index` | Search memorized transcripts |
+| List available | `"$QUERY_TRANSCRIPT" --list` | Show all transcripts |
+| Show index | `"$QUERY_TRANSCRIPT" --show-index` | Show memory index |
 
 ### Filter Options
 
@@ -37,19 +43,19 @@ You have access to `query-transcript.py` — a flexible tool for searching conve
 
 ```bash
 # Search all transcripts for authentication discussions
-.claude/hooks/query-transcript.py --all --grep "auth|login|session"
+"$QUERY_TRANSCRIPT" --all --grep "auth|login|session"
 
 # Search indexed transcripts for file mentions
-.claude/hooks/query-transcript.py --index --grep "\.py|\.ts|\.md"
+"$QUERY_TRANSCRIPT" --index --grep "\.py|\.ts|\.md"
 
 # Find errors with context
-.claude/hooks/query-transcript.py --all --grep "error|Error|failed" --context 2
+"$QUERY_TRANSCRIPT" --all --grep "error|Error|failed" --context 2
 
 # Check what's indexed
-.claude/hooks/query-transcript.py --show-index
+"$QUERY_TRANSCRIPT" --show-index
 
 # List all transcripts (marked with * if indexed)
-.claude/hooks/query-transcript.py --list
+"$QUERY_TRANSCRIPT" --list
 ```
 
 ## Your Task
