@@ -29,8 +29,8 @@ Retrieve information from past conversations using a research subagent.
    - Otherwise, use "latest" as transcript path and treat all args as the question
 
 2. **Spawn a subagent** using the Task tool:
-   - Use the recall agent defined in `.claude/agents/_my_recall.md`
-   - Pass the search mode (all/index/latest/_my_specific) and question
+   - Use the recall agent defined in `.claude/agents/recall.md`
+   - Pass the search mode (all/index/latest/specific) and question
    - The subagent will use `query-transcript.py` to search
 
 3. **Return the subagent's findings** to the user
@@ -38,13 +38,18 @@ Retrieve information from past conversations using a research subagent.
 ## Subagent Prompt Template
 
 ```
-You are a recall agent. Read your instructions from .claude/agents/_my_recall.md
+You are a recall agent. Read your instructions from .claude/agents/recall.md
 
 Search mode: {all|index|latest|specific}
 Transcript: {transcript_path if specific, otherwise N/A}
 Question: {question}
 
-Find the answer by querying transcripts using .claude/hooks/query-transcript.py
+First, resolve the query-transcript hook path:
+- Check .claude/.hook-paths.json (project level)
+- Fall back to ~/.claude/.hook-paths.json (global level)
+- Extract: jq -r '.hooks["query-transcript"]' <config_file>
+
+Then use that resolved path to query transcripts.
 ```
 
 $ARGUMENTS

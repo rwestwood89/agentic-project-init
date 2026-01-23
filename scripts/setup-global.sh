@@ -204,6 +204,33 @@ else
     echo -e "${GREEN}  ✓ Version: $VERSION${NC}"
 fi
 
+# Write hook paths config
+write_hook_paths() {
+    local config_file="$TARGET_DIR/.hook-paths.json"
+    local hooks_dir="$CLAUDE_PACK/hooks"
+
+    if [ "$DRY_RUN" = true ]; then
+        echo -e "${BLUE}[DRY RUN] Would write hook paths to $config_file${NC}"
+        return
+    fi
+
+    cat > "$config_file" << EOF
+{
+  "version": 1,
+  "resolved_at": "$(date -Iseconds)",
+  "source": "$SOURCE_DIR",
+  "hooks": {
+    "query-transcript": "$hooks_dir/query-transcript.py",
+    "parse-transcript": "$hooks_dir/parse-transcript.py",
+    "capture": "$hooks_dir/capture.sh",
+    "precompact-capture": "$hooks_dir/precompact-capture.sh"
+  }
+}
+EOF
+    echo -e "${GREEN}  ✓ Hook paths: $config_file${NC}"
+}
+write_hook_paths
+
 # Next steps
 echo ""
 echo -e "${GREEN}✓ Global setup complete!${NC}"

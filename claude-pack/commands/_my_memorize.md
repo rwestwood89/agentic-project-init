@@ -12,19 +12,33 @@ Create a structured memory artifact from a conversation transcript. Can be calle
 
 ## Instructions
 
-1. **Determine the transcript to process:**
+1. **Resolve hook paths:**
+   ```bash
+   CONFIG_FILE=".claude/.hook-paths.json"
+   [ -f "$CONFIG_FILE" ] || CONFIG_FILE="$HOME/.claude/.hook-paths.json"
+
+   if [ ! -f "$CONFIG_FILE" ]; then
+     echo "Error: No hook configuration found. Run setup-global.sh first."
+     exit 1
+   fi
+   ```
+
+2. **Determine the transcript to process:**
    - If argument is a `.jsonl` file, use it directly as the transcript
    - If argument is a `-capture.md` file, read it to get the transcript path
    - If no argument, find the most recent `*-capture.md` in `.project/memories/` with status "pending"
    - If no pending captures, inform the user they can specify a transcript path directly
 
-2. **Parse the transcript using the helper script:**
-   - Run: `.claude/hooks/parse-transcript.py <transcript-path> --max-chars=40000`
+3. **Parse the transcript using the helper script:**
+   ```bash
+   PARSE_TRANSCRIPT=$(jq -r '.hooks["parse-transcript"]' "$CONFIG_FILE")
+   "$PARSE_TRANSCRIPT" <transcript-path> --max-chars=40000
+   ```
    - This handles large transcripts by extracting key messages
 
-3. **Generate a timestamp ID** for this memory (or use existing if from a capture)
+4. **Generate a timestamp ID** for this memory (or use existing if from a capture)
 
-4. **Analyze the parsed output** and create a memory file at `.project/memories/{id}-memory.md`:
+5. **Analyze the parsed output** and create a memory file at `.project/memories/{id}-memory.md`:
 
    ```markdown
    # Memory: {brief title}
@@ -54,15 +68,15 @@ Create a structured memory artifact from a conversation transcript. Can be calle
    - keyword3
    ```
 
-5. **Update the index** at `.project/memories/index.json`:
+6. **Update the index** at `.project/memories/index.json`:
    - Add entry to `memories` array with id, created, transcript, memory_file, summary, topics, source
    - Update `transcripts` entry to include this memory_id
    - Use jq or read/write JSON carefully
 
-6. **If processing a capture file**, update it:
+7. **If processing a capture file**, update it:
    - Change status from "pending" to "memorized"
    - Add link to memory file
 
-7. **Report** what you created to the user
+8. **Report** what you created to the user
 
 $ARGUMENTS
