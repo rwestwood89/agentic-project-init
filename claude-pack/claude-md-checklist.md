@@ -2,6 +2,21 @@
 
 After running init, verify your CLAUDE.md includes these sections for optimal slash command support.
 
+## Session Start Section
+
+Add a "Session Start" section near the top of your CLAUDE.md that tells new sessions what to read before starting work. This is the single most impactful thing you can do for session-to-session continuity.
+
+```markdown
+## Session Start
+
+Before starting any non-trivial task, read the relevant context files:
+
+1. **Always read first:** `.project/CURRENT_WORK.md` — active work, recent changes, decisions
+2. **[Area-specific docs]** — point to your project's key documentation files
+```
+
+**Why:** CLAUDE.md is auto-loaded every session. Without explicit pointers, Claude will explore the codebase to understand what's going on — re-discovering what previous sessions already knew. A "Session Start" section turns CLAUDE.md into a boot loader that gets Claude productive in one read instead of ten.
+
 ## Required for Commands
 
 | Section | Used By | What to Include |

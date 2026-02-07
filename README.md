@@ -101,6 +101,7 @@ See **[docs/working-with-claude.md](docs/working-with-claude.md)** for practical
 | `/_my_capture` | Capture conversation for later |
 | `/_my_memorize` | Create memory from capture |
 | `/_my_recall` | Search past conversations |
+| `/_my_wrap_up` | End-of-session context persistence |
 | `/_my_review_compact` | Review before compaction |
 
 ## Script Reference

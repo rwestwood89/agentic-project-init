@@ -116,8 +116,32 @@ User corrects you or provides important context
     ↓
 /_my_memorize             Create structured memory artifact
     ↓
-/_my_recall               Search past conversations
+[End of session]
+    ↓
+/_my_wrap_up              Update CURRENT_WORK.md, MEMORY.md, docs
+    ↓
+[Next session]
+    ↓
+(auto-loaded)             CLAUDE.md → MEMORY.md → .claude/rules/
+    ↓
+(read on demand)          .project/CURRENT_WORK.md (pointed to by CLAUDE.md)
 ```
+
+### Session Start (Auto-Context)
+
+Claude Code auto-loads three context sources every session:
+1. **CLAUDE.md** — project orientation and "Session Start" pointers
+2. **Auto-memory** (`~/.claude/projects/*/memory/MEMORY.md`) — distilled working knowledge
+3. **`.claude/rules/`** — behavioral rules (including context-loading rule)
+
+Everything else (`.project/`, `docs/`, code) requires Claude to discover and read it. The "Session Start" section in CLAUDE.md bridges this gap by telling Claude what to read first.
+
+### When to Wrap Up (`/_my_wrap_up`)
+
+- End of a work session
+- After completing significant work
+- After discovering a gotcha that shouldn't burn time again
+- When the user says "update docs", "save context", or similar
 
 ### When to Capture (`/_my_capture`)
 
