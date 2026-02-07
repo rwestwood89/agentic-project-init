@@ -74,6 +74,15 @@ Restart Claude Code, then use commands with the `_my_` prefix:
 ...
 ```
 
+## Working with Claude Code
+
+See **[docs/working-with-claude.md](docs/working-with-claude.md)** for practical guidance on:
+- When to use the full workflow vs skip to implementation
+- Agent strategy (what to offload vs keep in main context)
+- The learning loop (capture → memorize → recall)
+- Verification gates before marking work complete
+- Autonomous execution vs asking first
+
 ## Command Reference
 
 | Command | Description |
