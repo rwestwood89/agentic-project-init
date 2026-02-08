@@ -221,30 +221,41 @@ move-item <code> --to <backlog|active|completed>
 
 ---
 
-### Task 7: Implement update-artifact script
+### Task 7: Implement update-artifact script ✅ COMPLETED
 **Refs**: `specs/04-lifecycle-scripts.md`, `specs/03-yaml-frontmatter-schema.md`
 **Scope**: Update artifact frontmatter (status, phases, etc.)
-**Files to Create**:
-- `src/scripts/update_artifact.py` (CLI tool)
-- `tests/test_update_artifact.py` (integration tests)
+**Files Created**:
+- `src/scripts/update_artifact.py` (CLI tool with argparse)
+- `tests/test_update_artifact.py` (19 integration tests, all passing)
 
 **CLI Signature**:
 ```bash
-update-artifact <code> --artifact <spec|design|plan> [--status draft|in-progress|complete] [--phases-complete N]
+update-artifact <code> --artifact <spec|design|plan> [--status draft|in-progress|complete] [--phases-complete N] [--owner NAME]
 ```
 
-**Acceptance Criteria**:
-- Locate artifact file in registry path
-- Parse existing frontmatter
-- Update specified fields (status, phases_complete)
-- Update `updated` timestamp to ISO 8601
-- Write updated artifact atomically
-- Preserve content and formatting
-- Fail gracefully on backlog items (no path)
-- JSON output with updated fields
-- Exit codes: 0 (success), 1 (input error), 2 (state error)
+**Acceptance Criteria**: ✅ All met
+- Locate artifact file in registry path ✅
+- Parse existing frontmatter ✅
+- Update specified fields (status, phases_complete, owner) ✅
+- Update `updated` timestamp to ISO 8601 automatically ✅
+- Write updated artifact atomically ✅
+- Preserve content and formatting ✅
+- Fail gracefully on backlog items (no path) ✅
+- JSON output with updated fields ✅
+- Exit codes: 0 (success), 1 (input error), 2 (state error) ✅
 
-**Backpressure**: Integration tests pass, manual test updates WI-001 spec status
+**Validation Results**:
+- All 19 tests pass (`pytest tests/test_update_artifact.py`)
+- Type checking passes (`mypy src/`)
+- Linting passes (`ruff check src/ tests/`)
+
+**Notes**:
+- Implemented validation for phases_complete (non-negative, not exceeding phases_total)
+- Added --owner flag for updating owner field
+- Comprehensive error handling for missing files, invalid transitions, and malformed frontmatter
+- Unicode content preservation verified
+- Case-insensitive item code handling
+- PyYAML handles frontmatter updates while preserving body content
 
 ---
 
