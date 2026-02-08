@@ -51,7 +51,7 @@ remove_symlinks() {
 }
 
 echo "Removing symlinks..."
-for subdir in commands agents hooks skills rules; do
+for subdir in commands agents hooks skills rules scripts; do
     remove_symlinks "$TARGET_DIR/$subdir" "$subdir"
 done
 

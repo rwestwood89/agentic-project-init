@@ -222,7 +222,7 @@ if [ "$INCLUDE_CLAUDE" = true ]; then
 
     copy_claude_pack() {
         # Create directory structure
-        for subdir in commands agents hooks skills rules; do
+        for subdir in commands agents hooks skills rules scripts; do
             if [ "$DRY_RUN" = true ]; then
                 echo -e "${BLUE}[DRY RUN] Would create: .claude/$subdir/${NC}"
             else
@@ -231,7 +231,7 @@ if [ "$INCLUDE_CLAUDE" = true ]; then
         done
 
         # Copy files (skip existing)
-        for subdir in commands agents hooks skills rules; do
+        for subdir in commands agents hooks skills rules scripts; do
             src_dir="$CLAUDE_PACK/$subdir"
             [ -d "$src_dir" ] || continue
 
@@ -250,7 +250,7 @@ if [ "$INCLUDE_CLAUDE" = true ]; then
                     if [ "$DRY_RUN" = true ]; then
                         echo -e "${GREEN}[DRY RUN] Would copy: $subdir/$filename${NC}"
                     else
-                        cp "$file" "$target"
+                        cp -p "$file" "$target"
                         echo -e "${GREEN}  ✓ $subdir/$filename${NC}"
                     fi
                 fi
