@@ -146,29 +146,41 @@ Each task is sized for ONE iteration (~5 files max to touch).
 
 ## Phase 2: Core Lifecycle Scripts (Tasks 5-7)
 
-### Task 5: Implement register-item script
+### Task 5: Implement register-item script ✅ COMPLETED
 **Refs**: `specs/04-lifecycle-scripts.md`, `specs/01-work-item-identity.md`, `specs/10-backlog-item-handling.md`
 **Scope**: Create script to register new work items
-**Files to Create**:
+**Files Created**:
 - `src/scripts/__init__.py`
-- `src/scripts/register_item.py` (CLI tool)
-- `tests/test_register_item.py` (integration tests)
+- `src/scripts/register_item.py` (CLI tool with argparse)
+- `src/utils/slug.py` (slugification utility for folder names)
+- `tests/test_register_item.py` (12 integration tests, all passing)
+- `tests/test_slug.py` (9 unit tests for slug utility, all passing)
 
 **CLI Signature**:
 ```bash
 register-item --title "Item Title" [--epic EP-NNN] [--stage active|backlog]
 ```
 
-**Acceptance Criteria**:
-- Assign next work item code (WI-NNN format)
-- Update registry.json atomically
-- Create folder structure for active items (`.project/active/<slug>/`)
-- Generate spec.md skeleton with frontmatter for active items
-- Skip folder/file creation for backlog items (path: null)
-- JSON output with assigned code
-- Exit codes: 0 (success), 1 (input error), 2 (state error)
+**Acceptance Criteria**: ✅ All met
+- Assign next work item code (WI-NNN format) ✅
+- Update registry.json atomically ✅
+- Create folder structure for active items (`.project/active/<slug>/`) ✅
+- Generate spec.md skeleton with frontmatter for active items ✅
+- Skip folder/file creation for backlog items (path: null) ✅
+- JSON output with assigned code ✅
+- Exit codes: 0 (success), 1 (input error), 2 (state error) ✅
 
-**Backpressure**: Integration tests pass, manual test creates WI-001 successfully
+**Validation Results**:
+- All 21 tests pass (12 integration + 9 slug tests)
+- Type checking passes (`mypy src/`)
+- Linting passes (`ruff check src/ tests/`)
+
+**Notes**:
+- Implemented slugify() utility for converting titles to URL-safe folder names
+- Comprehensive error handling for invalid epic codes, missing epics, corrupted registry
+- Spec.md skeleton includes proper frontmatter with all required fields
+- Idempotent folder creation (handles existing directories gracefully)
+- Default stage is 'backlog' when --stage not specified
 
 ---
 
