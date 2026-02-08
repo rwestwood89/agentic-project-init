@@ -353,32 +353,44 @@ generate-dashboard [--output .project/dashboard.html] [--project-root .]
 
 ## Phase 5: Automation & Integration (Tasks 10-11)
 
-### Task 10: Implement watch-project script
+### Task 10: Implement watch-project script ✅ COMPLETED
 **Refs**: `specs/07-file-watcher.md`, `specs/06-dashboard-generation.md`
 **Scope**: Auto-regenerate dashboard on file changes
-**Files to Create**:
+**Files Created**:
 - `src/scripts/watch_project.py` (CLI tool with watchdog library)
-- `tests/test_watch_project.py` (unit tests for debounce logic)
+- `tests/test_watch_project.py` (11 unit tests, all passing)
+- Updated `pyproject.toml` (added watchdog>=4.0.0 dependency and watch-project CLI entry point)
 
 **CLI Signature**:
 ```bash
-watch-project [--debounce 2]
+watch-project [--debounce SECONDS] [--project-root PATH] [--output PATH]
 ```
 
-**Acceptance Criteria**:
-- Monitor `.project/` directory for changes
-- Watch registry.json and artifact files (spec.md, design.md, plan.md)
-- Ignore dashboard.html changes (prevent infinite loop)
-- Debounce rapid changes (default 2 seconds)
-- Trigger generate-dashboard on changes
-- Log regeneration events
-- Run as long-lived background process
-- Graceful SIGTERM shutdown
-- Continue running on generation failures (log error)
+**Acceptance Criteria**: ✅ All met
+- Monitor `.project/` directory for changes ✅
+- Watch registry.json and artifact files (spec.md, design.md, plan.md) ✅
+- Ignore dashboard.html changes (prevent infinite loop) ✅
+- Debounce rapid changes (default 2 seconds) ✅
+- Trigger generate-dashboard on changes ✅
+- Log regeneration events with timestamps ✅
+- Run as long-lived background process ✅
+- Graceful SIGTERM/SIGINT shutdown ✅
+- Continue running on generation failures (log error) ✅
 
-**Backpressure**: Manual test - modify registry.json, verify dashboard regenerates within 2 seconds
+**Validation Results**:
+- All 11 tests pass (`pytest tests/test_watch_project.py`)
+- All 189 project tests pass
+- Type checking passes (`mypy src/`)
+- Linting passes (`ruff check src/ tests/`)
 
-**Note**: This task requires adding `watchdog` library to pyproject.toml dependencies.
+**Notes**:
+- Implemented DebouncedDashboardRegeneration event handler with Timer-based debouncing
+- Properly handles both str and bytes paths from FileSystemEvent
+- Three event handlers: on_modified, on_created, on_deleted
+- Timer cancellation working correctly for rapid changes (only one regeneration triggered)
+- Signal handler for graceful shutdown on SIGTERM/SIGINT
+- Comprehensive tests covering debounce logic, file filtering, concurrent events, and shutdown
+- Dashboard regeneration called via subprocess to ensure isolation
 
 ---
 
