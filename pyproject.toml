@@ -12,6 +12,7 @@ register-item = "src.scripts.register_item:main"
 move-item = "src.scripts.move_item:main"
 update-artifact = "src.scripts.update_artifact:main"
 reconcile-registry = "src.scripts.reconcile_registry:main"
+generate-dashboard = "src.scripts.generate_dashboard:main"
 
 [project.optional-dependencies]
 dev = [
