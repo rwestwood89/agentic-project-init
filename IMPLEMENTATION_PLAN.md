@@ -64,24 +64,34 @@ Each task is sized for ONE iteration (~5 files max to touch).
 
 ---
 
-### Task 2: Implement registry data model
+### Task 2: Implement registry data model ✅ COMPLETED
 **Refs**: `specs/02-registry-data-model.md`, `specs/01-work-item-identity.md`
 **Scope**: Create registry reading/writing with validation
-**Files to Create**:
+**Files Created**:
 - `src/models/__init__.py`
 - `src/models/registry.py` (Registry class with load/save/validate methods)
 - `src/models/work_item.py` (WorkItem, Epic classes)
-- `tests/test_registry.py` (pytest unit tests)
+- `tests/test_registry.py` (31 unit tests, all passing)
 
-**Acceptance Criteria**:
-- Load registry.json correctly (handle missing file)
-- Validate schema (epics, items, next_epic_id, next_item_id)
-- Parse work item codes with regex `(EP|WI)-\d{3}`
-- Generate next code deterministically
-- Save using atomic write
-- Handle backlog items with `path: null`
+**Acceptance Criteria**: ✅ All met
+- Load registry.json correctly (handle missing file) ✅
+- Validate schema (epics, items, next_epic_id, next_item_id) ✅
+- Parse work item codes with regex `(EP|WI)-\d{3}` ✅
+- Generate next code deterministically ✅
+- Save using atomic write ✅
+- Handle backlog items with `path: null` ✅
 
-**Backpressure**: All registry model tests pass
+**Validation Results**:
+- All 31 tests pass (`pytest tests/test_registry.py`)
+- Type checking passes (`mypy src/`)
+- Linting passes (`ruff check src/ tests/`)
+
+**Notes**:
+- Epic and WorkItem dataclasses with validation in `__post_init__`
+- Registry class provides high-level API for load/save/add/get/remove operations
+- Code generation methods: `generate_next_epic_code()` and `generate_next_item_code()`
+- Proper type annotations with `dict[str, Any]` for Python 3.11+
+- Comprehensive tests covering validation, serialization, and edge cases
 
 ---
 
