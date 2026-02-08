@@ -19,9 +19,10 @@ This command closes the loop: work happens → wrap-up persists the knowledge �
 
 ### Step 1. Review What Changed
 
-1. Run `git diff --stat` and `git log --oneline -5` to see what was modified this session
-2. Read `.project/CURRENT_WORK.md` to understand the current state
-3. Briefly summarize to the user: "Here's what happened this session: [summary]"
+1. **Review the conversation** to identify what was worked on, decisions made, and problems solved this session. The conversation is the source of truth for what *this* session did.
+2. **Cross-check with git** — run `git diff --stat` and `git log --oneline -5` to validate. If the git log contains commits that don't match your conversation (e.g., from another concurrent session), ignore them — only summarize your own work.
+3. Read `.project/CURRENT_WORK.md` to understand the current state
+4. Briefly summarize to the user: "Here's what happened this session: [summary]"
 
 ### Step 2. Update CURRENT_WORK.md
 
