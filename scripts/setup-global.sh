@@ -71,7 +71,9 @@ create_symlink() {
 create_dir() {
     local dir="$1"
     if [ "$DRY_RUN" = true ]; then
-        [ ! -d "$dir" ] && echo -e "${BLUE}[DRY RUN] Would create: $dir${NC}"
+        if [ ! -d "$dir" ]; then
+            echo -e "${BLUE}[DRY RUN] Would create: $dir${NC}"
+        fi
     else
         mkdir -p "$dir"
     fi
