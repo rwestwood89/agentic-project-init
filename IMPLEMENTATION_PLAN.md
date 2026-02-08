@@ -95,22 +95,32 @@ Each task is sized for ONE iteration (~5 files max to touch).
 
 ---
 
-### Task 3: Implement YAML frontmatter parsing
+### Task 3: Implement YAML frontmatter parsing ✅ COMPLETED
 **Refs**: `specs/03-yaml-frontmatter-schema.md`
 **Scope**: Parse and update YAML frontmatter in markdown files
-**Files to Create**:
-- `src/models/frontmatter.py` (parse_frontmatter, update_frontmatter functions)
-- `tests/test_frontmatter.py` (pytest unit tests with sample artifacts)
+**Files Created**:
+- `src/models/frontmatter.py` (4 functions: parse, update, validate, extract)
+- `tests/test_frontmatter.py` (31 unit tests, all passing)
+- Updated `pyproject.toml` (added PyYAML dependency and type stubs)
 
-**Acceptance Criteria**:
-- Parse valid YAML frontmatter delimited by `---`
-- Extract fields: id, title, type, status, epic, owner, created, updated
-- Handle plan-specific fields: phases_total, phases_complete
-- Update frontmatter while preserving content
-- Handle missing/malformed frontmatter gracefully
-- Preserve formatting when updating
+**Acceptance Criteria**: ✅ All met
+- Parse valid YAML frontmatter delimited by `---` ✅
+- Extract fields: id, title, type, status, epic, owner, created, updated ✅
+- Handle plan-specific fields: phases_total, phases_complete ✅
+- Update frontmatter while preserving content ✅
+- Handle missing/malformed frontmatter gracefully ✅
+- Preserve formatting when updating ✅
 
-**Backpressure**: All frontmatter tests pass
+**Validation Results**:
+- All 31 tests pass (`pytest tests/test_frontmatter.py`)
+- Type checking passes (`mypy src/`)
+- Linting passes (`ruff check src/ tests/`)
+
+**Notes**:
+- Implemented 4 functions: parse_frontmatter, update_frontmatter, validate_frontmatter, extract_frontmatter_field
+- Comprehensive validation with detailed error messages
+- Unicode content support verified
+- Handles edge cases: missing frontmatter, malformed YAML, null values, multiline content
 
 ---
 

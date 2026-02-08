@@ -3,13 +3,16 @@ name = "dashboard-system"
 version = "0.1.0"
 description = "Dashboard system for project management"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "pyyaml>=6.0",
+]
 
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0.0",
     "mypy>=1.8.0",
     "ruff>=0.2.0",
+    "types-PyYAML>=6.0",
 ]
 
 [build-system]
