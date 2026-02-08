@@ -114,11 +114,45 @@ done
 # Symlink hooks
 echo ""
 echo "Setting up hooks..."
+
+# Migrate existing auto-approve.sh (old hardcoded version -> new symlinked version)
+existing_hook="$TARGET_DIR/hooks/auto-approve.sh"
+if [ -f "$existing_hook" ] && [ ! -L "$existing_hook" ]; then
+    if [ "$DRY_RUN" = true ]; then
+        echo -e "${YELLOW}[DRY RUN] Would back up existing auto-approve.sh -> auto-approve.sh.bak${NC}"
+    else
+        cp "$existing_hook" "${existing_hook}.bak"
+        rm "$existing_hook"
+        echo -e "${YELLOW}  ⚠ Backed up existing auto-approve.sh -> auto-approve.sh.bak${NC}"
+        echo -e "${YELLOW}    (Old hardcoded hook replaced with config-driven version)${NC}"
+    fi
+fi
+
 for file in "$CLAUDE_PACK"/hooks/*; do
     [ -f "$file" ] || continue
     filename=$(basename "$file")
+    # Skip default config template (copied, not symlinked)
+    [[ "$filename" == *.default.json ]] && continue
     create_symlink "$file" "$TARGET_DIR/hooks/$filename" "$filename"
 done
+
+# Copy default config if not exists (user-specific data, not symlinked)
+config_source="$CLAUDE_PACK/hooks/allowed-tools.default.json"
+config_target="$TARGET_DIR/hooks/allowed-tools.json"
+if [ -f "$config_source" ]; then
+    if [ "$DRY_RUN" = true ]; then
+        if [ -e "$config_target" ]; then
+            echo -e "${YELLOW}[DRY RUN] Would skip (exists): allowed-tools.json${NC}"
+        else
+            echo -e "${GREEN}[DRY RUN] Would copy default config: allowed-tools.json${NC}"
+        fi
+    elif [ ! -e "$config_target" ]; then
+        cp "$config_source" "$config_target"
+        echo -e "${GREEN}  ✓ allowed-tools.json (default config)${NC}"
+    else
+        echo -e "${YELLOW}  ⚠ allowed-tools.json already exists (preserved)${NC}"
+    fi
+fi
 
 # Symlink skills
 echo ""
@@ -159,8 +193,9 @@ echo "Configuring hooks..."
 configure_hooks() {
     local settings_file="$TARGET_DIR/settings.json"
     local hook_path="$TARGET_DIR/hooks/precompact-capture.sh"
+    local auto_approve_path="$TARGET_DIR/hooks/auto-approve.sh"
 
-    # New hook configuration
+    # Hook configuration — includes ALL hook types (shallow merge replaces entire hooks object)
     local hook_config='{
   "hooks": {
     "PreCompact": [
@@ -170,6 +205,18 @@ configure_hooks() {
           {
             "type": "command",
             "command": "'"$hook_path"'"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "'"$auto_approve_path"'",
+            "timeout": 60
           }
         ]
       }
@@ -234,7 +281,10 @@ write_hook_paths() {
     "query-transcript": "$hooks_dir/query-transcript.py",
     "parse-transcript": "$hooks_dir/parse-transcript.py",
     "capture": "$hooks_dir/capture.sh",
-    "precompact-capture": "$hooks_dir/precompact-capture.sh"
+    "precompact-capture": "$hooks_dir/precompact-capture.sh",
+    "auto-approve": "$hooks_dir/auto-approve.sh",
+    "review-prompt": "$hooks_dir/review-prompt.md",
+    "review-schema": "$hooks_dir/review-schema.json"
   }
 }
 EOF

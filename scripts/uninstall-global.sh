@@ -60,16 +60,29 @@ echo ""
 echo "Cleaning settings.json..."
 settings_file="$TARGET_DIR/settings.json"
 if [ -f "$settings_file" ] && command -v jq &> /dev/null; then
-    # Check if PreCompact hooks exist
-    if jq -e '.hooks.PreCompact' "$settings_file" > /dev/null 2>&1; then
+    # Check if any managed hooks exist
+    if jq -e '.hooks.PreCompact or .hooks.PreToolUse' "$settings_file" > /dev/null 2>&1; then
         # Create backup
         cp "$settings_file" "$settings_file.bak"
         # Remove hook entries that reference our hooks directory
-        jq 'if .hooks.PreCompact then .hooks.PreCompact = [.hooks.PreCompact[] | select(.hooks | all(.command | contains("/.claude/hooks/") | not))] else . end | if .hooks.PreCompact == [] then del(.hooks.PreCompact) else . end | if .hooks == {} then del(.hooks) else . end' "$settings_file" > "$settings_file.tmp"
+        jq '
+          # Clean PreCompact
+          if .hooks.PreCompact then
+            .hooks.PreCompact = [.hooks.PreCompact[] | select(.hooks | all(.command | contains("/.claude/hooks/") | not))]
+          else . end |
+          if .hooks.PreCompact == [] then del(.hooks.PreCompact) else . end |
+          # Clean PreToolUse
+          if .hooks.PreToolUse then
+            .hooks.PreToolUse = [.hooks.PreToolUse[] | select(.hooks | all(.command | contains("/.claude/hooks/") | not))]
+          else . end |
+          if .hooks.PreToolUse == [] then del(.hooks.PreToolUse) else . end |
+          # Clean empty hooks object
+          if .hooks == {} then del(.hooks) else . end
+        ' "$settings_file" > "$settings_file.tmp"
         mv "$settings_file.tmp" "$settings_file"
         echo -e "${GREEN}  ✓ Cleaned hook configuration${NC}"
     else
-        echo -e "${YELLOW}  ⚠ No PreCompact hooks found${NC}"
+        echo -e "${YELLOW}  ⚠ No managed hooks found${NC}"
     fi
 elif [ -f "$settings_file" ]; then
     echo -e "${YELLOW}  ⚠ jq not found - please manually remove hook configuration${NC}"
@@ -80,7 +93,7 @@ fi
 # Remove metadata files
 echo ""
 echo "Removing metadata..."
-for file in .agentic-pack-source .agentic-pack-version .hook-paths.json; do
+for file in .agentic-pack-source .agentic-pack-version .hook-paths.json hooks/allowed-tools.json; do
     if [ -f "$TARGET_DIR/$file" ]; then
         rm "$TARGET_DIR/$file"
         echo -e "${GREEN}  ✓ Removed: $file${NC}"

@@ -1,0 +1,14 @@
+{
+  "type": "object",
+  "properties": {
+    "decision": {
+      "type": "string",
+      "enum": ["APPROVE", "PUSH_BACK", "ELEVATE"]
+    },
+    "reason": {
+      "type": "string",
+      "description": "Concise explanation for the decision"
+    }
+  },
+  "required": ["decision", "reason"]
+}
