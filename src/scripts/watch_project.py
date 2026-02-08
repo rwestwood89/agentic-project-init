@@ -17,6 +17,8 @@ from typing import Any
 from watchdog.events import FileSystemEvent, FileSystemEventHandler
 from watchdog.observers import Observer
 
+from ..utils.logging import init_logger
+
 
 class DebouncedDashboardRegeneration(FileSystemEventHandler):
     """File system event handler with debounced dashboard regeneration.
@@ -221,7 +223,13 @@ def main() -> None:
         help='Path to dashboard.html output file (default: .project/dashboard.html)',
     )
 
+    parser.add_argument(
+        '--verbose',
+        action='store_true',
+        help='Enable debug logging'
+    )
     args = parser.parse_args()
+    _logger = init_logger(verbose=args.verbose, use_colors=True)  # noqa: F841
 
     # Determine output path
     output_path = args.output

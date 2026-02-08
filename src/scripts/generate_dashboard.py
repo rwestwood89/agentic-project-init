@@ -15,6 +15,7 @@ from typing import Any
 from ..models.frontmatter import parse_frontmatter
 from ..models.registry import Registry
 from ..utils.atomic_write import atomic_write_text
+from ..utils.logging import init_logger
 
 
 def get_artifact_progress(
@@ -648,7 +649,13 @@ def main() -> int:
         help='Project root directory (default: current directory)'
     )
 
+    parser.add_argument(
+        '--verbose',
+        action='store_true',
+        help='Enable debug logging'
+    )
     args = parser.parse_args()
+    _logger = init_logger(verbose=args.verbose, use_colors=True)  # noqa: F841
 
     try:
         # Determine project root

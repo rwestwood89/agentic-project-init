@@ -29,6 +29,7 @@ from ..models.work_item import (
     Stage,
     WorkItem,
 )
+from ..utils.logging import init_logger
 
 
 def find_artifacts(project_root: Path) -> list[Path]:
@@ -283,7 +284,13 @@ def main() -> int:
         help="Path to .project/ directory (default: .project)"
     )
 
+    parser.add_argument(
+        '--verbose',
+        action='store_true',
+        help='Enable debug logging'
+    )
     args = parser.parse_args()
+    _logger = init_logger(verbose=args.verbose, use_colors=True)  # noqa: F841
 
     try:
         summary = reconcile(

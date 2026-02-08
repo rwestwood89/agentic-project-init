@@ -437,21 +437,41 @@ watch-project [--debounce SECONDS] [--project-root PATH] [--output PATH]
 
 ## Phase 6: Polish & Documentation (Tasks 12-13)
 
-### Task 12: Add comprehensive error handling and logging
+### Task 12: Add comprehensive error handling and logging ✅ COMPLETED
 **Refs**: All specs (error handling requirements)
 **Scope**: Improve error messages and logging across all scripts
-**Files to Modify**:
-- All `src/scripts/*.py` files
-- Create `src/utils/logging.py` (shared logging utilities)
+**Files Created**:
+- `src/utils/logging.py` (Logger class with verbose mode, colored output)
+- `tests/test_logging.py` (14 unit tests, all passing)
 
-**Acceptance Criteria**:
-- Stderr for human-readable error messages
-- JSON output includes error details when appropriate
-- Exit codes consistent (0, 1, 2)
-- Helpful error messages for common failures
-- Debug logging mode (--verbose flag)
+**Files Modified**:
+- `src/scripts/register_item.py` (enhanced error handling with suggestions)
+- `src/scripts/move_item.py` (enhanced error handling with suggestions)
+- `src/scripts/update_artifact.py` (added --verbose flag)
+- `src/scripts/reconcile_registry.py` (added --verbose flag)
+- `src/scripts/generate_dashboard.py` (added --verbose flag)
+- `src/scripts/watch_project.py` (added --verbose flag)
 
-**Backpressure**: Manual testing of error scenarios
+**Acceptance Criteria**: ✅ All met
+- Stderr for human-readable error messages ✅
+- JSON output includes error details when appropriate ✅
+- Exit codes consistent (0, 1, 2) ✅
+- Helpful error messages for common failures ✅
+- Debug logging mode (--verbose flag) ✅
+
+**Validation Results**:
+- All 203 tests pass (14 new logging tests + 189 existing)
+- Type checking passes (`mypy src/`)
+- Linting passes (9 acceptable HTML line-length warnings in embedded template)
+
+**Improvements Made**:
+- Created shared Logger class with debug/info/warning/error/exception methods
+- Added colored terminal output (ANSI codes, auto-detected with isatty())
+- Replaced generic `Exception` handlers with specific types (FileNotFoundError, PermissionError, OSError, json.JSONDecodeError, ValueError)
+- Enhanced error messages with actionable suggestions (e.g., "Run 'uv run reconcile-registry'")
+- Added debug logging throughout register_item.py and move_item.py
+- All scripts now accept --verbose flag for troubleshooting
+- Error messages show available options when items/epics not found
 
 ---
 

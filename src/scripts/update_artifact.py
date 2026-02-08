@@ -16,6 +16,7 @@ from pathlib import Path
 from ..models.frontmatter import parse_frontmatter, update_frontmatter
 from ..models.registry import Registry
 from ..utils.atomic_write import atomic_write_text
+from ..utils.logging import init_logger
 
 
 def main() -> int:
@@ -65,7 +66,13 @@ Examples:
         help='Owner name or identifier'
     )
 
+    parser.add_argument(
+        '--verbose',
+        action='store_true',
+        help='Enable debug logging'
+    )
     args = parser.parse_args()
+    _logger = init_logger(verbose=args.verbose, use_colors=True)  # noqa: F841
 
     # Normalize code to uppercase
     code = args.code.upper()

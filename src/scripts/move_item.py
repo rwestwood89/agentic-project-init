@@ -16,6 +16,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from ..models.registry import Registry
+from ..utils.logging import init_logger
 from ..utils.slug import slugify
 
 
@@ -154,23 +155,50 @@ def main() -> int:
         choices=['backlog', 'active', 'completed'],
         help='Target stage'
     )
+    parser.add_argument(
+        '--verbose',
+        action='store_true',
+        help='Enable debug logging'
+    )
 
     args = parser.parse_args()
     code = args.code.upper()
     target_stage = args.to
 
+    # Initialize logger
+    logger = init_logger(verbose=args.verbose, use_colors=True)
+
     # Load registry
+    logger.debug("Loading registry", path=".project/registry.json")
     try:
         registry = Registry()
         registry.load()
+        logger.debug("Registry loaded successfully")
+    except FileNotFoundError:
+        logger.error(
+            "Registry file not found",
+            suggestion="Run 'uv run reconcile-registry' to create registry.json"
+        )
+        return 2
+    except (json.JSONDecodeError, ValueError) as e:
+        logger.exception("Failed to load registry (corrupted or invalid format)", e)
+        return 2
     except Exception as e:
-        print(f"Error: Failed to load registry: {e}", file=sys.stderr)
+        logger.exception("Unexpected error loading registry", e)
         return 2
 
     # Find item
+    logger.debug("Looking up item", code=code)
     item = registry.get_item(code)
     if not item:
-        print(f"Error: Work item {code} not found in registry", file=sys.stderr)
+        available_codes = [i.code for i in registry.items.values()][:5]
+        suggestion = (
+            f"Available items: {', '.join(available_codes)}" +
+            (" ..." if len(registry.items) > 5 else "")
+            if available_codes
+            else "No items in registry. Use 'uv run register-item' to create one."
+        )
+        logger.error(f"Work item {code} not found in registry", suggestion=suggestion)
         return 1
 
     current_stage = item.stage
@@ -178,10 +206,7 @@ def main() -> int:
 
     # Validate transition
     if current_stage == target_stage:
-        print(
-            f"Error: Item {code} is already in {target_stage} stage",
-            file=sys.stderr
-        )
+        logger.error(f"Item {code} is already in {target_stage} stage")
         return 2
 
     # Define valid transitions
@@ -192,9 +217,15 @@ def main() -> int:
     }
 
     if target_stage not in valid_transitions.get(current_stage, []):
-        print(
-            f"Error: Invalid transition from {current_stage} to {target_stage}",
-            file=sys.stderr
+        valid = valid_transitions.get(current_stage, [])
+        suggestion = (
+            f"Valid transitions from {current_stage}: {', '.join(valid)}"
+            if valid
+            else f"Cannot move from {current_stage} (terminal state)"
+        )
+        logger.error(
+            f"Invalid transition from {current_stage} to {target_stage}",
+            suggestion=suggestion
         )
         return 2
 
@@ -206,10 +237,12 @@ def main() -> int:
         if current_stage == 'backlog' and target_stage == 'active':
             slug = slugify(item.title)
             folder_path = project_root / 'active' / slug
+            logger.debug("Creating active folder", path=str(folder_path))
             folder_path.mkdir(parents=True, exist_ok=True)
 
             # Create spec.md skeleton
             spec_path = folder_path / 'spec.md'
+            logger.debug("Creating spec.md", path=str(spec_path))
             create_spec_skeleton(code, item.title, item.epic, spec_path)
 
             new_path = f"active/{slug}"
@@ -217,17 +250,20 @@ def main() -> int:
         # Handle active → completed transition
         elif current_stage == 'active' and target_stage == 'completed':
             if not old_path:
-                print(
-                    f"Error: Item {code} has no path in registry",
-                    file=sys.stderr
+                logger.error(
+                    f"Item {code} has no path in registry",
+                    suggestion=(
+                        "Registry may be corrupted. "
+                        "Run 'uv run reconcile-registry'."
+                    )
                 )
                 return 2
 
             old_folder = project_root / old_path
             if not old_folder.exists():
-                print(
-                    f"Error: Folder {old_folder} does not exist",
-                    file=sys.stderr
+                logger.error(
+                    f"Folder {old_folder} does not exist",
+                    suggestion="Registry out of sync. Run 'uv run reconcile-registry'."
                 )
                 return 2
 
@@ -238,10 +274,12 @@ def main() -> int:
             new_folder = project_root / 'completed' / new_folder_name
 
             # Move folder
+            logger.debug("Moving folder", old=str(old_folder), new=str(new_folder))
             new_folder.parent.mkdir(parents=True, exist_ok=True)
             shutil.move(str(old_folder), str(new_folder))
 
             # Update CHANGELOG.md
+            logger.debug("Updating CHANGELOG.md")
             update_changelog(new_folder, code, item.title)
 
             new_path = f"completed/{new_folder_name}"
@@ -252,6 +290,7 @@ def main() -> int:
                 old_folder = project_root / old_path
                 if old_folder.exists():
                     # Remove folder (confirmation already handled by caller)
+                    logger.debug("Removing folder", path=str(old_folder))
                     shutil.rmtree(old_folder)
 
             new_path = None  # Backlog items have no path
@@ -265,11 +304,14 @@ def main() -> int:
         if target_stage == 'completed' and item.epic:
             epic = registry.get_epic(item.epic)
             if epic and check_epic_completion(registry, item.epic):
+                logger.debug("Marking epic as completed", epic=item.epic)
                 epic.status = 'completed'
                 epic_updated = True
 
         # Save registry
+        logger.debug("Saving registry")
         registry.save()
+        logger.debug("Registry saved successfully")
 
         # Output result
         result = {
@@ -284,8 +326,17 @@ def main() -> int:
         print(json.dumps(result))
         return 0
 
+    except PermissionError as e:
+        logger.error(
+            f"Permission denied: {e}",
+            suggestion="Check file/directory permissions"
+        )
+        return 2
+    except OSError as e:
+        logger.exception("Failed to move item (filesystem error)", e)
+        return 2
     except Exception as e:
-        print(f"Error: Failed to move item: {e}", file=sys.stderr)
+        logger.exception("Unexpected error moving item", e)
         return 2
 
 

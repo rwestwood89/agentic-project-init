@@ -13,6 +13,7 @@ from pathlib import Path
 
 from ..models.registry import Registry
 from ..models.work_item import EPIC_CODE_PATTERN, WorkItem
+from ..utils.logging import init_logger
 from ..utils.slug import slugify
 
 
@@ -93,40 +94,67 @@ def main() -> int:
         default='backlog',
         help='Initial stage (default: backlog)'
     )
+    parser.add_argument(
+        '--verbose',
+        action='store_true',
+        help='Enable debug logging'
+    )
 
     args = parser.parse_args()
 
+    # Initialize logger
+    logger = init_logger(verbose=args.verbose, use_colors=True)
+
     # Validate epic code format if provided
     if args.epic and not EPIC_CODE_PATTERN.match(args.epic):
-        print(
-            f"Error: Invalid epic code format: {args.epic}. Expected EP-NNN",
-            file=sys.stderr
+        logger.error(
+            f"Invalid epic code format: {args.epic}",
+            suggestion="Epic codes must match pattern EP-NNN (e.g., EP-001)"
         )
         return 1
 
     # Load registry
+    logger.debug("Loading registry", path=".project/registry.json")
     registry = Registry()
     try:
         registry.load()
+        logger.debug("Registry loaded successfully",
+                    epics=len(registry.epics),
+                    items=len(registry.items))
+    except FileNotFoundError:
+        logger.error(
+            "Registry file not found",
+            suggestion="Run 'uv run reconcile-registry' to create registry.json"
+        )
+        return 2
+    except (json.JSONDecodeError, ValueError) as e:
+        logger.exception("Failed to load registry (corrupted or invalid format)", e)
+        logger.info("Consider running 'uv run reconcile-registry' to rebuild")
+        return 2
     except Exception as e:
-        print(f"Error: Failed to load registry: {e}", file=sys.stderr)
+        logger.exception("Unexpected error loading registry", e)
         return 2
 
     # Validate epic exists if specified
     if args.epic and not registry.get_epic(args.epic):
-        print(
-            f"Error: Epic {args.epic} not found in registry",
-            file=sys.stderr
+        available_epics = list(registry.epics.keys())
+        suggestion = (
+            f"Available epics: {', '.join(available_epics)}"
+            if available_epics
+            else "No epics exist yet. Create an epic first or omit --epic flag."
         )
+        logger.error(f"Epic {args.epic} not found in registry", suggestion=suggestion)
         return 1
 
     # Generate code and path
     code = registry.generate_next_item_code()
-    path: str | None = None
+    logger.debug("Generated code", code=code)
 
+    path: str | None = None
     if args.stage == 'active':
         slug = slugify(args.title)
         path = f"active/{slug}"
+        logger.debug("Generated path", path=path)
 
     # Create work item
     try:
@@ -137,8 +165,9 @@ def main() -> int:
             stage=args.stage,
             path=path,
         )
+        logger.debug("Created work item", code=code, stage=args.stage)
     except ValueError as e:
-        print(f"Error: Invalid work item data: {e}", file=sys.stderr)
+        logger.error(f"Invalid work item data: {e}")
         return 1
 
     # Add to registry
@@ -152,23 +181,42 @@ def main() -> int:
 
         try:
             # Create directory
+            logger.debug("Creating directory", path=str(item_dir))
             item_dir.mkdir(parents=True, exist_ok=True)
 
             # Create spec.md skeleton
+            logger.debug("Creating spec.md skeleton", path=str(spec_path))
             create_spec_skeleton(code, args.title, args.epic, spec_path)
 
-        except Exception as e:
-            print(
-                f"Error: Failed to create folder/spec: {e}",
-                file=sys.stderr
+        except PermissionError:
+            logger.error(
+                f"Permission denied creating {item_dir}",
+                suggestion="Check directory permissions"
             )
+            return 2
+        except OSError as e:
+            logger.exception(f"Failed to create folder/spec at {item_dir}", e)
+            return 2
+        except Exception as e:
+            logger.exception("Unexpected error creating folder/spec", e)
             return 2
 
     # Save registry
     try:
+        logger.debug("Saving registry")
         registry.save()
+        logger.debug("Registry saved successfully")
+    except PermissionError:
+        logger.error(
+            "Permission denied writing to registry.json",
+            suggestion="Check file permissions for .project/registry.json"
+        )
+        return 2
+    except OSError as e:
+        logger.exception("Failed to save registry", e)
+        return 2
     except Exception as e:
-        print(f"Error: Failed to save registry: {e}", file=sys.stderr)
+        logger.exception("Unexpected error saving registry", e)
         return 2
 
     # Output JSON result
