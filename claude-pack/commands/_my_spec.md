@@ -101,33 +101,53 @@ Use standard definitions throughout:
 
 ### Stage 2: Document Creation
 
-1. **Get Metadata**
+1. **Register Work Item**
+
+   Use the `register-item` script to create the work item in the registry:
    ```bash
-   .project/scripts/get-metadata.sh
+   uv run register-item --title "Feature Name" --stage active [--epic EP-NNN]
    ```
 
-2. **Create Feature Directory**
-   ```bash
-   mkdir -p .project/active/{feature-name}
-   ```
+   The script will:
+   - Assign a unique work item code (WI-NNN)
+   - Update registry.json atomically
+   - Create the folder structure (`.project/active/{slug}/`)
+   - Generate spec.md skeleton with frontmatter
 
-3. **Assess Complexity**
+   **Parse the JSON output** to get the assigned code for use in subsequent steps.
+
+   **Error Handling**:
+   - If script fails (exit code 1 or 2), log the error to stderr and ask user how to proceed
+   - If script is unavailable, warn user and fall back to manual folder creation
+
+2. **Assess Complexity**
 
    Based on scope and surfaces involved:
    - **LOW**: Clear scope, limited surfaces, straightforward implementation
    - **MEDIUM**: Multiple integrations, needs careful design planning
    - **HIGH**: Significant scope, many surfaces, needs research and staged implementation
 
-4. **Write Spec**
+3. **Write Spec**
 
-   Write to `.project/active/{feature-name}/spec.md` using this template:
+   The spec.md file was already created by `register-item` with YAML frontmatter. The frontmatter includes:
+   - `id`: WI-NNN (work item code)
+   - `title`: Feature name
+   - `type`: work_item
+   - `status`: draft
+   - `epic`: EP-NNN (if linked to an epic)
+   - `owner`: Git username
+   - `created`: ISO 8601 timestamp
+   - `updated`: ISO 8601 timestamp
+
+   Now fill in the body content below the frontmatter using this structure:
 
    ```markdown
+   ---
+   [YAML frontmatter already exists - do not modify]
+   ---
+
    # Spec: [Feature Name]
 
-   **Status:** Draft
-   **Owner:** [Git Username]
-   **Created:** [Date/Time]
    **Complexity:** [LOW | MEDIUM | HIGH]
    **Branch:** [Branch name if applicable]
 
@@ -214,15 +234,16 @@ Use standard definitions throughout:
    **Next Steps:** After approval, proceed to `/_my_design`
    ```
 
-5. **Internal Review**
+4. **Internal Review**
 
    Before presenting, verify:
    - Are ALL user-provided details captured?
    - Are requirements clearly marked as user-provided vs inferred?
    - Did I avoid adding implementation requirements the user didn't ask for?
    - Are business goals and success criteria clear?
+   - Is the frontmatter intact with the correct work item code?
 
-6. **Present to User**
+5. **Present to User**
 
    Let the user know the spec is ready for review. Take feedback and iterate.
 

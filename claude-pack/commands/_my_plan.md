@@ -95,14 +95,41 @@ For each approved phase, write:
 2. **Changes required** (reference design.md, add file:line specifics)
 3. **Validation steps** (how to verify this phase works)
 
-Write to `.project/active/{feature-name}/plan.md`:
+Write to `.project/active/{feature-name}/plan.md`.
+
+**Note**: Include `phases_total` in the frontmatter so that `update-artifact` can track progress during implementation.
+
+Example frontmatter:
+```yaml
+---
+id: WI-NNN
+title: Feature Name
+type: work_item
+status: in-progress
+phases_total: 3
+phases_complete: 0
+owner: [Git Username]
+created: [ISO 8601 timestamp]
+updated: [ISO 8601 timestamp]
+---
+```
+
+Plan document structure:
 
 ```markdown
-# Implementation Plan: [Feature Name]
+---
+id: WI-NNN
+title: Feature Name
+type: work_item
+status: in-progress
+phases_total: 3
+phases_complete: 0
+owner: [Git Username]
+created: [ISO 8601 timestamp]
+updated: [ISO 8601 timestamp]
+---
 
-**Status:** Draft
-**Created:** [Date]
-**Last Updated:** [Date]
+# Implementation Plan: [Feature Name]
 
 ## Source Documents
 - **Spec:** `.project/active/{feature-name}/spec.md`
@@ -253,6 +280,20 @@ test "[next behavior]":
 
 **Status**: Draft → In Progress → Complete
 ```
+
+### Step 4: Mark Plan Complete
+
+After writing the plan and user approves:
+
+```bash
+uv run update-artifact <code> --artifact plan --status complete
+```
+
+This updates the plan frontmatter to mark it ready for implementation.
+
+**Error Handling**:
+- If script fails, log the error and ask user how to proceed
+- If script is unavailable, warn user and manually update frontmatter
 
 ## Guidelines
 

@@ -98,7 +98,20 @@ When invoked:
    - Run linting/quality checks per project conventions
    - Verify integration with existing code
 
-2. **MANDATORY: Update Plan Document**:
+2. **Update Phase Progress**:
+
+   Use `update-artifact` to increment the phases_complete counter:
+   ```bash
+   uv run update-artifact <code> --artifact plan --phases-complete N
+   ```
+
+   Where N is the number of completed phases so far.
+
+   **Error Handling**:
+   - If script fails (exit code 1 or 2), log the error and ask user how to proceed
+   - If script is unavailable, warn user and manually update the frontmatter
+
+3. **MANDATORY: Update Plan Document**:
    Add to plan under "Implementation Notes":
    ```markdown
    ### Phase [N] Completion
@@ -115,12 +128,28 @@ When invoked:
    - [What changed and why]
    ```
 
-3. **MANDATORY: Synchronize Status**:
-   - Mark spec status: "Implementation In Progress" or "Complete"
-   - Update epic if relevant
+4. **Move to Completed** (after final phase):
+
+   When all phases are complete, use `move-item` to archive the work item:
+   ```bash
+   uv run move-item <code> --to completed
+   ```
+
+   The script will:
+   - Rename folder from `active/` to `completed/` with date prefix
+   - Update registry.json with new stage and path
+   - Update/create CHANGELOG.md in the completed folder
+   - Check if parent epic is complete (all items done)
+
+   **Error Handling**:
+   - If script fails, log the error and ask user how to proceed
+   - If script is unavailable, warn user and manually move the folder and update tracking
+
+5. **MANDATORY: Synchronize Status**:
+   - Update epic if relevant (check if all items complete)
    - Update CURRENT_WORK.md if it exists
 
-4. **Checkpoint with User** if failures or deviations
+6. **Checkpoint with User** if failures or deviations
 
 ## Guidelines
 

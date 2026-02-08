@@ -14,5 +14,15 @@
   },
   "env": {
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  },
+  "permissions": {
+    "allow": [
+      "Bash(command:uv run register-item*)",
+      "Bash(command:uv run move-item*)",
+      "Bash(command:uv run update-artifact*)",
+      "Bash(command:uv run reconcile-registry*)",
+      "Bash(command:uv run generate-dashboard*)",
+      "Bash(command:uv run watch-project*)"
+    ]
   }
 }

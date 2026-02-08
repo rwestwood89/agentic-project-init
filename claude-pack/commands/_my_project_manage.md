@@ -32,19 +32,23 @@ Generate a comprehensive project status report with assessment and recommendatio
 
 Read project management files in this order:
 
-1. **Current State**:
+1. **Registry Data** (primary source of truth):
+   - `.project/registry.json` - Structured data on all work items and epics
+   - Use this as the canonical source for work item status, stages, and metadata
+
+2. **Current State**:
    - `.project/CURRENT_WORK.md` - What's active now
    - `.project/backlog/BACKLOG.md` - Epic priorities
 
-2. **Active Work** (if any):
+3. **Active Work** (if any):
    - `.project/active/*/plan.md` - Current implementation plans
    - `.project/active/*/spec.md` - What's being built
 
-3. **History**:
+4. **History**:
    - `.project/completed/CHANGELOG.md` - What's been done
    - Recent reports in `.project/reports/`
 
-4. **Backlog Details**:
+5. **Backlog Details**:
    - `.project/backlog/epic_*.md` - Upcoming epic definitions
 
 #### Stage 2: Analyze
@@ -381,19 +385,31 @@ When called with an argument (`/_my_project_manage close <item-name>`):
    Ready to archive this item to `.project/completed/`?
    ```
 
-2. **Archive item** (after confirmation):
+2. **Move item to completed** (after confirmation):
+
+   Use the `move-item` script to archive:
    ```bash
-   mv .project/active/<item-name> .project/completed/$(date +%Y%m%d)_<item-name>
+   uv run move-item <code> --to completed
    ```
 
-3. **Update tracking documents**:
+   The script will:
+   - Rename folder from `active/` to `completed/` with date prefix
+   - Update registry.json with new stage and path
+   - Update/create CHANGELOG.md in the completed folder
+   - Check if parent epic is complete (all items done)
+
+   **Error Handling**:
+   - If script fails (exit code 1 or 2), log the error and ask user how to proceed
+   - If script is unavailable, warn user and manually move folder/update tracking
+
+3. **Update tracking documents** (if not using script or after script runs):
    - `.project/CURRENT_WORK.md`:
      - Remove from active work
      - Add to "Recently Completed"
-   - Parent epic in backlog - Mark item as "✅ COMPLETE"
-   - `.project/completed/CHANGELOG.md` - Add entry
+   - Parent epic in backlog - Mark item as "✅ COMPLETE" (if not already done by script)
 
 4. **Check if epic is complete**:
+   - Review the script output or registry to see if epic completion was detected
    - If all items in epic are done, prompt to close epic
 
 5. **Report to user**:

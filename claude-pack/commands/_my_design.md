@@ -226,6 +226,21 @@ CYCLE:
    - Note what existing code is being reused
    - **WAIT for approval** before suggesting next steps
 
+4. **Mark design complete** (after user approval):
+
+   Use the `update-artifact` script to mark the design complete:
+   ```bash
+   uv run update-artifact <code> --artifact design --status complete
+   ```
+
+   The script will:
+   - Update the design.md frontmatter status field to "complete"
+   - Update the `updated` timestamp automatically
+
+   **Error Handling**:
+   - If script fails (exit code 1 or 2), log the error and ask user how to proceed
+   - If script is unavailable, warn user and manually update the frontmatter
+
 **Expected final document structure**:
 ```
 # Design: [Feature Name]
