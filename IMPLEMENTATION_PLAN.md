@@ -1,0 +1,444 @@
+# Implementation Plan: Dashboard System
+
+**Last Updated**: 2026-02-08
+**Status**: Planning Phase Complete
+**Current Branch**: `ralph/dashboard`
+
+---
+
+## Overview
+
+This plan implements a complete dashboard system for project management with:
+- Registry-based work item tracking (epics and work items)
+- Lifecycle automation scripts (Python, stdlib only)
+- HTML Kanban dashboard with auto-regeneration
+- Integration with existing agentic commands
+
+**Specifications**: All 10 specs complete in `specs/` directory
+**Gap Analysis**: No implementation exists yet (`src/` is empty)
+
+---
+
+## Task Prioritization Strategy
+
+Tasks are ordered by:
+1. **Foundation First**: Core data model and atomic write infrastructure
+2. **Build Scripts**: Lifecycle automation before visualization
+3. **Visualization**: Dashboard generation after core scripts work
+4. **Integration**: Command integration after all scripts are tested
+5. **Polish**: File watcher and advanced features last
+
+Each task is sized for ONE iteration (~5 files max to touch).
+
+---
+
+## Phase 1: Foundation (Tasks 1-4)
+
+### Task 1: Implement atomic write utilities ✅ COMPLETED
+**Refs**: `specs/09-atomic-writes.md`
+**Scope**: Create `src/utils/atomic_write.py` with atomic write pattern
+**Files Created**:
+- `src/utils/__init__.py`
+- `src/utils/atomic_write.py` (atomic_write_json, atomic_write_text functions)
+- `tests/test_atomic_write.py` (17 unit tests, all passing)
+- `pyproject.toml` (project configuration with pytest, mypy, ruff)
+- `.python-version` (Python 3.11)
+
+**Acceptance Criteria**: ✅ All met
+- Temp file created in same directory as target ✅
+- Rename is atomic (all-or-nothing) ✅
+- Failed writes leave target unchanged ✅
+- Orphaned temp files cleaned up ✅
+- Permissions preserved after rename (0o644) ✅
+
+**Validation Results**:
+- All 17 tests pass (`pytest tests/test_atomic_write.py`)
+- Type checking passes (`mypy src/`)
+- Linting passes (`ruff check src/ tests/`)
+
+**Notes**:
+- Both JSON and text atomic writes implemented
+- Unicode support validated
+- Parent directory creation handled
+- Error cleanup verified with failure tests
+
+---
+
+### Task 2: Implement registry data model
+**Refs**: `specs/02-registry-data-model.md`, `specs/01-work-item-identity.md`
+**Scope**: Create registry reading/writing with validation
+**Files to Create**:
+- `src/models/__init__.py`
+- `src/models/registry.py` (Registry class with load/save/validate methods)
+- `src/models/work_item.py` (WorkItem, Epic classes)
+- `tests/test_registry.py` (pytest unit tests)
+
+**Acceptance Criteria**:
+- Load registry.json correctly (handle missing file)
+- Validate schema (epics, items, next_epic_id, next_item_id)
+- Parse work item codes with regex `(EP|WI)-\d{3}`
+- Generate next code deterministically
+- Save using atomic write
+- Handle backlog items with `path: null`
+
+**Backpressure**: All registry model tests pass
+
+---
+
+### Task 3: Implement YAML frontmatter parsing
+**Refs**: `specs/03-yaml-frontmatter-schema.md`
+**Scope**: Parse and update YAML frontmatter in markdown files
+**Files to Create**:
+- `src/models/frontmatter.py` (parse_frontmatter, update_frontmatter functions)
+- `tests/test_frontmatter.py` (pytest unit tests with sample artifacts)
+
+**Acceptance Criteria**:
+- Parse valid YAML frontmatter delimited by `---`
+- Extract fields: id, title, type, status, epic, owner, created, updated
+- Handle plan-specific fields: phases_total, phases_complete
+- Update frontmatter while preserving content
+- Handle missing/malformed frontmatter gracefully
+- Preserve formatting when updating
+
+**Backpressure**: All frontmatter tests pass
+
+---
+
+### Task 4: Set up project structure with pyproject.toml
+**Refs**: Project context (UV package manager, pytest, ruff, mypy)
+**Scope**: Create Python project configuration
+**Files to Create**:
+- `pyproject.toml` (UV-based config with dev dependencies)
+- `src/__init__.py`
+- `.python-version` (specify Python version)
+- `README_src.md` (developer documentation)
+
+**Acceptance Criteria**:
+- UV can install dependencies (`uv sync`)
+- pytest configured and runnable (`uv run pytest`)
+- ruff configured for linting (`uv run ruff check`)
+- mypy configured for type checking (`uv run mypy`)
+- Scripts installed as CLI tools via pyproject.toml entry points
+
+**Backpressure**: `uv sync` completes successfully, tests are runnable
+
+---
+
+## Phase 2: Core Lifecycle Scripts (Tasks 5-7)
+
+### Task 5: Implement register-item script
+**Refs**: `specs/04-lifecycle-scripts.md`, `specs/01-work-item-identity.md`, `specs/10-backlog-item-handling.md`
+**Scope**: Create script to register new work items
+**Files to Create**:
+- `src/scripts/__init__.py`
+- `src/scripts/register_item.py` (CLI tool)
+- `tests/test_register_item.py` (integration tests)
+
+**CLI Signature**:
+```bash
+register-item --title "Item Title" [--epic EP-NNN] [--stage active|backlog]
+```
+
+**Acceptance Criteria**:
+- Assign next work item code (WI-NNN format)
+- Update registry.json atomically
+- Create folder structure for active items (`.project/active/<slug>/`)
+- Generate spec.md skeleton with frontmatter for active items
+- Skip folder/file creation for backlog items (path: null)
+- JSON output with assigned code
+- Exit codes: 0 (success), 1 (input error), 2 (state error)
+
+**Backpressure**: Integration tests pass, manual test creates WI-001 successfully
+
+---
+
+### Task 6: Implement move-item script
+**Refs**: `specs/04-lifecycle-scripts.md`, `specs/10-backlog-item-handling.md`
+**Scope**: Move work items between stages
+**Files to Create**:
+- `src/scripts/move_item.py` (CLI tool)
+- `tests/test_move_item.py` (integration tests)
+
+**CLI Signature**:
+```bash
+move-item <code> --to <backlog|active|completed>
+```
+
+**Acceptance Criteria**:
+- Validate item exists in registry
+- Rename folder (e.g., `active/` → `completed/`)
+- Update registry.json with new stage and path
+- Update CHANGELOG.md in completed/ folder with completion date
+- Create folder/spec.md when moving backlog → active
+- Check epic completion (mark epic complete if all items complete)
+- JSON output with old/new paths
+- Exit codes: 0 (success), 1 (input error), 2 (state error)
+
+**Backpressure**: Integration tests pass, manual test moves WI-001 to completed
+
+---
+
+### Task 7: Implement update-artifact script
+**Refs**: `specs/04-lifecycle-scripts.md`, `specs/03-yaml-frontmatter-schema.md`
+**Scope**: Update artifact frontmatter (status, phases, etc.)
+**Files to Create**:
+- `src/scripts/update_artifact.py` (CLI tool)
+- `tests/test_update_artifact.py` (integration tests)
+
+**CLI Signature**:
+```bash
+update-artifact <code> --artifact <spec|design|plan> [--status draft|in-progress|complete] [--phases-complete N]
+```
+
+**Acceptance Criteria**:
+- Locate artifact file in registry path
+- Parse existing frontmatter
+- Update specified fields (status, phases_complete)
+- Update `updated` timestamp to ISO 8601
+- Write updated artifact atomically
+- Preserve content and formatting
+- Fail gracefully on backlog items (no path)
+- JSON output with updated fields
+- Exit codes: 0 (success), 1 (input error), 2 (state error)
+
+**Backpressure**: Integration tests pass, manual test updates WI-001 spec status
+
+---
+
+## Phase 3: Registry Maintenance (Task 8)
+
+### Task 8: Implement reconcile-registry script
+**Refs**: `specs/05-reconciliation.md`, `specs/02-registry-data-model.md`
+**Scope**: Rebuild registry from filesystem artifacts
+**Files to Create**:
+- `src/scripts/reconcile_registry.py` (CLI tool)
+- `tests/test_reconcile_registry.py` (integration tests)
+
+**CLI Signature**:
+```bash
+reconcile-registry [--dry-run]
+```
+
+**Acceptance Criteria**:
+- Scan `.project/` for spec.md, design.md, plan.md files
+- Parse frontmatter from each artifact
+- Preserve existing codes from frontmatter
+- Assign new codes to artifacts missing IDs
+- Detect duplicate codes (first keeps code, second gets new code)
+- Remove registry entries for missing files
+- Update `next_epic_id` and `next_item_id` correctly
+- Idempotent operation (safe to re-run)
+- JSON output with summary (preserved, assigned, conflicts, removed)
+- Dry-run mode shows changes without writing
+
+**Backpressure**: Integration tests pass, reconcile on corrupt registry succeeds
+
+---
+
+## Phase 4: Dashboard Visualization (Task 9)
+
+### Task 9: Implement generate-dashboard script
+**Refs**: `specs/06-dashboard-generation.md`, `specs/02-registry-data-model.md`
+**Scope**: Generate HTML Kanban dashboard
+**Files to Create**:
+- `src/scripts/generate_dashboard.py` (CLI tool)
+- `src/templates/dashboard.html.template` (Jinja2 template or embedded HTML)
+- `tests/test_generate_dashboard.py` (integration tests)
+
+**CLI Signature**:
+```bash
+generate-dashboard [--output .project/dashboard.html]
+```
+
+**Acceptance Criteria**:
+- Read registry.json for all items and epics
+- Generate 3-column layout: Backlog | Active | Completed
+- Group items under epic headers (code, title, progress summary)
+- Show ungrouped items in separate section
+- Item cards show: code, title, progress indicator, completion date
+- Progress badges for spec/design/plan (definition phase)
+- Progress bar for implementation (phases_complete / phases_total)
+- Self-contained HTML (embedded CSS/JS, no CDN)
+- Click-to-copy item codes (JavaScript)
+- Hover tooltips with owner/dates/status
+- Performance: <1 second for 100 items
+- Write dashboard.html atomically
+
+**Backpressure**: Manual test generates dashboard.html, opens in browser, verifies layout
+
+---
+
+## Phase 5: Automation & Integration (Tasks 10-11)
+
+### Task 10: Implement watch-project script
+**Refs**: `specs/07-file-watcher.md`, `specs/06-dashboard-generation.md`
+**Scope**: Auto-regenerate dashboard on file changes
+**Files to Create**:
+- `src/scripts/watch_project.py` (CLI tool with watchdog library)
+- `tests/test_watch_project.py` (unit tests for debounce logic)
+
+**CLI Signature**:
+```bash
+watch-project [--debounce 2]
+```
+
+**Acceptance Criteria**:
+- Monitor `.project/` directory for changes
+- Watch registry.json and artifact files (spec.md, design.md, plan.md)
+- Ignore dashboard.html changes (prevent infinite loop)
+- Debounce rapid changes (default 2 seconds)
+- Trigger generate-dashboard on changes
+- Log regeneration events
+- Run as long-lived background process
+- Graceful SIGTERM shutdown
+- Continue running on generation failures (log error)
+
+**Backpressure**: Manual test - modify registry.json, verify dashboard regenerates within 2 seconds
+
+**Note**: This task requires adding `watchdog` library to pyproject.toml dependencies.
+
+---
+
+### Task 11: Integrate scripts into agentic commands
+**Refs**: `specs/08-command-integration.md`
+**Scope**: Update 5 commands to call lifecycle scripts
+**Files to Modify**:
+- `claude-pack/commands/_my_spec.md`
+- `claude-pack/commands/_my_design.md`
+- `claude-pack/commands/_my_plan.md`
+- `claude-pack/commands/_my_implement.md`
+- `claude-pack/commands/_my_project_manage.md`
+- `.claude/settings.local.json` (add script permissions)
+
+**Integration Points**:
+- `_my_spec`: Call `register-item` instead of manual folder creation
+- `_my_design`: Call `update-artifact --status complete` after design approval
+- `_my_plan`: Call `update-artifact --status complete` after plan creation
+- `_my_implement`: Call `update-artifact --phases-complete N` after each phase
+- `_my_implement`: Call `move-item --to completed` after final phase
+- `_my_project_manage status`: Read registry.json directly for status reports
+- `_my_project_manage close`: Call `move-item --to completed`
+
+**Acceptance Criteria**:
+- Commands instruct agents to use scripts, not manual operations
+- Script failures logged with user pause for decision
+- Graceful fallback when scripts unavailable (warn user)
+- JSON output parsed correctly
+- Settings file includes script permissions
+
+**Backpressure**: Manual test each command integration point
+
+---
+
+## Phase 6: Polish & Documentation (Tasks 12-13)
+
+### Task 12: Add comprehensive error handling and logging
+**Refs**: All specs (error handling requirements)
+**Scope**: Improve error messages and logging across all scripts
+**Files to Modify**:
+- All `src/scripts/*.py` files
+- Create `src/utils/logging.py` (shared logging utilities)
+
+**Acceptance Criteria**:
+- Stderr for human-readable error messages
+- JSON output includes error details when appropriate
+- Exit codes consistent (0, 1, 2)
+- Helpful error messages for common failures
+- Debug logging mode (--verbose flag)
+
+**Backpressure**: Manual testing of error scenarios
+
+---
+
+### Task 13: Documentation and examples
+**Refs**: All specs
+**Scope**: Create developer and user documentation
+**Files to Create**:
+- `docs/LIFECYCLE_SCRIPTS.md` (usage guide for all scripts)
+- `docs/REGISTRY_SCHEMA.md` (registry.json schema documentation)
+- `docs/FRONTMATTER_SCHEMA.md` (YAML frontmatter reference)
+- `docs/DASHBOARD.md` (dashboard features and usage)
+- Update `README.md` with dashboard system overview
+
+**Acceptance Criteria**:
+- Complete CLI reference for all scripts
+- Example commands for common workflows
+- Schema documentation with examples
+- Dashboard feature documentation with screenshots
+
+**Backpressure**: Documentation reviewed for completeness
+
+---
+
+## Dependencies Graph
+
+```
+Task 1 (atomic_write)
+    ↓
+Task 2 (registry model) ──┐
+    ↓                     │
+Task 3 (frontmatter) ─────┤
+    ↓                     │
+Task 4 (project setup) ───┤
+    ↓                     │
+Task 5 (register-item) ───┤
+    ↓                     │
+Task 6 (move-item) ───────┤
+    ↓                     │
+Task 7 (update-artifact) ─┤
+    ↓                     │
+Task 8 (reconcile) ───────┤
+    ↓                     │
+Task 9 (dashboard) ───────┘
+    ↓
+Task 10 (file-watcher)
+    ↓
+Task 11 (command integration)
+    ↓
+Task 12 (error handling) ──┐
+    ↓                      │
+Task 13 (documentation) ───┘
+```
+
+---
+
+## Out of Scope (V1)
+
+These features are explicitly deferred:
+- Concurrent access handling (registry locking)
+- Multi-user collaboration features
+- Web server for dashboard (static HTML only)
+- Real-time dashboard updates (file watcher runs locally)
+- GitHub integration (issue sync, PR tracking)
+- Advanced analytics and reporting
+- Custom dashboard themes
+- Mobile-responsive dashboard (desktop-first)
+
+---
+
+## Success Metrics
+
+**Milestone 1 (Phase 1-2)**: Core scripts operational
+- All lifecycle scripts (register, move, update) working
+- Manual testing creates, moves, and updates items successfully
+
+**Milestone 2 (Phase 3-4)**: Visualization complete
+- Dashboard generates correctly with all features
+- Reconciliation recovers from registry corruption
+
+**Milestone 3 (Phase 5-6)**: Full integration
+- Agentic commands use scripts automatically
+- File watcher keeps dashboard current
+- Documentation complete
+
+---
+
+## Next Steps
+
+1. **Implementation Agent**: Start with Task 1 (atomic write utilities)
+2. **Testing Strategy**: Write tests first, then implementation (TDD)
+3. **Incremental Validation**: Manual test each script after implementation
+4. **Backpressure Verification**: Run acceptance criteria for each task
+5. **Integration Testing**: Test end-to-end workflow after Phase 2
+
+**Ready to begin implementation with Task 1.**
