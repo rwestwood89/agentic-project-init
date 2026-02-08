@@ -2,6 +2,18 @@
 
 A reusable template repository for Claude Code configurations and project management workflows. Clone once, use everywhere - commands are available globally via symlinks to `~/.claude/`.
 
+## Dashboard System
+
+**NEW**: This repository now includes a complete dashboard system for visual project tracking:
+
+- **Registry-based tracking** - All work items and epics in `.project/registry.json`
+- **Lifecycle scripts** - CLI tools for creating, moving, and updating items
+- **HTML Kanban dashboard** - Three-column visualization (Backlog | Active | Completed)
+- **Auto-regeneration** - File watcher keeps dashboard current
+- **Agentic integration** - Commands automatically update registry and dashboard
+
+See [Dashboard Documentation](docs/DASHBOARD.md) for features and usage.
+
 ## What's Included
 
 ### `claude-pack/` - Claude Code Configuration
@@ -20,12 +32,27 @@ Everything that gets symlinked to `~/.claude/`:
 Copied to `.project/` in target projects:
 
 - **CURRENT_WORK.md** - Track active work
+- **registry.json** - Source of truth for work items and epics (auto-generated)
+- **dashboard.html** - Visual Kanban board (auto-generated)
 - **backlog/** - Planned features and tasks
 - **active/** - In-progress specs, designs, and plans
 - **completed/** - Finished work
 - **memories/** - Conversation summaries and learnings
 - **research/** - Research notes and findings
 - **reports/** - Generated reports
+
+### `src/` - Dashboard Scripts (Python)
+
+Lifecycle automation for project management:
+
+- **register-item** - Create new work items
+- **move-item** - Move items between stages
+- **update-artifact** - Update artifact frontmatter
+- **reconcile-registry** - Rebuild registry from filesystem
+- **generate-dashboard** - Generate HTML Kanban dashboard
+- **watch-project** - Auto-regenerate dashboard on file changes
+
+See [Lifecycle Scripts Documentation](docs/LIFECYCLE_SCRIPTS.md) for CLI reference.
 
 ### `scripts/` - Setup Scripts
 
@@ -74,6 +101,45 @@ Restart Claude Code, then use commands with the `_my_` prefix:
 /_my_code_review - Review code against spec/design
 ...
 ```
+
+## Dashboard System Quick Start
+
+### Install Dependencies
+
+```bash
+uv sync
+```
+
+### Generate Dashboard
+
+```bash
+uv run generate-dashboard
+open .project/dashboard.html
+```
+
+### Auto-Regenerate on Changes
+
+```bash
+uv run watch-project
+```
+
+### Create and Track Work
+
+```bash
+# Create new work item
+uv run register-item --title "Add user authentication"
+
+# Move to active
+uv run move-item WI-001 --to active
+
+# Update progress
+uv run update-artifact WI-001 --artifact spec --status complete
+
+# Complete item
+uv run move-item WI-001 --to completed
+```
+
+See [Dashboard Documentation](docs/DASHBOARD.md) for full feature guide.
 
 ## Working with Claude Code
 
@@ -336,6 +402,15 @@ The `_my_` prefix:
 2. Clearly identifies these as user-level commands
 3. Groups them together in command listings
 4. Follows Claude Code's convention for user commands
+
+## Documentation
+
+Comprehensive documentation for the dashboard system:
+
+- **[Lifecycle Scripts](docs/LIFECYCLE_SCRIPTS.md)** - Complete CLI reference and usage guide
+- **[Registry Schema](docs/REGISTRY_SCHEMA.md)** - registry.json structure and data model
+- **[Frontmatter Schema](docs/FRONTMATTER_SCHEMA.md)** - YAML frontmatter reference
+- **[Dashboard Features](docs/DASHBOARD.md)** - HTML Kanban dashboard usage
 
 ## Troubleshooting
 
