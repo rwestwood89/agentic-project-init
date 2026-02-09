@@ -246,6 +246,19 @@ classify_segment() {
   if [[ "$cmd" == "git" ]]; then
     local rest="${seg#*git }"
     rest="${rest#"${rest%%[![:space:]]*}"}"
+    # Skip global git flags (e.g., -C <path>, --no-pager, -c key=val)
+    while [[ -n "$rest" && "${rest%% *}" == -* ]]; do
+      local flag="${rest%% *}"
+      rest="${rest#"$flag"}"
+      rest="${rest#"${rest%%[![:space:]]*}"}"
+      # Flags that consume a separate argument — skip it too
+      case "$flag" in
+        -C|-c|--git-dir|--work-tree|--namespace)
+          rest="${rest#"${rest%% *}"}"
+          rest="${rest#"${rest%%[![:space:]]*}"}"
+          ;;
+      esac
+    done
     local subcmd="${rest%% *}"
     case "$subcmd" in
       status|diff|log|branch|show|remote|tag|stash|fetch|ls-files|rev-parse|describe|shortlog|reflog|config)
