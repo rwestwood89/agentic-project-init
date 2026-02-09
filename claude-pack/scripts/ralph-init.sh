@@ -51,21 +51,67 @@ log_error() {
     exit 1
 }
 
+log_timestamp() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1"
+}
+
+# Check if a step's output already exists (for resume)
+step_complete() {
+    local step_num="$1"
+    local step_name="$2"
+    shift 2
+    # Remaining args are files to check
+    for file in "$@"; do
+        if ! [[ -s "$file" ]]; then
+            return 1
+        fi
+    done
+    log_timestamp "SKIP  Step $step_num: $step_name — output already exists"
+    log_info "[SKIPPED] Step $step_num: $step_name — output already exists"
+    return 0
+}
+
+# Check if step 6 (specs) can be skipped (multiple output files)
+resume_step6() {
+    [[ "$RESUME" != true ]] && return 1
+    local count
+    count=$(find specs -maxdepth 1 -name '*.md' ! -name '_raw_output.md' -size +0c 2>/dev/null | wc -l)
+    [[ "$count" -gt 0 ]] || return 1
+    SPEC_COUNT=$count
+    log_timestamp "SKIP  Step 6: Specification files — $count specs already exist"
+    log_info "[SKIPPED] Step 6: Specification files — $count specs already exist"
+    return 0
+}
+
 # Run claude headless and capture output
 claude_generate() {
     local prompt="$1"
     local description="$2"
-    
+
     log_info "Generating: $description"
-    echo "$prompt" | claude -p --model "$MODEL" --output-format text 2>/dev/null
+    local output
+    output=$(echo "$prompt" | claude -p --model "$MODEL" --output-format text)
+
+    if [[ -z "$output" ]]; then
+        log_error "Generation failed (empty output): $description. Re-run with --resume to retry."
+    fi
+
+    echo "$output"
 }
 
 claude_generate_design() {
     local prompt="$1"
     local description="$2"
-    
+
     log_info "Generating: $description (using $DESIGN_MODEL)"
-    echo "$prompt" | claude -p --model "$DESIGN_MODEL" --output-format text 2>/dev/null
+    local output
+    output=$(echo "$prompt" | claude -p --model "$DESIGN_MODEL" --output-format text)
+
+    if [[ -z "$output" ]]; then
+        log_error "Generation failed (empty output): $description. Re-run with --resume to retry."
+    fi
+
+    echo "$output"
 }
 
 # -----------------------------------------------------------------------------
@@ -83,6 +129,7 @@ Arguments:
 Options:
   --model <model>         Model for generation (default: sonnet)
   --design-model <model>  Model for design phase (default: sonnet, consider opus)
+  --resume                Resume a previously failed run (skips completed steps)
   --help                  Show this help message
 
 Environment Variables:
@@ -99,6 +146,7 @@ EOF
 # Parse arguments
 PROJECT_NAME=""
 CONCEPT_FILE=""
+RESUME=false
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -112,6 +160,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --help|-h)
             usage
+            ;;
+        --resume)
+            RESUME=true
+            shift
             ;;
         -*)
             log_error "Unknown option: $1"
@@ -163,34 +215,71 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 # Step 1: Create Worktree
 # -----------------------------------------------------------------------------
 
-log_step "Step 1/8: Creating git worktree"
-
-if [[ -d "$WORKTREE_PATH" ]]; then
-    log_error "Worktree already exists: $WORKTREE_PATH"
+if [[ "$RESUME" = true ]]; then
+    if [[ -d "$WORKTREE_PATH" ]]; then
+        log_step "Step 1/10: Entering existing worktree (resume mode)"
+        cd "$WORKTREE_PATH"
+        log_info "Resumed in $WORKTREE_PATH"
+    else
+        log_info "No existing worktree found — starting fresh"
+        RESUME=false  # Fall back to fresh mode
+        log_step "Step 1/10: Creating git worktree"
+        git worktree add "$WORKTREE_PATH" -b "$BRANCH_NAME"
+        cd "$WORKTREE_PATH"
+        log_info "Created worktree at $WORKTREE_PATH"
+    fi
+else
+    log_step "Step 1/10: Creating git worktree"
+    if [[ -d "$WORKTREE_PATH" ]]; then
+        log_error "Worktree already exists: $WORKTREE_PATH (use --resume to continue a previous run)"
+    fi
+    git worktree add "$WORKTREE_PATH" -b "$BRANCH_NAME"
+    cd "$WORKTREE_PATH"
+    log_info "Created worktree at $WORKTREE_PATH"
 fi
 
-git worktree add "$WORKTREE_PATH" -b "$BRANCH_NAME"
-cd "$WORKTREE_PATH"
+# -----------------------------------------------------------------------------
+# Logging Setup (after worktree exists)
+# -----------------------------------------------------------------------------
 
-log_info "Created worktree at $WORKTREE_PATH"
+LOG_FILE="ralph-init.log"
+exec > >(tee -a "$LOG_FILE") 2>&1
+
+log_timestamp "Ralph Init started"
+log_timestamp "Project: $PROJECT_NAME | Model: $MODEL | Design Model: $DESIGN_MODEL"
+log_timestamp "Worktree: $WORKTREE_PATH | Branch: $BRANCH_NAME"
+[[ "$RESUME" = true ]] && log_timestamp "Mode: RESUME"
 
 # -----------------------------------------------------------------------------
 # Step 2: Create Directory Structure
 # -----------------------------------------------------------------------------
 
-log_step "Step 2/8: Creating directory structure"
+if [[ "$RESUME" = true ]] && step_complete 2 "Directory structure" "specs/" "src/" "tests/"; then
+    :
+else
+
+log_step "Step 2/10: Creating directory structure"
+log_timestamp "START Step 2: Creating directory structure"
 
 mkdir -p specs
 mkdir -p src
 mkdir -p tests
 
 log_info "Created: specs/, src/, tests/"
+log_timestamp "END   Step 2: Success"
+
+fi
 
 # -----------------------------------------------------------------------------
 # Step 3: Generate Design Document from Concept (3-turn: design → review → refine)
 # -----------------------------------------------------------------------------
 
+if [[ "$RESUME" = true ]] && step_complete 3 "Initial design" "DESIGN_v1.md"; then
+    DESIGN_DOC=$(cat DESIGN_v1.md)
+else
+
 log_step "Step 3/10: Generating initial design document"
+log_timestamp "START Step 3: Generating initial design document"
 
 DESIGN_PROMPT=$(cat << 'PROMPT_END'
 I have a project concept focused on OUTCOMES. I need you to create a 
@@ -251,12 +340,20 @@ DESIGN_DOC=$(claude_generate_design "${DESIGN_PROMPT}${CONCEPT_CONTENT}" "Initia
 echo "$DESIGN_DOC" > DESIGN_v1.md
 
 log_info "Generated: DESIGN_v1.md"
+log_timestamp "END   Step 3: Success"
+
+fi
 
 # -----------------------------------------------------------------------------
 # Step 3b: Design Review
 # -----------------------------------------------------------------------------
 
+if [[ "$RESUME" = true ]] && step_complete 4 "Design review" "DESIGN_REVIEW.md"; then
+    DESIGN_REVIEW=$(cat DESIGN_REVIEW.md)
+else
+
 log_step "Step 4/10: Reviewing design (critic agent)"
+log_timestamp "START Step 4: Reviewing design (critic agent)"
 
 REVIEW_PROMPT=$(cat << 'PROMPT_END'
 You are a design review specialist. Your goal is to critically evaluate this 
@@ -405,12 +502,20 @@ DESIGN_REVIEW=$(claude_generate_design "$REVIEW_INPUT" "Design review")
 echo "$DESIGN_REVIEW" > DESIGN_REVIEW.md
 
 log_info "Generated: DESIGN_REVIEW.md"
+log_timestamp "END   Step 4: Success"
+
+fi
 
 # -----------------------------------------------------------------------------
 # Step 3c: Refine Design Based on Review
 # -----------------------------------------------------------------------------
 
+if [[ "$RESUME" = true ]] && step_complete 5 "Refined design" "DESIGN.md"; then
+    DESIGN_DOC=$(cat DESIGN.md)
+else
+
 log_step "Step 5/10: Refining design based on review"
+log_timestamp "START Step 5: Refining design based on review"
 
 REFINE_PROMPT=$(cat << 'PROMPT_END'
 You previously created a design document. A critical review has identified 
@@ -459,12 +564,20 @@ DESIGN_DOC=$(claude_generate_design "$REFINE_INPUT" "Refined design")
 echo "$DESIGN_DOC" > DESIGN.md
 
 log_info "Generated: DESIGN.md (refined)"
+log_timestamp "END   Step 5: Success"
+
+fi
 
 # -----------------------------------------------------------------------------
 # Step 4: Generate Specs from Design
 # -----------------------------------------------------------------------------
 
+if resume_step6; then
+    :
+else
+
 log_step "Step 6/10: Generating specification files"
+log_timestamp "START Step 6: Generating specification files"
 
 SPECS_PROMPT=$(cat << 'PROMPT_END'
 I'm setting up a Ralph Wiggum loop to build this system. Ralph loops work by 
@@ -519,13 +632,13 @@ SPECS_OUTPUT=$(claude_generate "${SPECS_PROMPT}${DESIGN_DOC}" "Specification fil
 
 # Parse specs from output - look for ```markdown specs/*.md blocks
 echo "$SPECS_OUTPUT" | awk '
-/^```markdown specs\/[^`]+\.md$/ {
-    # Extract filename from the fence line
+{ gsub(/\r$/, "") }
+/^```markdown specs\/[^`]+\.md[[:space:]]*$/ {
     match($0, /specs\/[^`]+\.md/)
     filename = substr($0, RSTART, RLENGTH)
-    getline  # Skip the fence line
+    getline
     content = ""
-    while (getline > 0 && !/^```$/) {
+    while (getline > 0 && !/^```[[:space:]]*$/) {
         content = content $0 "\n"
     }
     print content > filename
@@ -533,22 +646,30 @@ echo "$SPECS_OUTPUT" | awk '
 }
 '
 
-# Count generated specs
-SPEC_COUNT=$(ls -1 specs/*.md 2>/dev/null | wc -l)
+# Count generated specs (use find to avoid pipefail issues with ls)
+SPEC_COUNT=$(find specs -maxdepth 1 -name '*.md' ! -name '_raw_output.md' -size +0c 2>/dev/null | wc -l)
 log_info "Generated: $SPEC_COUNT spec files in specs/"
 
-# If no specs were parsed, save raw output for debugging
+# Fail hard if no specs were parsed
 if [[ "$SPEC_COUNT" -eq 0 ]]; then
     echo "$SPECS_OUTPUT" > specs/_raw_output.md
-    log_info "Warning: Could not parse specs. Raw output saved to specs/_raw_output.md"
-    log_info "You may need to manually extract spec files from the output."
+    log_error "Failed to parse any specs from Claude output. Raw output saved to specs/_raw_output.md. Re-run with --resume to retry this step."
+fi
+
+log_timestamp "END   Step 6: Success"
+
 fi
 
 # -----------------------------------------------------------------------------
 # Step 5: Generate AGENTS.md
 # -----------------------------------------------------------------------------
 
+if [[ "$RESUME" = true ]] && step_complete 7 "AGENTS.md" "AGENTS.md"; then
+    :
+else
+
 log_step "Step 7/10: Generating AGENTS.md"
+log_timestamp "START Step 7: Generating AGENTS.md"
 
 AGENTS_PROMPT=$(cat << 'PROMPT_END'
 Generate an AGENTS.md file for a Ralph Wiggum loop. This is the operational 
@@ -592,12 +713,20 @@ AGENTS_OUTPUT=$(claude_generate "${AGENTS_PROMPT}${DESIGN_DOC}" "AGENTS.md")
 echo "$AGENTS_OUTPUT" > AGENTS.md
 
 log_info "Generated: AGENTS.md"
+log_timestamp "END   Step 7: Success"
+
+fi
 
 # -----------------------------------------------------------------------------
 # Step 6: Generate PROMPT_plan.md
 # -----------------------------------------------------------------------------
 
+if [[ "$RESUME" = true ]] && step_complete 8 "PROMPT_plan.md" "PROMPT_plan.md"; then
+    :
+else
+
 log_step "Step 8/10: Generating PROMPT_plan.md"
+log_timestamp "START Step 8: Generating PROMPT_plan.md"
 
 PLAN_PROMPT=$(cat << 'PROMPT_END'
 Generate a PROMPT_plan.md for a Ralph Wiggum loop. This prompt is piped into 
@@ -631,12 +760,20 @@ PLAN_OUTPUT=$(claude_generate "$PLAN_PROMPT" "PROMPT_plan.md")
 echo "$PLAN_OUTPUT" > PROMPT_plan.md
 
 log_info "Generated: PROMPT_plan.md"
+log_timestamp "END   Step 8: Success"
+
+fi
 
 # -----------------------------------------------------------------------------
 # Step 7: Generate PROMPT_build.md
 # -----------------------------------------------------------------------------
 
+if [[ "$RESUME" = true ]] && step_complete 9 "PROMPT_build.md" "PROMPT_build.md"; then
+    :
+else
+
 log_step "Step 9/10: Generating PROMPT_build.md"
+log_timestamp "START Step 9: Generating PROMPT_build.md"
 
 BUILD_PROMPT=$(cat << 'PROMPT_END'
 Generate a PROMPT_build.md for a Ralph Wiggum loop. This prompt is piped into 
@@ -675,12 +812,20 @@ BUILD_OUTPUT=$(claude_generate "$BUILD_PROMPT" "PROMPT_build.md")
 echo "$BUILD_OUTPUT" > PROMPT_build.md
 
 log_info "Generated: PROMPT_build.md"
+log_timestamp "END   Step 9: Success"
+
+fi
 
 # -----------------------------------------------------------------------------
 # Step 8: Create Loop Script and Scaffold
 # -----------------------------------------------------------------------------
 
 log_step "Step 10/10: Creating loop.sh and project scaffold"
+log_timestamp "START Step 10: Creating loop.sh and project scaffold"
+
+if [[ "$RESUME" = true ]] && [[ -f "loop.sh" ]] && [[ -f "pyproject.toml" ]]; then
+    log_info "[SKIPPED] Scaffold creation — files already exist"
+else
 
 # Create loop.sh
 cat << 'LOOP_SCRIPT' > loop.sh
@@ -789,27 +934,50 @@ __pycache__/
 dist/
 build/
 .DS_Store
+ralph-init.log
 GITIGNORE
 
 log_info "Created: pyproject.toml, src/$PACKAGE_NAME/, tests/"
 
-# Initial commit
+fi
+
+# Commit all changes
 git add -A
-git commit -m "ralph-init: scaffold for $PROJECT_NAME
+if ! git diff --cached --quiet 2>/dev/null; then
+    if [[ "$RESUME" = true ]] && git log --oneline -1 2>/dev/null | grep -q "ralph-init: scaffold"; then
+        git commit --amend -m "ralph-init: scaffold for $PROJECT_NAME (resumed)
 
 Generated by ralph-init.sh:
 - DESIGN_v1.md: Initial design from concept
 - DESIGN_REVIEW.md: Critical review of initial design
 - DESIGN.md: Refined design (addresses review)
-- specs/: Individual specifications  
+- specs/: Individual specifications
 - AGENTS.md: Operational guide
 - PROMPT_plan.md: Planning mode prompt
 - PROMPT_build.md: Building mode prompt
 - loop.sh: Ralph loop script
 - Python project scaffold
 "
+    else
+        git commit -m "ralph-init: scaffold for $PROJECT_NAME
 
-log_info "Created initial commit"
+Generated by ralph-init.sh:
+- DESIGN_v1.md: Initial design from concept
+- DESIGN_REVIEW.md: Critical review of initial design
+- DESIGN.md: Refined design (addresses review)
+- specs/: Individual specifications
+- AGENTS.md: Operational guide
+- PROMPT_plan.md: Planning mode prompt
+- PROMPT_build.md: Building mode prompt
+- loop.sh: Ralph loop script
+- Python project scaffold
+"
+    fi
+    log_info "Created initial commit"
+else
+    log_info "No new changes to commit"
+fi
+log_timestamp "END   Step 10: Success"
 
 # -----------------------------------------------------------------------------
 # Summary
