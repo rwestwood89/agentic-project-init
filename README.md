@@ -88,6 +88,7 @@ See **[docs/working-with-claude.md](docs/working-with-claude.md)** for practical
 
 | Command | Description |
 |---------|-------------|
+| `/_my_concept` | Develop a feature concept with success criteria |
 | `/_my_research` | Research a topic and save findings |
 | `/_my_spec` | Create a feature specification |
 | `/_my_design` | Create a technical design |
