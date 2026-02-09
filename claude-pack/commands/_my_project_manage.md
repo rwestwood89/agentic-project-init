@@ -383,7 +383,7 @@ When called with an argument (`/_my_project_manage close <item-name>`):
 
 2. **Archive item** (after confirmation):
    ```bash
-   mv .project/active/<item-name> .project/completed/$(date +%Y%m%d)_<item-name>
+   git mv .project/active/<item-name> .project/completed/$(date +%Y%m%d)_<item-name>
    ```
 
 3. **Update tracking documents**:

@@ -49,8 +49,8 @@ Iterate through items in the epic:
 ### 4. Epic Cleanup
 
 1. **Check** for all completed active items
-2. **Move items** to `completed/`, prefixed with date stamp (e.g., `20251223_item_name/`)
-3. **Move epic** to `completed/` with date stamp (e.g., `20251223_epic_name.md`)
+2. **Move items** to `completed/` using `git mv`, prefixed with date stamp (e.g., `git mv .project/active/item_name .project/completed/20251223_item_name`)
+3. **Move epic** to `completed/` using `git mv` with date stamp (e.g., `git mv .project/backlog/epic_name.md .project/completed/20251223_epic_name.md`)
 4. **Update docs**: `CURRENT_WORK.md`, `BACKLOG.md`, and `completed/CHANGELOG.md`
 
 ---
@@ -81,6 +81,7 @@ Iterate through items in the epic:
 ├── completed/
 │   ├── {date}_{item_name}/   # Archived items
 │   └── epic_*.md             # Archived epics
+├── scripts/                  # Utility scripts (get-metadata.sh)
 ├── research/                 # Deep investigations
 └── reports/                  # Status reports
 ```
