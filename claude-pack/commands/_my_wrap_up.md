@@ -75,7 +75,15 @@ Wrap-up complete:
 - Docs: [which files updated, or "none needed"]
 ```
 
-If `--quick` was passed, only do Step 2 and report.
+If `--quick` was passed, only do Steps 2, 5, and 6.
+
+### Step 6. Commit
+
+Commit the wrap-up changes to git:
+
+1. Stage the files that were updated (e.g., `.project/CURRENT_WORK.md`, docs)
+2. Commit with message: `chore: wrap-up session context`
+3. Do NOT push unless the user asks
 
 ---
 
