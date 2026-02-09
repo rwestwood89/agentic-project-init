@@ -52,6 +52,93 @@ fall_through() {
   exit 0
 }
 
+# Tier 2 invocation — headless Claude review
+# Defined here (before routing functions that call it) so bash can resolve it
+invoke_tier2() {
+  local context="$1"
+  local prompt_file="$HOOK_DIR/review-prompt.md"
+  local schema_file="$HOOK_DIR/review-schema.json"
+
+  # Verify files exist
+  if [[ ! -f "$prompt_file" || ! -f "$schema_file" ]]; then
+    ask_user "Tier 2 review files missing — please confirm: $context"
+    return  # won't reach here (ask_user exits)
+  fi
+
+  local system_prompt
+  system_prompt=$(<"$prompt_file")
+  local schema
+  schema=$(<"$schema_file")
+
+  # Build context section with tool description
+  local context_section=""
+  if [[ -n "$description" ]]; then
+    context_section="Agent's stated purpose: ${description}"
+  fi
+
+  # Extract recent transcript context (last few assistant/user text messages)
+  local transcript_context=""
+  if [[ -n "$transcript_path" && -f "$transcript_path" ]]; then
+    transcript_context=$(tail -50 "$transcript_path" | jq -r '
+      select(.type == "assistant" or .type == "user") |
+      if .type == "user" then
+        "User: " + (.message.content // "" | if type == "string" then .[:200] else "" end)
+      elif .type == "assistant" then
+        (.message.content // [] | if type == "array" then
+          [.[] | select(.type == "text") | .text[:200]] | join(" ")
+        else "" end) | if . != "" then "Assistant: " + . else empty end
+      else empty end
+    ' 2>/dev/null | tail -10)
+  fi
+
+  local review_prompt="Review this tool use request:
+Tool: ${tool_name}
+Input: $(echo "$input" | jq -c '.tool_input' 2>/dev/null)
+Working Directory: ${cwd_val}"
+
+  if [[ -n "$context_section" ]]; then
+    review_prompt="${review_prompt}
+
+${context_section}"
+  fi
+
+  if [[ -n "$transcript_context" ]]; then
+    review_prompt="${review_prompt}
+
+Recent conversation context:
+${transcript_context}"
+  fi
+
+  local response
+  response=$(timeout 30 claude -p "$review_prompt" \
+    --system-prompt "$system_prompt" \
+    --model haiku \
+    --output-format json \
+    --json-schema "$schema" \
+    --tools "" \
+    --max-turns 3 \
+    --no-session-persistence \
+    --max-budget-usd 0.05 \
+    2>/dev/null) || {
+    [[ -f "$AUDIT_LOG" ]] && echo "[$(date +%H:%M:%S)] TIER2-TIMEOUT $context" >> "$AUDIT_LOG"
+    ask_user "Tier 2 review timed out — please confirm: $context"
+    return
+  }
+
+  local decision reason
+  decision=$(echo "$response" | jq -r '.structured_output.decision // "ELEVATE"' 2>/dev/null)
+  reason=$(echo "$response" | jq -r '.structured_output.reason // "No reason provided"' 2>/dev/null)
+
+  [[ -f "$AUDIT_LOG" ]] && echo "[$(date +%H:%M:%S)] TIER2 decision=$decision reason=$reason context=$context" >> "$AUDIT_LOG"
+
+  case "$decision" in
+    APPROVE)   allow "Tier2-approved: $reason" ;;
+    PUSH_BACK) deny "Tier 2 review: $reason" ;;
+    ELEVATE)   ask_user "Tier 2 escalated: $reason" ;;
+    *)         ask_user "Tier 2 unknown response — please confirm: $context" ;;
+  esac
+}
+
 # Tier 2 routing: for file tools and bash commands where the hook HAS an opinion
 # (the path/command was evaluated and found outside the safe zone)
 tier2_or_escalate() {
@@ -281,6 +368,12 @@ command_b64=""
 
 command_str=$(echo "${command_b64:-}" | base64 -d 2>/dev/null) || command_str=""
 
+# Extract tool description (Claude's stated purpose) and transcript path
+description=""
+transcript_path=""
+description=$(echo "$input" | jq -r '.tool_input.description // ""' 2>/dev/null) || description=""
+transcript_path=$(echo "$input" | jq -r '.transcript_path // ""' 2>/dev/null) || transcript_path=""
+
 # If parsing failed, fall through silently
 [[ -z "$tool_name" ]] && fall_through "(parse failure)"
 
@@ -334,61 +427,7 @@ if [[ "$tool_name" == "Bash" ]]; then
 fi
 
 # =============================================================================
-# Section 8: Tier 2 invocation — headless Claude review
-# =============================================================================
-invoke_tier2() {
-  local context="$1"
-  local prompt_file="$HOOK_DIR/review-prompt.md"
-  local schema_file="$HOOK_DIR/review-schema.json"
-
-  # Verify files exist
-  if [[ ! -f "$prompt_file" || ! -f "$schema_file" ]]; then
-    ask_user "Tier 2 review files missing — please confirm: $context"
-    return  # won't reach here (ask_user exits)
-  fi
-
-  local system_prompt
-  system_prompt=$(<"$prompt_file")
-  local schema
-  schema=$(<"$schema_file")
-
-  local review_prompt="Review this tool use request:
-Tool: ${tool_name}
-Input: $(echo "$input" | jq -c '.tool_input' 2>/dev/null)
-Working Directory: ${cwd_val}"
-
-  local response
-  response=$(timeout 30 claude -p "$review_prompt" \
-    --system-prompt "$system_prompt" \
-    --model haiku \
-    --output-format json \
-    --json-schema "$schema" \
-    --tools "" \
-    --max-turns 3 \
-    --no-session-persistence \
-    --max-budget-usd 0.05 \
-    2>/dev/null) || {
-    [[ -f "$AUDIT_LOG" ]] && echo "[$(date +%H:%M:%S)] TIER2-TIMEOUT $context" >> "$AUDIT_LOG"
-    ask_user "Tier 2 review timed out — please confirm: $context"
-    return
-  }
-
-  local decision reason
-  decision=$(echo "$response" | jq -r '.structured_output.decision // "ELEVATE"' 2>/dev/null)
-  reason=$(echo "$response" | jq -r '.structured_output.reason // "No reason provided"' 2>/dev/null)
-
-  [[ -f "$AUDIT_LOG" ]] && echo "[$(date +%H:%M:%S)] TIER2 decision=$decision reason=$reason context=$context" >> "$AUDIT_LOG"
-
-  case "$decision" in
-    APPROVE)   allow "Tier2-approved: $reason" ;;
-    PUSH_BACK) deny "Tier 2 review: $reason" ;;
-    ELEVATE)   ask_user "Tier 2 escalated: $reason" ;;
-    *)         ask_user "Tier 2 unknown response — please confirm: $context" ;;
-  esac
-}
-
-# =============================================================================
-# Section 9: Built-in safe tools — auto-approve without Tier 2
+# Section 8: Built-in safe tools — auto-approve without Tier 2
 # =============================================================================
 case "$tool_name" in
   Task)            allow "Task" "(subagent orchestration)" ;;
@@ -406,6 +445,6 @@ case "$tool_name" in
 esac
 
 # =============================================================================
-# Section 10: Final catch-all — unhandled tools
+# Section 9: Final catch-all — unhandled tools
 # =============================================================================
 tier2_or_fallthrough "${tool_name:-unknown} (unhandled tool)"
