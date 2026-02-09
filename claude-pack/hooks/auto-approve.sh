@@ -1,12 +1,12 @@
 #!/bin/bash
-# PreToolUse auto-approve hook — config-driven, three-tier review pipeline
-# Tier 1: Fast bash pattern matching (built-in + config safe lists)
-# Tier 2: Headless Claude (Haiku) review for uncertain cases
-# Tier 3: Escalation to user prompt
+# PreToolUse auto-approve hook — two-tier review pipeline
+# Tier 1: Fast bash pattern matching → auto-approve or auto-elevate
+# Tier 2: Headless Claude (Haiku) review → approve, push back, or elevate
 #
 # Config: ~/.claude/hooks/allowed-tools.json (managed by /_my_allow_tool)
 
 AUDIT_LOG="/tmp/claude-hook-audit.log"
+PUSHBACK_HASH_FILE="/tmp/claude-hook-last-pushback.hash"
 
 # =============================================================================
 # Section 1: Config loading
@@ -47,13 +47,16 @@ ask_user() {
   echo '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"ask","permissionDecisionReason":"'"$1"'"}}'
   exit 0
 }
-fall_through() {
-  [[ -f "$AUDIT_LOG" ]] && echo "[$(date +%H:%M:%S)] FALL-THROUGH $*" >> "$AUDIT_LOG" || true
-  exit 0
+send_to_tier2() {
+  local context="$1"
+  if [[ "$tier2_enabled" == "true" ]] && command -v claude &>/dev/null; then
+    invoke_tier2 "$context"
+  else
+    ask_user "Requires confirmation: ${context}"
+  fi
 }
 
 # Tier 2 invocation — headless Claude review
-# Defined here (before routing functions that call it) so bash can resolve it
 invoke_tier2() {
   local context="$1"
   local prompt_file="$HOOK_DIR/review-prompt.md"
@@ -69,6 +72,13 @@ invoke_tier2() {
   system_prompt=$(<"$prompt_file")
   local schema
   schema=$(<"$schema_file")
+
+  # Check if this is a retry of a previously pushed-back request
+  local request_hash is_retry=false
+  request_hash=$(echo "$input" | md5sum | cut -d' ' -f1)
+  if [[ -f "$PUSHBACK_HASH_FILE" ]] && [[ "$(cat "$PUSHBACK_HASH_FILE")" == "$request_hash" ]]; then
+    is_retry=true
+  fi
 
   # Build context section with tool description
   local context_section=""
@@ -109,6 +119,12 @@ Recent conversation context:
 ${transcript_context}"
   fi
 
+  if [[ "$is_retry" == true ]]; then
+    review_prompt="${review_prompt}
+
+IMPORTANT: This is a RETRY of a previously pushed-back request. The agent has already been asked to reconsider. You MUST choose either APPROVE or ELEVATE. Do NOT choose PUSH_BACK."
+  fi
+
   local response
   response=$(timeout 30 claude -p "$review_prompt" \
     --system-prompt "$system_prompt" \
@@ -132,33 +148,27 @@ ${transcript_context}"
   [[ -f "$AUDIT_LOG" ]] && echo "[$(date +%H:%M:%S)] TIER2 decision=$decision reason=$reason context=$context" >> "$AUDIT_LOG"
 
   case "$decision" in
-    APPROVE)   allow "Tier2-approved: $reason" ;;
-    PUSH_BACK) deny "Tier 2 review: $reason" ;;
-    ELEVATE)   ask_user "Tier 2 escalated: $reason" ;;
-    *)         ask_user "Tier 2 unknown response — please confirm: $context" ;;
+    APPROVE)
+      rm -f "$PUSHBACK_HASH_FILE"
+      allow "Tier2-approved: $reason"
+      ;;
+    PUSH_BACK)
+      if [[ "$is_retry" == true ]]; then
+        rm -f "$PUSHBACK_HASH_FILE"
+        ask_user "Tier 2 could not decide — please confirm: $context"
+      else
+        echo "$request_hash" > "$PUSHBACK_HASH_FILE"
+        deny "Tier 2 review: $reason"
+      fi
+      ;;
+    ELEVATE)
+      rm -f "$PUSHBACK_HASH_FILE"
+      ask_user "Tier 2 escalated: $reason"
+      ;;
+    *)
+      ask_user "Tier 2 unknown response — please confirm: $context"
+      ;;
   esac
-}
-
-# Tier 2 routing: for file tools and bash commands where the hook HAS an opinion
-# (the path/command was evaluated and found outside the safe zone)
-tier2_or_escalate() {
-  local context="$1"
-  if [[ "$tier2_enabled" == "true" ]] && command -v claude &>/dev/null; then
-    invoke_tier2 "$context"
-  else
-    ask_user "Requires confirmation: ${context}"
-  fi
-}
-
-# Tier 2 routing: for unhandled tools where the hook has NO opinion
-# When Tier 2 is disabled, fall through to Claude Code's default permission system
-tier2_or_fallthrough() {
-  local context="$1"
-  if [[ "$tier2_enabled" == "true" ]] && command -v claude &>/dev/null; then
-    invoke_tier2 "$context"
-  else
-    fall_through "$context"
-  fi
 }
 
 # =============================================================================
@@ -208,21 +218,21 @@ check_path_args() {
     fi
   done
   if [[ "$found" == false ]]; then
-    is_allowed_path "${cwd_val:-}" && check_result="allow" || check_result="unknown"
+    is_allowed_path "${cwd_val:-}" && check_result="safe" || check_result="review"
   elif [[ "$all_ok" == true ]]; then
-    check_result="allow"
+    check_result="safe"
   else
-    check_result="unknown"
+    check_result="review"
   fi
 }
 
 # =============================================================================
 # Section 4: classify_segment — sets seg_result variable (no subshell)
-# Values: allow | deny | ask | unknown
+# Values: safe | elevate | review
 # =============================================================================
 classify_segment() {
   local seg="$1"
-  seg_result="unknown"
+  seg_result="review"
 
   local cmd="$seg"
   cmd="${cmd#"${cmd%%[![:space:]]*}"}"
@@ -235,12 +245,12 @@ classify_segment() {
   # Built-in always-safe commands
   case "$cmd" in
     cd|ls|pwd|echo|printf|which|date|whoami|true|false|test|\[|env|export|source|type|command|tee|xargs|grep|sed|awk|tr|cut|jq|wc|sort|uniq|head|tail)
-      seg_result="allow"; return ;;
+      seg_result="safe"; return ;;
   esac
 
   # Config-driven safe commands
   for safe_cmd in "${config_commands[@]}"; do
-    [[ "$cmd" == "$safe_cmd" ]] && { seg_result="allow"; return; }
+    [[ "$cmd" == "$safe_cmd" ]] && { seg_result="safe"; return; }
   done
 
   if [[ "$cmd" == "git" ]]; then
@@ -261,13 +271,13 @@ classify_segment() {
     done
     local subcmd="${rest%% *}"
     case "$subcmd" in
-      status|diff|log|branch|show|remote|tag|stash|fetch|ls-files|rev-parse|describe|shortlog|reflog|config)
+      status|diff|log|branch|show|remote|tag|stash|fetch|ls-files|rev-parse|describe|shortlog|reflog|config|count-objects)
         if [[ "$seg" != *"--hard"* && "$seg" != *"--force"* && "$seg" != *" -f "* && "$seg" != *" -D "* ]]; then
-          seg_result="allow"; return
+          seg_result="safe"; return
         fi
         ;;
       commit|push|add|rebase|reset|checkout|merge|cherry-pick|revert|clean|restore|switch|pull)
-        seg_result="ask"; return ;;
+        seg_result="elevate"; return ;;
     esac
     return
   fi
@@ -283,20 +293,20 @@ classify_segment() {
         local target="${run_rest%% *}"
         case "$target" in
           python|python3|pytest|mypy|ruff|sysml-codegen|agentic-mbse|black|isort)
-            seg_result="allow"; return ;;
+            seg_result="safe"; return ;;
         esac
         ;;
       pip|venv|sync|lock|tree)
-        seg_result="allow"; return ;;
+        seg_result="safe"; return ;;
     esac
     return
   fi
 
   case "$cmd" in
     python|python3|pytest|mypy|ruff|black|isort|pip|pip3)
-      seg_result="allow"; return ;;
+      seg_result="safe"; return ;;
     claude)
-      [[ "$seg" == *"--version"* || "$seg" == *"--help"* ]] && seg_result="allow"
+      [[ "$seg" == *"--version"* || "$seg" == *"--help"* ]] && seg_result="safe"
       return ;;
   esac
 
@@ -312,9 +322,9 @@ classify_segment() {
         fi
       done
       if [[ "$found_path" == true && "$all_tmp" == true ]]; then
-        seg_result="allow"
+        seg_result="safe"
       else
-        seg_result="deny"
+        seg_result="review"
       fi
       return
     fi
@@ -333,7 +343,7 @@ classify_segment() {
     for word in $seg; do
       if [[ "$word" == *".claude/"*".sh" || "$word" == *".project/"*".sh" ]]; then
         if is_allowed_path "$word"; then
-          seg_result="allow"; return
+          seg_result="safe"; return
         fi
       fi
     done
@@ -350,7 +360,7 @@ classify_segment() {
         local gh_action="${action_rest%% *}"
         case "$gh_action" in
           view|list|status|diff|checks|show)
-            seg_result="allow"; return ;;
+            seg_result="safe"; return ;;
         esac
         ;;
     esac
@@ -387,28 +397,39 @@ transcript_path=""
 description=$(echo "$input" | jq -r '.tool_input.description // ""' 2>/dev/null) || description=""
 transcript_path=$(echo "$input" | jq -r '.transcript_path // ""' 2>/dev/null) || transcript_path=""
 
-# If parsing failed, fall through silently
-[[ -z "$tool_name" ]] && fall_through "(parse failure)"
+# If parsing failed, send to tier2 for review
+[[ -z "$tool_name" ]] && send_to_tier2 "(parse failure)"
 
 # =============================================================================
-# Section 6: File tools (Read, Write, Edit, Glob, Grep)
+# Section 6: Decision pipeline — every tool call ends here
 # =============================================================================
+
+# --- File tools ---
 if [[ "$tool_name" =~ ^(Read|Write|Edit|Glob|Grep)$ ]]; then
-  if [[ -z "$file_path" ]]; then
-    if [[ "$tool_name" == "Glob" || "$tool_name" == "Grep" ]]; then
-      is_allowed_path "${cwd_val:-}" && allow "$tool_name" "(cwd: $cwd_val)"
-    fi
-    tier2_or_escalate "$tool_name (no path resolved)"
+  if [[ -n "$file_path" ]] && is_allowed_path "$file_path"; then
+    allow "$tool_name" "$file_path"
   fi
-  is_allowed_path "$file_path" && allow "$tool_name" "$file_path"
-  tier2_or_escalate "$tool_name $file_path (outside allowed paths)"
+  if [[ -z "$file_path" ]] && [[ "$tool_name" == "Glob" || "$tool_name" == "Grep" ]]; then
+    is_allowed_path "${cwd_val:-}" && allow "$tool_name" "(cwd: $cwd_val)"
+  fi
+  send_to_tier2 "$tool_name ${file_path:-(no path)}"
 fi
 
-# =============================================================================
-# Section 7: Bash commands
-# =============================================================================
+# --- Built-in safe tools ---
+case "$tool_name" in
+  Task|WebSearch|WebFetch|AskUserQuestion)
+    allow "$tool_name" "(built-in safe)" ;;
+  NotebookEdit)
+    nb_path=$(echo "$input" | jq -r '.tool_input.notebook_path // empty' 2>/dev/null)
+    if [[ -n "$nb_path" ]] && is_allowed_path "$nb_path"; then
+      allow "NotebookEdit" "$nb_path"
+    fi
+    send_to_tier2 "NotebookEdit ${nb_path:-unknown}" ;;
+esac
+
+# --- Bash commands ---
 if [[ "$tool_name" == "Bash" ]]; then
-  [[ -z "$command_str" ]] && fall_through "Bash" "(empty command)"
+  [[ -z "$command_str" ]] && send_to_tier2 "Bash (empty command)"
 
   segments=()
   while IFS= read -r seg; do
@@ -418,46 +439,22 @@ if [[ "$tool_name" == "Bash" ]]; then
   done < <(echo "$command_str" | sed 's/ && /\n/g; s/ || /\n/g; s/ ; /\n/g')
   [[ ${#segments[@]} -eq 0 ]] && segments=("$command_str")
 
-  overall="allow"
-  seg_result=""
-
+  worst="safe"
   for seg in "${segments[@]}"; do
     classify_segment "$seg"
     case "$seg_result" in
-      deny)  deny "$seg" ;;
-      ask)   overall="ask" ;;
-      allow) ;;
-      *)     [[ "$overall" == "allow" ]] && overall="unknown" ;;
+      elevate) worst="elevate" ;;
+      review)  [[ "$worst" != "elevate" ]] && worst="review" ;;
+      safe)    ;;
     esac
   done
 
-  case "$overall" in
-    allow)   allow "Bash" "$command_str" ;;
-    ask)     ask_user "Git write operation — requires confirmation" ;;
-    deny)    deny "Blocked: $command_str" ;;
-    *)       tier2_or_escalate "Bash: $command_str" ;;
+  case "$worst" in
+    safe)    allow "Bash" "$command_str" ;;
+    elevate) ask_user "Requires confirmation: $command_str" ;;
+    review)  send_to_tier2 "Bash: $command_str" ;;
   esac
 fi
 
-# =============================================================================
-# Section 8: Built-in safe tools — auto-approve without Tier 2
-# =============================================================================
-case "$tool_name" in
-  Task)            allow "Task" "(subagent orchestration)" ;;
-  WebSearch)       allow "WebSearch" "(read-only search)" ;;
-  WebFetch)        allow "WebFetch" "(read-only fetch)" ;;
-  AskUserQuestion) allow "AskUserQuestion" "(user interaction)" ;;
-  NotebookEdit)
-    # Notebook edits: approve if path is in allowed dirs, else tier2
-    nb_path=$(echo "$input" | jq -r '.tool_input.notebook_path // empty' 2>/dev/null)
-    if [[ -n "$nb_path" ]] && is_allowed_path "$nb_path"; then
-      allow "NotebookEdit" "$nb_path"
-    fi
-    tier2_or_escalate "NotebookEdit ${nb_path:-unknown} (outside allowed paths)"
-    ;;
-esac
-
-# =============================================================================
-# Section 9: Final catch-all — unhandled tools
-# =============================================================================
-tier2_or_fallthrough "${tool_name:-unknown} (unhandled tool)"
+# --- Everything else ---
+send_to_tier2 "${tool_name:-unknown} (unhandled tool)"
