@@ -90,7 +90,7 @@ if [ ! -d "$CLAUDE_PACK" ]; then
 fi
 
 # Create directories
-for subdir in commands agents hooks skills rules; do
+for subdir in commands agents hooks skills rules scripts; do
     create_dir "$TARGET_DIR/$subdir"
 done
 
@@ -139,6 +139,17 @@ if [ -d "$CLAUDE_PACK/rules" ]; then
         [ -f "$file" ] || continue
         filename=$(basename "$file")
         create_symlink "$file" "$TARGET_DIR/rules/$filename" "$filename"
+    done
+fi
+
+# Symlink scripts
+echo ""
+echo "Setting up scripts..."
+if [ -d "$CLAUDE_PACK/scripts" ]; then
+    for file in "$CLAUDE_PACK"/scripts/*; do
+        [ -f "$file" ] || continue
+        filename=$(basename "$file")
+        create_symlink "$file" "$TARGET_DIR/scripts/$filename" "$filename"
     done
 fi
 
@@ -240,5 +251,9 @@ echo "1. Restart Claude Code to pick up new commands"
 echo "2. Run 'init-project.sh' in each project that needs .project/"
 echo ""
 echo "Commands will be available as /_my_<command> (e.g., /_my_research)"
+echo ""
+echo "Ralph Loop (autonomous project scaffolding):"
+echo "  ~/.claude/scripts/ralph-init.sh <project_name> <concept_file>"
+echo "  Run from any git repo with a concept markdown file."
 echo ""
 echo "To update later, run: cd $SOURCE_DIR && git pull"

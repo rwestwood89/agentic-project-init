@@ -13,6 +13,7 @@ Everything that gets symlinked to `~/.claude/`:
 - **agents/** - Autonomous subprocesses for complex tasks
 - **skills/** - Specialized capabilities and domain knowledge
 - **rules/** - Project guidelines and coding standards
+- **scripts/** - Standalone tools (Ralph Loop for autonomous project scaffolding)
 
 ### `project-pack/` - Project Management Template
 
@@ -49,7 +50,7 @@ cd ~/agentic-project-init
 ./scripts/setup-global.sh
 ```
 
-This creates symlinks in `~/.claude/` pointing to the commands, hooks, agents, skills, and rules.
+This creates symlinks in `~/.claude/` pointing to the commands, hooks, agents, skills, rules, and scripts.
 
 ### Step 3: Initialize Projects (Each Project)
 
@@ -104,6 +105,66 @@ See **[docs/working-with-claude.md](docs/working-with-claude.md)** for practical
 | `/_my_wrap_up` | End-of-session context persistence |
 | `/_my_review_compact` | Review before compaction |
 
+## Ralph Loop
+
+The Ralph Wiggum Loop is an autonomous coding pipeline. Given a concept file describing
+project outcomes, it generates a complete project scaffold in a git worktree:
+
+- Multi-pass design documents (initial → review → refined)
+- Individual specification files
+- Agent prompts (planning + building modes)
+- A loop runner script for iterative autonomous coding
+- Python project scaffold (UV, pytest, ruff, mypy)
+
+### Usage
+
+```bash
+~/.claude/scripts/ralph-init.sh <project_name> <concept_file> [options]
+```
+
+### Example
+
+```bash
+cd ~/my-repo
+~/.claude/scripts/ralph-init.sh comment-system ./CONCEPT.md
+~/.claude/scripts/ralph-init.sh auth-system ./auth-concept.md --design-model opus
+```
+
+### Prerequisites
+
+- Must be run from within a git repository
+- Claude CLI installed and configured
+- UV installed (for Python projects)
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `--model <model>` | Model for generation (default: sonnet) |
+| `--design-model <model>` | Model for design phase (default: sonnet) |
+| `--help` | Show usage information |
+
+Environment variables: `RALPH_MODEL`, `RALPH_DESIGN_MODEL`
+
+### What It Produces
+
+```
+../repo_projectname/          (git worktree)
+├── DESIGN_v1.md              Initial design
+├── DESIGN_REVIEW.md          Critical review
+├── DESIGN.md                 Refined design
+├── specs/                    Individual specifications
+├── AGENTS.md                 Operational guide
+├── PROMPT_plan.md            Planning mode prompt
+├── PROMPT_build.md           Building mode prompt
+├── loop.sh                   Ralph loop runner
+├── pyproject.toml            Python project config
+├── src/<package>/            Source package
+└── tests/                    Test scaffold
+```
+
+After setup: review the design evolution, then `./loop.sh plan 3` to plan, `./loop.sh 10` to build.
+
 ## Script Reference
 
 ### setup-global.sh
@@ -118,7 +179,7 @@ One-time installation of commands to `~/.claude/`.
 - `--dry-run` - Show what would be done without making changes
 
 **What it does:**
-- Creates `~/.claude/{commands,agents,hooks,skills,rules}/` directories
+- Creates `~/.claude/{commands,agents,hooks,skills,rules,scripts}/` directories
 - Symlinks all files from `claude-pack/` to `~/.claude/`
 - Configures hooks in `~/.claude/settings.json`
 - Stores source location in `~/.claude/.agentic-pack-source`
@@ -198,6 +259,8 @@ your-project/
 ├── hooks/
 ├── skills/
 ├── rules/
+├── scripts/
+│   └── ralph-init.sh -> /path/to/agentic-project-init/claude-pack/scripts/ralph-init.sh
 └── settings.json
 ```
 
