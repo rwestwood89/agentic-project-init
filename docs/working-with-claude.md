@@ -8,7 +8,8 @@ A practical guide for effective collaboration with Claude Code using the agentic
 |-----------|---------|-------------|
 | Non-trivial task | `/_my_plan` | Multiple files, unclear scope, architectural decisions |
 | Understand codebase | `/_my_research` | Deep exploration, feasibility analysis |
-| New feature | Full workflow | Spec → Design → Plan → Implement |
+| New feature idea | `/_my_concept` | Vague idea, need to scope and define success criteria |
+| New feature | Full workflow | Concept → Spec → Design → Plan → Implement |
 | Bug fix (obvious) | Just fix it | Clear cause, single file, explicit instructions |
 | Small change | `/_my_quick_edit` | Too small for full workflow, needs some planning |
 | After correction | `/_my_capture` | User corrects you, important learning moment |
@@ -21,7 +22,7 @@ A practical guide for effective collaboration with Claude Code using the agentic
 
 ## When to Plan vs Just Do
 
-### Use Full Workflow (Spec → Design → Plan → Implement)
+### Use Full Workflow (Concept → Spec → Design → Plan → Implement)
 
 **Architectural decisions required:**
 - New subsystem or service
@@ -235,6 +236,7 @@ Provide:
 ## Workflow Reference
 
 ```
+/_my_concept    →  WHY/WHAT: Problem statement, success criteria, scope
 /_my_spec       →  WHAT: Requirements, acceptance criteria, scope
 /_my_design     →  HOW: Technical approach, alternatives, decisions
 /_my_plan       →  WHEN: Phased execution, validation strategy
