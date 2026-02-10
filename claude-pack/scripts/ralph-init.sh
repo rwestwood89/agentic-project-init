@@ -24,6 +24,8 @@ set -euo pipefail
 
 MODEL="${RALPH_MODEL:-sonnet}"
 DESIGN_MODEL="${RALPH_DESIGN_MODEL:-sonnet}"  # Can use opus for design phase
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PACKAGE_NAME=""  # Set after PROJECT_NAME is parsed
 
 # Colors for output
 RED='\033[0;31m'
@@ -75,7 +77,7 @@ step_complete() {
 resume_step6() {
     [[ "$RESUME" != true ]] && return 1
     local count
-    count=$(find specs -maxdepth 1 -name '*.md' ! -name '_raw_output.md' -size +0c 2>/dev/null | wc -l)
+    count=$(find specs -maxdepth 1 -name '*.md' ! -name '_raw_output.md' ! -name '_raw_output_attempt1.md' -size +0c 2>/dev/null | wc -l)
     [[ "$count" -gt 0 ]] || return 1
     SPEC_COUNT=$count
     log_timestamp "SKIP  Step 6: Specification files — $count specs already exist"
@@ -83,12 +85,86 @@ resume_step6() {
     return 0
 }
 
-# Run claude headless and capture output
+# Validate that generation output is actual content, not a conversational summary
+# Args: $1=output, $2=min_lines (default 20)
+# Returns: 0 (valid) or 1 (summary detected)
+validate_generation() {
+    local output="$1"
+    local min_lines="${2:-20}"
+
+    local line_count
+    line_count=$(echo "$output" | wc -l)
+
+    if [[ "$line_count" -lt "$min_lines" ]]; then
+        log_info "Validation FAIL: output too short ($line_count lines, minimum $min_lines)" >&2
+        return 1
+    fi
+
+    # Check if first non-empty line looks like conversational preamble
+    local first_line
+    first_line=$(echo "$output" | sed '/^[[:space:]]*$/d' | head -1)
+
+    if [[ "$first_line" =~ ^(I\'ve\ |I\ have\ |Here\'s\ |Here\ are|Here\ is|Below\ |The\ following\ |Sure|Let\ me|Certainly|Of\ course) ]]; then
+        log_info "Validation FAIL: conversational preamble detected: '${first_line:0:60}...'" >&2
+        return 1
+    fi
+
+    # Catch "The <noun> is ready/complete/done" — meta-commentary about content
+    if [[ "$first_line" =~ ^The\ .+\ (is\ ready|is\ complete|is\ done|has\ been) ]]; then
+        log_info "Validation FAIL: meta-commentary detected: '${first_line:0:60}...'" >&2
+        return 1
+    fi
+
+    # Catch "Summary of" at start
+    if [[ "$first_line" =~ ^Summary\ (of|:) ]]; then
+        log_info "Validation FAIL: summary header detected: '${first_line:0:60}...'" >&2
+        return 1
+    fi
+
+    # Check for tool-use artifacts anywhere in output (Claude asking for permissions)
+    if echo "$output" | grep -qiE '(please approve|file write permission|approve the|permission to write|ready to write)'; then
+        log_info "Validation FAIL: tool-use artifact detected (Claude asked for permissions instead of producing content)" >&2
+        return 1
+    fi
+
+    return 0
+}
+
+# Re-generate when output was a summary instead of actual content
+# Args: $1=raw_output, $2=original_prompt, $3=model
+fixup_generate() {
+    local raw_output="$1"
+    local original_prompt="$2"
+    local model="$3"
+
+    local line_count
+    line_count=$(echo "$raw_output" | wc -l)
+    local first_line
+    first_line=$(echo "$raw_output" | sed '/^[[:space:]]*$/d' | head -1)
+
+    local fixup_prompt
+    fixup_prompt="Your previous response was a conversational summary (${line_count} lines starting with: '${first_line:0:80}'). That is NOT what was requested. Output the COMPLETE content as specified in the original prompt. Start DIRECTLY with the content — no introductory text, no explanations, no preamble.
+
+---
+
+ORIGINAL PROMPT:
+
+${original_prompt}"
+
+    log_info "Fix-up: re-generating with explicit content instruction" >&2
+    local output
+    output=$(echo "$fixup_prompt" | claude -p --model "$model" --output-format text)
+    echo "$output"
+}
+
+# Run claude headless and capture output, with validation + fix-up
+# Args: $1=prompt, $2=description, $3=min_lines (optional, default 20)
 claude_generate() {
     local prompt="$1"
     local description="$2"
+    local min_lines="${3:-20}"
 
-    log_info "Generating: $description"
+    log_info "Generating: $description" >&2
     local output
     output=$(echo "$prompt" | claude -p --model "$MODEL" --output-format text)
 
@@ -96,19 +172,48 @@ claude_generate() {
         log_error "Generation failed (empty output): $description. Re-run with --resume to retry."
     fi
 
+    if ! validate_generation "$output" "$min_lines"; then
+        log_info "Attempting fix-up for: $description" >&2
+        output=$(fixup_generate "$output" "$prompt" "$MODEL")
+
+        if [[ -z "$output" ]]; then
+            log_error "Fix-up generation failed (empty output): $description. Re-run with --resume to retry."
+        fi
+
+        if ! validate_generation "$output" "$min_lines"; then
+            log_info "Warning: fix-up output still looks like a summary, proceeding anyway" >&2
+        fi
+    fi
+
     echo "$output"
 }
 
+# Run claude headless with design model, with validation + fix-up
+# Args: $1=prompt, $2=description, $3=min_lines (optional, default 20)
 claude_generate_design() {
     local prompt="$1"
     local description="$2"
+    local min_lines="${3:-20}"
 
-    log_info "Generating: $description (using $DESIGN_MODEL)"
+    log_info "Generating: $description (using $DESIGN_MODEL)" >&2
     local output
     output=$(echo "$prompt" | claude -p --model "$DESIGN_MODEL" --output-format text)
 
     if [[ -z "$output" ]]; then
         log_error "Generation failed (empty output): $description. Re-run with --resume to retry."
+    fi
+
+    if ! validate_generation "$output" "$min_lines"; then
+        log_info "Attempting fix-up for: $description" >&2
+        output=$(fixup_generate "$output" "$prompt" "$DESIGN_MODEL")
+
+        if [[ -z "$output" ]]; then
+            log_error "Fix-up generation failed (empty output): $description. Re-run with --resume to retry."
+        fi
+
+        if ! validate_generation "$output" "$min_lines"; then
+            log_info "Warning: fix-up output still looks like a summary, proceeding anyway" >&2
+        fi
     fi
 
     echo "$output"
@@ -183,8 +288,7 @@ done
 
 # Validate arguments
 [[ -z "$PROJECT_NAME" ]] && log_error "Missing project_name argument. Run with --help for usage."
-[[ -z "$CONCEPT_FILE" ]] && log_error "Missing concept_file argument. Run with --help for usage."
-[[ ! -f "$CONCEPT_FILE" ]] && log_error "Concept file not found: $CONCEPT_FILE"
+PACKAGE_NAME=$(echo "$PROJECT_NAME" | tr '-' '_')
 
 # Validate we're in a git repo
 git rev-parse --git-dir > /dev/null 2>&1 || log_error "Not in a git repository"
@@ -199,8 +303,16 @@ WORKTREE_NAME="${BASE_NAME}_${PROJECT_NAME}"
 WORKTREE_PATH="$(dirname "$REPO_ROOT")/$WORKTREE_NAME"
 BRANCH_NAME="ralph/$PROJECT_NAME"
 
-# Read concept file
-CONCEPT_CONTENT=$(cat "$CONCEPT_FILE")
+# Read concept file (optional on --resume if design steps are already done)
+CONCEPT_CONTENT=""
+if [[ -n "$CONCEPT_FILE" ]] && [[ -f "$CONCEPT_FILE" ]]; then
+    CONCEPT_CONTENT=$(cat "$CONCEPT_FILE")
+elif [[ "$RESUME" = true ]]; then
+    log_info "Concept file not available — OK for resume if design steps are complete"
+else
+    [[ -z "$CONCEPT_FILE" ]] && log_error "Missing concept_file argument. Run with --help for usage."
+    log_error "Concept file not found: $CONCEPT_FILE"
+fi
 
 echo -e "\n${GREEN}Ralph Init — Automated Setup${NC}"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -236,6 +348,15 @@ else
     git worktree add "$WORKTREE_PATH" -b "$BRANCH_NAME"
     cd "$WORKTREE_PATH"
     log_info "Created worktree at $WORKTREE_PATH"
+fi
+
+# Save concept file into worktree for traceability
+if [[ -n "$CONCEPT_CONTENT" ]]; then
+    echo "$CONCEPT_CONTENT" > CONCEPT.md
+    log_info "Saved concept file as CONCEPT.md"
+elif [[ "$RESUME" = true ]] && [[ -f "CONCEPT.md" ]]; then
+    CONCEPT_CONTENT=$(cat CONCEPT.md)
+    log_info "Loaded concept from existing CONCEPT.md"
 fi
 
 # -----------------------------------------------------------------------------
@@ -327,7 +448,9 @@ Keep the design:
 - Abstract enough that implementation details are left to the agent
 - Focused on WHAT and WHY, not line-by-line HOW
 
-Output the design as a single markdown document.
+YOUR ENTIRE RESPONSE IS THE OUTPUT FILE. Start directly with the markdown
+content (e.g., "# Design Document ..."). Do not summarize, describe, or
+comment on the document — just produce it. No preamble, no explanation.
 
 ---
 
@@ -483,6 +606,10 @@ Can this actually be built as specified?
 
 Be specific. Reference exact sections. Every issue should have a suggested resolution.
 
+YOUR ENTIRE RESPONSE IS THE OUTPUT FILE. Start directly with "# Design Review".
+Do not summarize, describe, or comment on the review — just produce it.
+No preamble, no explanation.
+
 ---
 
 CONCEPT:
@@ -518,14 +645,12 @@ log_step "Step 5/10: Refining design based on review"
 log_timestamp "START Step 5: Refining design based on review"
 
 REFINE_PROMPT=$(cat << 'PROMPT_END'
-You previously created a design document. A critical review has identified 
-issues that need to be addressed before implementation.
-
-Your task: Produce a REFINED DESIGN that addresses the review findings.
+Below is an initial design document (V1) and a critical review of that design.
+Produce a REFINED DESIGN (V2) that addresses the review findings.
 
 Instructions:
 1. Read the review carefully — especially Critical and Major issues
-2. Address each issue explicitly in your refined design
+2. Address each issue explicitly in the refined design
 3. Keep what works — don't rewrite sections that passed review
 4. For each significant change, add a brief note explaining the change
 
@@ -537,7 +662,9 @@ At the end of the refined design, include a section:
 - [Change 2]: [Why]
 - ...
 
-Output the complete refined design document (not just the changes).
+YOUR ENTIRE RESPONSE IS THE OUTPUT FILE. Start directly with the markdown
+content (e.g., "# Design Document ..."). Do not summarize, describe, or
+comment on the document — just produce it. No preamble, no explanation.
 
 ---
 
@@ -621,6 +748,21 @@ Important:
 - Acceptance criteria should be machine-verifiable where possible
 - Think about what tests would catch bad implementations
 
+CRITICAL FORMAT REQUIREMENT:
+Your output will be parsed by a machine. The parser scans for lines matching
+exactly: ```markdown specs/FILENAME.md  (opening fence with path)
+and extracts content until the next ``` (closing fence).
+
+If the parser finds ZERO matching fences, the entire step FAILS.
+Common mistakes that cause FAIL:
+- Writing a prose summary like "I've created 16 specification files..."
+- Using ```md instead of ```markdown
+- Omitting the specs/ path prefix
+- Adding extra text before the first fenced block
+
+Start DIRECTLY with the first ```markdown specs/... fenced block.
+Do NOT include any introductory text, summary, or explanation before or between spec blocks.
+
 ---
 
 DESIGN DOCUMENT:
@@ -628,7 +770,57 @@ DESIGN DOCUMENT:
 PROMPT_END
 )
 
-SPECS_OUTPUT=$(claude_generate "${SPECS_PROMPT}${DESIGN_DOC}" "Specification files")
+SPECS_FULL_PROMPT="${SPECS_PROMPT}${DESIGN_DOC}"
+SPECS_OUTPUT=$(claude_generate "$SPECS_FULL_PROMPT" "Specification files")
+
+# Spec-specific validation using validate-specs-output.sh
+SPEC_VALIDATION=$(echo "$SPECS_OUTPUT" | "$SCRIPT_DIR/validate-specs-output.sh" 2>&1) || true
+
+if [[ "$SPEC_VALIDATION" == PASS:* ]]; then
+    log_info "Spec validation: $SPEC_VALIDATION" >&2
+else
+    # First attempt failed — save raw output and retry with fix-up
+    log_info "Spec validation failed: $SPEC_VALIDATION" >&2
+    echo "$SPECS_OUTPUT" > specs/_raw_output_attempt1.md
+    log_info "Raw output saved to specs/_raw_output_attempt1.md" >&2
+
+    SPEC_FIXUP_PROMPT="Your previous response FAILED machine validation:
+
+${SPEC_VALIDATION}
+
+The parser requires EXACTLY this format for each spec:
+
+\`\`\`markdown specs/FILENAME.md
+# Topic Name
+(spec content)
+\`\`\`
+
+Start DIRECTLY with the first fenced block. No introductory text.
+Reformat the following content into properly fenced spec blocks.
+
+---
+
+RAW OUTPUT TO REFORMAT:
+
+${SPECS_OUTPUT}
+
+---
+
+ORIGINAL PROMPT (for context):
+
+${SPECS_FULL_PROMPT}"
+
+    SPECS_OUTPUT=$(claude_generate "$SPEC_FIXUP_PROMPT" "Specification files (fix-up)")
+
+    SPEC_VALIDATION=$(echo "$SPECS_OUTPUT" | "$SCRIPT_DIR/validate-specs-output.sh" 2>&1) || true
+
+    if [[ "$SPEC_VALIDATION" == PASS:* ]]; then
+        log_info "Spec validation (fix-up): $SPEC_VALIDATION" >&2
+    else
+        echo "$SPECS_OUTPUT" > specs/_raw_output.md
+        log_error "Spec validation failed after fix-up: $SPEC_VALIDATION. Raw outputs saved to specs/_raw_output_attempt1.md and specs/_raw_output.md. Re-run with --resume to retry this step."
+    fi
+fi
 
 # Parse specs from output - look for ```markdown specs/*.md blocks
 echo "$SPECS_OUTPUT" | awk '
@@ -647,7 +839,7 @@ echo "$SPECS_OUTPUT" | awk '
 '
 
 # Count generated specs (use find to avoid pipefail issues with ls)
-SPEC_COUNT=$(find specs -maxdepth 1 -name '*.md' ! -name '_raw_output.md' -size +0c 2>/dev/null | wc -l)
+SPEC_COUNT=$(find specs -maxdepth 1 -name '*.md' ! -name '_raw_output.md' ! -name '_raw_output_attempt1.md' -size +0c 2>/dev/null | wc -l)
 log_info "Generated: $SPEC_COUNT spec files in specs/"
 
 # Fail hard if no specs were parsed
@@ -700,7 +892,9 @@ Include ONLY these sections:
 ## Known Gotchas
 [Common agent pitfalls for this specific project]
 
-Output ONLY the AGENTS.md content, no explanations.
+YOUR ENTIRE RESPONSE IS THE OUTPUT FILE. Start directly with the markdown
+content (e.g., "## Build & Run"). Do not summarize, describe, or comment
+on the document — just produce it. No preamble, no explanation.
 
 ---
 
@@ -718,100 +912,103 @@ log_timestamp "END   Step 7: Success"
 fi
 
 # -----------------------------------------------------------------------------
-# Step 6: Generate PROMPT_plan.md
+# Step 6: Write PROMPT_plan.md (hard-coded template)
 # -----------------------------------------------------------------------------
 
 if [[ "$RESUME" = true ]] && step_complete 8 "PROMPT_plan.md" "PROMPT_plan.md"; then
     :
 else
 
-log_step "Step 8/10: Generating PROMPT_plan.md"
-log_timestamp "START Step 8: Generating PROMPT_plan.md"
+log_step "Step 8/10: Writing PROMPT_plan.md"
+log_timestamp "START Step 8: Writing PROMPT_plan.md"
 
-PLAN_PROMPT=$(cat << 'PROMPT_END'
-Generate a PROMPT_plan.md for a Ralph Wiggum loop. This prompt is piped into 
-`claude -p` at the start of each PLANNING iteration.
+cat << 'PROMPT_PLAN' > PROMPT_plan.md
+You are a PLANNING agent in a Ralph Wiggum loop. No code edits, no commits.
 
-The agent should:
-1. Study all specs in specs/* using parallel subagents
-2. Study IMPLEMENTATION_PLAN.md if it exists  
-3. Study src/ to understand what's already built
-4. Compare specs against current code (gap analysis)
-5. Create/update IMPLEMENTATION_PLAN.md with prioritized tasks
+## Process
 
-Rules:
-- PLANNING ONLY. No implementation. No commits.
-- Tasks should be sized for ONE iteration (~5 files max)
-- Each task references which spec(s) it addresses
-- Each task notes what backpressure verifies it
-- Use "study" not "read"
-- Include "don't assume not implemented — search first" as guardrail
-- Use "Ultrathink" for complex analysis
-- Markdown bullet points, not JSON
-- Project uses Python with UV, pytest, ruff, mypy
+1. **Study all specs** — launch parallel subagents to study each file in specs/
+2. **Study existing code** — search src/ to understand what's already built
+3. **Study IMPLEMENTATION_PLAN.md** if it exists — note completed vs pending tasks
+4. **Gap analysis** — compare spec requirements against current codebase
+   - Don't assume not implemented — always search first (Glob, Grep, Read)
+   - Use Ultrathink for cross-spec dependency analysis
+5. **Produce IMPLEMENTATION_PLAN.md** — create or update with prioritized tasks
 
-The prompt should be ~25-35 lines. Concise and direct.
+## Task Format (markdown bullets, not JSON)
 
-Output ONLY the prompt content, no explanations or markdown fences.
-PROMPT_END
-)
+- **Task name** [spec-NNN]
+  - What: concrete deliverable (~5 files max, one iteration)
+  - Why: which spec requirement(s) it satisfies
+  - Verified by: what backpressure proves it works (test, mypy, ruff)
+  - Depends on: prerequisite tasks if any
 
-PLAN_OUTPUT=$(claude_generate "$PLAN_PROMPT" "PROMPT_plan.md")
-echo "$PLAN_OUTPUT" > PROMPT_plan.md
+## Rules
 
-log_info "Generated: PROMPT_plan.md"
+- PLANNING ONLY — no implementation, no file edits, no commits
+- Prioritize: critical path first, dependencies before dependents
+- Size tasks for ONE iteration (completable in a single agent run)
+- IMPLEMENTATION_PLAN.md lives at repository root, not in subdirectories
+PROMPT_PLAN
+
+log_info "Written: PROMPT_plan.md"
 log_timestamp "END   Step 8: Success"
 
 fi
 
 # -----------------------------------------------------------------------------
-# Step 7: Generate PROMPT_build.md
+# Step 7: Write PROMPT_build.md (hard-coded template)
 # -----------------------------------------------------------------------------
 
 if [[ "$RESUME" = true ]] && step_complete 9 "PROMPT_build.md" "PROMPT_build.md"; then
     :
 else
 
-log_step "Step 9/10: Generating PROMPT_build.md"
-log_timestamp "START Step 9: Generating PROMPT_build.md"
+log_step "Step 9/10: Writing PROMPT_build.md"
+log_timestamp "START Step 9: Writing PROMPT_build.md"
 
-BUILD_PROMPT=$(cat << 'PROMPT_END'
-Generate a PROMPT_build.md for a Ralph Wiggum loop. This prompt is piped into 
-`claude -p` at the start of each BUILD iteration.
+cat << PROMPT_BUILD > PROMPT_build.md
+You are a BUILD agent in a Ralph Wiggum loop. Complete exactly ONE task per iteration.
 
-The agent should:
-1. Study specs/* for requirements context
-2. Study IMPLEMENTATION_PLAN.md to pick the most important remaining task
-3. Search the codebase before assuming anything is missing
-4. Implement exactly ONE task
-5. Run validation (pytest, mypy, ruff)
-6. Update IMPLEMENTATION_PLAN.md — mark task done, note discoveries
-7. Update AGENTS.md ONLY if operational learnings (keep it brief!)
-8. git add -A && git commit with descriptive message
+## Workflow
 
-Include these guardrails using 9s numbering (higher = more critical):
+1. **Study** specs/* for requirements and constraints
+2. **Study** IMPLEMENTATION_PLAN.md — pick the highest-priority incomplete task
+3. **Search** the codebase before assuming anything is missing (Glob, Grep, Read)
+4. **Implement** the task completely — no TODOs, no placeholders, no stubs
+5. **Test** — write tests that validate behavior against spec requirements
+6. **Validate**
+   - \`uv run pytest tests/\` — all tests must pass
+   - \`uv run mypy src/\` — no type errors
+   - \`uv run ruff check src/ tests/ && uv run ruff format src/ tests/\`
+7. **Update IMPLEMENTATION_PLAN.md** — mark task [DONE], add discoveries/blockers
+8. **Commit** — \`git add -A && git commit -m "descriptive message"\`
+
+## Guardrails (ascending criticality)
+
 - 999: Capture the why in docs and tests
-- 9999: Single sources of truth, no migrations/adapters
+- 9999: Single sources of truth — no migrations, no adapters
 - 99999: Implement completely. No placeholders, no stubs.
 - 999999: Keep IMPLEMENTATION_PLAN.md current with learnings
-- 9999999: Update AGENTS.md with operational learnings only, keep brief
+- 9999999: AGENTS.md is operational ONLY — no status, no progress, no checklists
 - 99999999: For bugs found, resolve or document in IMPLEMENTATION_PLAN.md
 - 999999999: Clean completed items from IMPLEMENTATION_PLAN.md periodically
-- 9999999999: AGENTS.md is operational only — no status, no progress notes
-- 99999999999: Don't assume not implemented — always search first
+- 9999999999: Don't assume not implemented — always search first
+- 99999999999: NEVER put implementation status in AGENTS.md — that goes in IMPLEMENTATION_PLAN.md
 
-Project uses Python with UV, pytest, ruff, mypy.
+## What goes where
 
-The prompt should be ~35-45 lines. Concise and direct.
+- **IMPLEMENTATION_PLAN.md** (root): task status, progress, blockers, discoveries
+- **AGENTS.md**: operational guide ONLY (build commands, gotchas, conventions) — NEVER status
 
-Output ONLY the prompt content, no explanations or markdown fences.
-PROMPT_END
-)
+## Environment
 
-BUILD_OUTPUT=$(claude_generate "$BUILD_PROMPT" "PROMPT_build.md")
-echo "$BUILD_OUTPUT" > PROMPT_build.md
+- Python with UV — \`uv run pytest\`, \`uv run mypy src/\`, \`uv run ruff check/format\`
+- Source: src/${PACKAGE_NAME}/
+- Tests: tests/
+PROMPT_BUILD
 
-log_info "Generated: PROMPT_build.md"
+log_info "Written: PROMPT_build.md"
 log_timestamp "END   Step 9: Success"
 
 fi
@@ -910,7 +1107,6 @@ strict = true
 PYPROJECT
 
 # Create source package
-PACKAGE_NAME=$(echo "$PROJECT_NAME" | tr '-' '_')
 mkdir -p "src/$PACKAGE_NAME"
 echo '"""Ralph project package."""' > "src/$PACKAGE_NAME/__init__.py"
 
@@ -1002,18 +1198,18 @@ echo ""
 echo "  1. Review the design evolution:"
 echo "     - DESIGN_v1.md → DESIGN_REVIEW.md → DESIGN.md"
 echo "     - Check the 'Changes from V1' section in DESIGN.md"
-echo "     ${YELLOW}cd $WORKTREE_PATH${NC}"
+echo -e "     ${YELLOW}cd $WORKTREE_PATH${NC}"
 echo ""
 echo "  2. Review specs/ for completeness"
 echo ""
 echo "  3. Install dev dependencies:"
-echo "     ${YELLOW}uv sync --extra dev${NC}"
+echo -e "     ${YELLOW}uv sync --extra dev${NC}"
 echo ""
 echo "  4. Run planning phase (generates IMPLEMENTATION_PLAN.md):"
-echo "     ${YELLOW}./loop.sh plan 3${NC}"
+echo -e "     ${YELLOW}./loop.sh plan 3${NC}"
 echo ""
 echo "  5. Review the plan, then start building:"
-echo "     ${YELLOW}./loop.sh 10${NC}"
+echo -e "     ${YELLOW}./loop.sh 10${NC}"
 echo ""
 echo "  6. Watch the first few iterations, tune as needed."
 echo ""
