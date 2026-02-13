@@ -458,24 +458,20 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 
 if should_run_stage "worktree"; then
 
-if [[ "$RESUME" = true ]]; then
-    if [[ -d "$WORKTREE_PATH" ]]; then
-        log_step "$(step_header worktree 1 10 "Entering existing worktree (resume mode)")"
-        cd "$WORKTREE_PATH"
-        log_info "Resumed in $WORKTREE_PATH"
-    else
-        log_info "No existing worktree found — starting fresh"
-        RESUME=false  # Fall back to fresh mode
-        log_step "$(step_header worktree 1 10 "Creating git worktree")"
-        git worktree add "$WORKTREE_PATH" -b "$BRANCH_NAME"
-        cd "$WORKTREE_PATH"
-        log_info "Created worktree at $WORKTREE_PATH"
-    fi
+if [[ -d "$WORKTREE_PATH" ]]; then
+    # Worktree already exists — enter it
+    log_step "$(step_header worktree 1 10 "Entering existing worktree")"
+    cd "$WORKTREE_PATH"
+    log_info "Entered existing worktree: $WORKTREE_PATH"
+elif git show-ref --verify --quiet "refs/heads/$BRANCH_NAME" 2>/dev/null; then
+    # Branch exists but worktree dir doesn't — attach worktree to existing branch
+    log_step "$(step_header worktree 1 10 "Creating git worktree (existing branch)")"
+    git worktree add "$WORKTREE_PATH" "$BRANCH_NAME"
+    cd "$WORKTREE_PATH"
+    log_info "Created worktree at $WORKTREE_PATH (attached to existing branch $BRANCH_NAME)"
 else
+    # Fresh start — create branch and worktree
     log_step "$(step_header worktree 1 10 "Creating git worktree")"
-    if [[ -d "$WORKTREE_PATH" ]]; then
-        log_error "Worktree already exists: $WORKTREE_PATH (use --resume to continue a previous run)"
-    fi
     git worktree add "$WORKTREE_PATH" -b "$BRANCH_NAME"
     cd "$WORKTREE_PATH"
     log_info "Created worktree at $WORKTREE_PATH"
