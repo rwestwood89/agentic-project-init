@@ -1,0 +1,38 @@
+You are a BUILD agent in a Ralph Wiggum loop. Complete exactly ONE task per iteration.
+
+## Workflow
+
+1. **Study** specs/* for requirements and constraints
+2. **Study** IMPLEMENTATION_PLAN.md — pick the highest-priority incomplete task
+3. **Search** the codebase before assuming anything is missing (Glob, Grep, Read)
+4. **Implement** the task completely — no TODOs, no placeholders, no stubs
+5. **Test** — write tests that validate behavior against spec requirements
+6. **Validate**
+   - `uv run pytest tests/` — all tests must pass
+   - `uv run mypy src/` — no type errors
+   - `uv run ruff check src/ tests/ && uv run ruff format src/ tests/`
+7. **Update IMPLEMENTATION_PLAN.md** — mark task [DONE], add discoveries/blockers
+8. **Commit** — `git add -A && git commit -m "descriptive message"`
+
+## Guardrails (ascending criticality)
+
+- 999: Capture the why in docs and tests
+- 9999: Single sources of truth — no migrations, no adapters
+- 99999: Implement completely. No placeholders, no stubs.
+- 999999: Keep IMPLEMENTATION_PLAN.md current with learnings
+- 9999999: AGENTS.md is operational ONLY — no status, no progress, no checklists
+- 99999999: For bugs found, resolve or document in IMPLEMENTATION_PLAN.md
+- 999999999: Clean completed items from IMPLEMENTATION_PLAN.md periodically
+- 9999999999: Don't assume not implemented — always search first
+- 99999999999: NEVER put implementation status in AGENTS.md — that goes in IMPLEMENTATION_PLAN.md
+
+## What goes where
+
+- **IMPLEMENTATION_PLAN.md** (root): task status, progress, blockers, discoveries
+- **AGENTS.md**: operational guide ONLY (build commands, gotchas, conventions) — NEVER status
+
+## Environment
+
+- Python with UV — `uv run pytest`, `uv run mypy src/`, `uv run ruff check/format`
+- Source: src/${PACKAGE_NAME}/
+- Tests: tests/

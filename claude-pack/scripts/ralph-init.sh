@@ -5,11 +5,15 @@ set -euo pipefail
 # ralph-init.sh — Automated Ralph Wiggum Loop Setup
 # =============================================================================
 #
-# Usage: ./ralph-init.sh <project_name> <concept_file> [--model <model>]
+# Usage: ./ralph-init.sh <project_name> <concept_file> [options]
+#        ./ralph-init.sh <project_name> --design <design_file> [options]
 #
 # Example:
 #   ./ralph-init.sh comment-system ./CONCEPT.md
 #   ./ralph-init.sh comment-system ./CONCEPT.md --model opus
+#   ./ralph-init.sh comment-system --design ./DESIGN.md
+#   ./ralph-init.sh comment-system --design ./draft.md --review-design
+#   ./ralph-init.sh comment-system ./CONCEPT.md --stage specs,agents
 #
 # Prerequisites:
 #   - Must be run from within a git repository
@@ -26,6 +30,12 @@ MODEL="${RALPH_MODEL:-sonnet}"
 DESIGN_MODEL="${RALPH_DESIGN_MODEL:-sonnet}"  # Can use opus for design phase
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PACKAGE_NAME=""  # Set after PROJECT_NAME is parsed
+PROMPTS_DIR=""   # Override prompt file location
+STAGE_FILTER=false
+STAGES=""
+DESIGN_FILE=""
+REVIEW_DESIGN=false
+SPEC_COUNT=0
 
 # Colors for output
 RED='\033[0;31m'
@@ -33,6 +43,9 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
+
+# Valid stage names for --stage flag
+VALID_STAGES="worktree,dirs,design,review,refine,specs,agents,prompts,scaffold"
 
 # -----------------------------------------------------------------------------
 # Helper Functions
@@ -55,6 +68,19 @@ log_error() {
 
 log_timestamp() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1"
+}
+
+# Format step header: "[stage_name]" when --stage is active, "Step N/M:" otherwise
+step_header() {
+    local stage_name="$1"
+    local step_num="$2"
+    local total="$3"
+    local description="$4"
+    if [[ "$STAGE_FILTER" = true ]]; then
+        echo "[$stage_name] $description"
+    else
+        echo "Step $step_num/$total: $description"
+    fi
 }
 
 # Check if a step's output already exists (for resume)
@@ -220,22 +246,73 @@ claude_generate_design() {
 }
 
 # -----------------------------------------------------------------------------
+# Prompt Resolution
+# -----------------------------------------------------------------------------
+
+# Resolve prompt file path using search order:
+# 1. --prompts-dir <path> (CLI flag)
+# 2. prompts/ in current directory (per-project override)
+# 3. $SCRIPT_DIR/../prompts/ralph/ (default)
+resolve_prompt() {
+    local filename="$1"
+    if [[ -n "$PROMPTS_DIR" ]] && [[ -f "$PROMPTS_DIR/$filename" ]]; then
+        echo "$PROMPTS_DIR/$filename"
+        return
+    fi
+    if [[ -f "prompts/$filename" ]]; then
+        echo "prompts/$filename"
+        return
+    fi
+    local default_path="$SCRIPT_DIR/../prompts/ralph/$filename"
+    if [[ -f "$default_path" ]]; then
+        echo "$default_path"
+        return
+    fi
+    log_error "Prompt file not found: $filename (searched: ${PROMPTS_DIR:+$PROMPTS_DIR, }prompts/, $SCRIPT_DIR/../prompts/ralph/)"
+}
+
+# Load prompt file content
+load_prompt() {
+    local filename="$1"
+    local path
+    path=$(resolve_prompt "$filename")
+    cat "$path"
+}
+
+# -----------------------------------------------------------------------------
+# Stage Filtering
+# -----------------------------------------------------------------------------
+
+# Check if a stage should run (always true when --stage is not used)
+should_run_stage() {
+    local stage="$1"
+    [[ "$STAGE_FILTER" = false ]] && return 0
+    echo ",$STAGES," | grep -q ",$stage,"
+}
+
+# -----------------------------------------------------------------------------
 # Argument Parsing
 # -----------------------------------------------------------------------------
 
 usage() {
     cat << EOF
 Usage: $(basename "$0") <project_name> <concept_file> [options]
+       $(basename "$0") <project_name> --design <design_file> [options]
 
 Arguments:
   project_name    Name for the Ralph project (e.g., comment-system)
   concept_file    Path to markdown file describing project OUTCOMES
 
 Options:
-  --model <model>         Model for generation (default: sonnet)
-  --design-model <model>  Model for design phase (default: sonnet, consider opus)
-  --resume                Resume a previously failed run (skips completed steps)
-  --help                  Show this help message
+  --stage <stages>          Comma-separated stages to run (default: all)
+                            Valid: worktree,dirs,design,review,refine,specs,agents,prompts,scaffold
+  --design <file>           Use existing design document (skip design/review/refine)
+  --review-design           With --design: run review+refine on provided design
+  --prompts-dir <path>      Override prompt/template files directory
+  --model <model>           Model for generation (default: sonnet)
+  --design-model <model>    Model for design phase (default: sonnet)
+  --resume                  Resume a previously failed run
+  --help                    Show this help message
 
 Environment Variables:
   RALPH_MODEL             Default model for file generation
@@ -244,6 +321,9 @@ Environment Variables:
 Example:
   $(basename "$0") comment-system ./CONCEPT.md
   $(basename "$0") auth-system ./auth-concept.md --design-model opus
+  $(basename "$0") comment-system --design ./DESIGN.md
+  $(basename "$0") comment-system --design ./draft.md --review-design
+  $(basename "$0") comment-system ./CONCEPT.md --stage specs,agents,prompts
 EOF
     exit 0
 }
@@ -262,6 +342,24 @@ while [[ $# -gt 0 ]]; do
         --design-model)
             DESIGN_MODEL="$2"
             shift 2
+            ;;
+        --prompts-dir)
+            PROMPTS_DIR="$2"
+            [[ ! -d "$PROMPTS_DIR" ]] && log_error "Prompts directory not found: $PROMPTS_DIR"
+            shift 2
+            ;;
+        --stage)
+            STAGE_FILTER=true
+            STAGES="$2"
+            shift 2
+            ;;
+        --design)
+            DESIGN_FILE="$2"
+            shift 2
+            ;;
+        --review-design)
+            REVIEW_DESIGN=true
+            shift
             ;;
         --help|-h)
             usage
@@ -286,12 +384,32 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+# Validate --stage names
+if [[ "$STAGE_FILTER" = true ]]; then
+    IFS=',' read -ra STAGE_ARRAY <<< "$STAGES"
+    for stage in "${STAGE_ARRAY[@]}"; do
+        if ! echo ",$VALID_STAGES," | grep -q ",$stage,"; then
+            log_error "Unknown stage: $stage (valid: $VALID_STAGES)"
+        fi
+    done
+fi
+
+# Validate --review-design requires --design
+if [[ "$REVIEW_DESIGN" = true ]] && [[ -z "$DESIGN_FILE" ]]; then
+    log_error "--review-design requires --design <file>"
+fi
+
 # Validate arguments
 [[ -z "$PROJECT_NAME" ]] && log_error "Missing project_name argument. Run with --help for usage."
 PACKAGE_NAME=$(echo "$PROJECT_NAME" | tr '-' '_')
 
 # Validate we're in a git repo
 git rev-parse --git-dir > /dev/null 2>&1 || log_error "Not in a git repository"
+
+# Validate --design file exists
+if [[ -n "$DESIGN_FILE" ]] && [[ ! -f "$DESIGN_FILE" ]]; then
+    log_error "Design file not found: $DESIGN_FILE"
+fi
 
 # -----------------------------------------------------------------------------
 # Determine Paths
@@ -303,15 +421,23 @@ WORKTREE_NAME="${BASE_NAME}_${PROJECT_NAME}"
 WORKTREE_PATH="$(dirname "$REPO_ROOT")/$WORKTREE_NAME"
 BRANCH_NAME="ralph/$PROJECT_NAME"
 
-# Read concept file (optional on --resume if design steps are already done)
+# Read concept file (optional on --resume or --design if design steps are already done)
 CONCEPT_CONTENT=""
 if [[ -n "$CONCEPT_FILE" ]] && [[ -f "$CONCEPT_FILE" ]]; then
     CONCEPT_CONTENT=$(cat "$CONCEPT_FILE")
 elif [[ "$RESUME" = true ]]; then
     log_info "Concept file not available — OK for resume if design steps are complete"
+elif [[ -n "$DESIGN_FILE" ]]; then
+    log_info "Concept file not provided — using --design mode"
 else
     [[ -z "$CONCEPT_FILE" ]] && log_error "Missing concept_file argument. Run with --help for usage."
     log_error "Concept file not found: $CONCEPT_FILE"
+fi
+
+# Read design file if provided
+DESIGN_INPUT_CONTENT=""
+if [[ -n "$DESIGN_FILE" ]]; then
+    DESIGN_INPUT_CONTENT=$(cat "$DESIGN_FILE")
 fi
 
 echo -e "\n${GREEN}Ralph Init — Automated Setup${NC}"
@@ -321,33 +447,46 @@ echo "  Base Repo:  $BASE_NAME"
 echo "  Worktree:   $WORKTREE_PATH"
 echo "  Branch:     $BRANCH_NAME"
 echo "  Model:      $MODEL (design: $DESIGN_MODEL)"
+[[ "$STAGE_FILTER" = true ]] && echo "  Stages:     $STAGES"
+[[ -n "$DESIGN_FILE" ]] && echo "  Design:     $DESIGN_FILE${REVIEW_DESIGN:+ (with review)}"
+[[ -n "$PROMPTS_DIR" ]] && echo "  Prompts:    $PROMPTS_DIR"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 # -----------------------------------------------------------------------------
 # Step 1: Create Worktree
 # -----------------------------------------------------------------------------
 
+if should_run_stage "worktree"; then
+
 if [[ "$RESUME" = true ]]; then
     if [[ -d "$WORKTREE_PATH" ]]; then
-        log_step "Step 1/10: Entering existing worktree (resume mode)"
+        log_step "$(step_header worktree 1 10 "Entering existing worktree (resume mode)")"
         cd "$WORKTREE_PATH"
         log_info "Resumed in $WORKTREE_PATH"
     else
         log_info "No existing worktree found — starting fresh"
         RESUME=false  # Fall back to fresh mode
-        log_step "Step 1/10: Creating git worktree"
+        log_step "$(step_header worktree 1 10 "Creating git worktree")"
         git worktree add "$WORKTREE_PATH" -b "$BRANCH_NAME"
         cd "$WORKTREE_PATH"
         log_info "Created worktree at $WORKTREE_PATH"
     fi
 else
-    log_step "Step 1/10: Creating git worktree"
+    log_step "$(step_header worktree 1 10 "Creating git worktree")"
     if [[ -d "$WORKTREE_PATH" ]]; then
         log_error "Worktree already exists: $WORKTREE_PATH (use --resume to continue a previous run)"
     fi
     git worktree add "$WORKTREE_PATH" -b "$BRANCH_NAME"
     cd "$WORKTREE_PATH"
     log_info "Created worktree at $WORKTREE_PATH"
+fi
+
+else
+    # Worktree stage skipped — enter existing worktree if it exists
+    if [[ -d "$WORKTREE_PATH" ]]; then
+        cd "$WORKTREE_PATH"
+        log_info "Entered existing worktree: $WORKTREE_PATH"
+    fi
 fi
 
 # Save concept file into worktree for traceability
@@ -357,6 +496,20 @@ if [[ -n "$CONCEPT_CONTENT" ]]; then
 elif [[ "$RESUME" = true ]] && [[ -f "CONCEPT.md" ]]; then
     CONCEPT_CONTENT=$(cat CONCEPT.md)
     log_info "Loaded concept from existing CONCEPT.md"
+fi
+
+# Handle --design file: copy into worktree
+DESIGN_DOC=""
+if [[ -n "$DESIGN_INPUT_CONTENT" ]]; then
+    if [[ "$REVIEW_DESIGN" = true ]]; then
+        echo "$DESIGN_INPUT_CONTENT" > DESIGN_v1.md
+        DESIGN_DOC="$DESIGN_INPUT_CONTENT"
+        log_info "Copied design file to DESIGN_v1.md (will review+refine)"
+    else
+        echo "$DESIGN_INPUT_CONTENT" > DESIGN.md
+        DESIGN_DOC="$DESIGN_INPUT_CONTENT"
+        log_info "Copied design file to DESIGN.md (skipping design/review/refine)"
+    fi
 fi
 
 # -----------------------------------------------------------------------------
@@ -370,16 +523,20 @@ log_timestamp "Ralph Init started"
 log_timestamp "Project: $PROJECT_NAME | Model: $MODEL | Design Model: $DESIGN_MODEL"
 log_timestamp "Worktree: $WORKTREE_PATH | Branch: $BRANCH_NAME"
 [[ "$RESUME" = true ]] && log_timestamp "Mode: RESUME"
+[[ "$STAGE_FILTER" = true ]] && log_timestamp "Stages: $STAGES"
+[[ -n "$DESIGN_FILE" ]] && log_timestamp "Design input: $DESIGN_FILE (review: $REVIEW_DESIGN)"
 
 # -----------------------------------------------------------------------------
 # Step 2: Create Directory Structure
 # -----------------------------------------------------------------------------
 
+if should_run_stage "dirs"; then
+
 if [[ "$RESUME" = true ]] && step_complete 2 "Directory structure" "specs/" "src/" "tests/"; then
     :
 else
 
-log_step "Step 2/10: Creating directory structure"
+log_step "$(step_header dirs 2 10 "Creating directory structure")"
 log_timestamp "START Step 2: Creating directory structure"
 
 mkdir -p specs
@@ -391,74 +548,24 @@ log_timestamp "END   Step 2: Success"
 
 fi
 
+fi  # dirs stage
+
 # -----------------------------------------------------------------------------
 # Step 3: Generate Design Document from Concept (3-turn: design → review → refine)
 # -----------------------------------------------------------------------------
 
-if [[ "$RESUME" = true ]] && step_complete 3 "Initial design" "DESIGN_v1.md"; then
+if should_run_stage "design"; then
+
+if [[ -n "$DESIGN_FILE" ]]; then
+    log_info "[design] Skipped — using provided design file"
+elif [[ "$RESUME" = true ]] && step_complete 3 "Initial design" "DESIGN_v1.md"; then
     DESIGN_DOC=$(cat DESIGN_v1.md)
 else
 
-log_step "Step 3/10: Generating initial design document"
+log_step "$(step_header design 3 10 "Generating initial design document")"
 log_timestamp "START Step 3: Generating initial design document"
 
-DESIGN_PROMPT=$(cat << 'PROMPT_END'
-I have a project concept focused on OUTCOMES. I need you to create a 
-detailed DESIGN DOCUMENT that specifies the architecture and implementation
-approach. This design will be used to generate specifications for an
-automated coding agent (Ralph Wiggum loop).
-
-Create a design document that includes:
-
-## 1. Overview
-- One paragraph summary of what this system does
-- Primary use cases (3-5 bullet points)
-
-## 2. Data Model
-- Core entities and their relationships
-- Schema definitions (use TypeScript interfaces or JSON Schema style)
-- Storage format decisions (files, database, etc.)
-
-## 3. Architecture
-- Component breakdown (what are the major pieces?)
-- How components interact (data flow)
-- Key interfaces between components
-
-## 4. Core Algorithms
-- Any non-trivial logic that needs careful implementation
-- Edge cases that must be handled
-- Performance considerations
-
-## 5. External Interfaces
-- CLI commands (if applicable)
-- API endpoints or MCP tools (if applicable)
-- File formats for input/output
-
-## 6. Constraints & Invariants
-- Rules that must NEVER be violated
-- Security considerations
-- Determinism requirements
-
-## 7. Phasing (optional)
-- If this is a multi-phase project, what's in Phase 1 vs later?
-- What can be deferred?
-
-Keep the design:
-- Concrete enough that a coding agent can implement it
-- Abstract enough that implementation details are left to the agent
-- Focused on WHAT and WHY, not line-by-line HOW
-
-YOUR ENTIRE RESPONSE IS THE OUTPUT FILE. Start directly with the markdown
-content (e.g., "# Design Document ..."). Do not summarize, describe, or
-comment on the document — just produce it. No preamble, no explanation.
-
----
-
-PROJECT CONCEPT:
-
-PROMPT_END
-)
-
+DESIGN_PROMPT=$(load_prompt "design.prompt.md")
 DESIGN_DOC=$(claude_generate_design "${DESIGN_PROMPT}${CONCEPT_CONTENT}" "Initial design")
 echo "$DESIGN_DOC" > DESIGN_v1.md
 
@@ -467,155 +574,32 @@ log_timestamp "END   Step 3: Success"
 
 fi
 
+fi  # design stage
+
 # -----------------------------------------------------------------------------
 # Step 3b: Design Review
 # -----------------------------------------------------------------------------
 
-if [[ "$RESUME" = true ]] && step_complete 4 "Design review" "DESIGN_REVIEW.md"; then
+if should_run_stage "review"; then
+
+if [[ -n "$DESIGN_FILE" ]] && [[ "$REVIEW_DESIGN" != true ]]; then
+    log_info "[review] Skipped — using provided design file"
+elif [[ "$RESUME" = true ]] && step_complete 4 "Design review" "DESIGN_REVIEW.md"; then
     DESIGN_REVIEW=$(cat DESIGN_REVIEW.md)
 else
 
-log_step "Step 4/10: Reviewing design (critic agent)"
+# Prerequisite: load DESIGN_v1.md if not in memory
+if [[ -z "$DESIGN_DOC" ]] && [[ -f "DESIGN_v1.md" ]]; then
+    DESIGN_DOC=$(cat DESIGN_v1.md)
+    log_info "Loaded DESIGN_v1.md from disk"
+elif [[ -z "$DESIGN_DOC" ]]; then
+    log_error "review stage requires DESIGN_v1.md but it does not exist. Run the design stage first."
+fi
+
+log_step "$(step_header review 4 10 "Reviewing design (critic agent)")"
 log_timestamp "START Step 4: Reviewing design (critic agent)"
 
-REVIEW_PROMPT=$(cat << 'PROMPT_END'
-You are a design review specialist. Your goal is to critically evaluate this 
-design document to catch issues before implementation begins.
-
-**This is a CRITICAL REVIEW - be skeptical and thorough:**
-- Verify the design actually satisfies the concept/requirements
-- Challenge architectural decisions and abstractions
-- Look for ambiguity, duplication, and hidden complexity
-- Identify missing pieces that will cause problems during implementation
-
-## Review Process
-
-Evaluate the design along each dimension below. For each dimension, provide:
-- **Assessment**: Pass / Concerns / Fail
-- **Findings**: Specific observations with references to design sections
-- **Recommendations**: Concrete suggestions if issues found
-
-### Dimension 1: Concept Compliance
-
-Does the design meet the stated outcomes?
-
-- Does every outcome in the concept have a corresponding design element?
-- Are edge cases accounted for?
-- Does the design serve the stated goals?
-
-### Dimension 2: Abstraction Quality
-
-Are abstractions clean and maintainable?
-
-- Are abstractions at the right level (not too general, not too specific)?
-- Is the component hierarchy logical and easy to understand?
-- Are responsibilities clearly separated?
-- Would a developer understand the design quickly?
-
-### Dimension 3: Duplication Avoidance
-
-Does it avoid unnecessary duplication?
-
-- Are there opportunities to consolidate similar components?
-- Does it create parallel structures that will drift over time?
-- Are there redundant data representations?
-
-### Dimension 4: Data Structure Clarity
-
-Are data structures explicit and intuitive?
-
-- Are data classes well-defined with clear fields and types?
-- Are there ambiguous objects (e.g., generic dicts, untyped maps)?
-- Is the data flow explicit and traceable?
-- Are schemas/interfaces clearly specified?
-
-### Dimension 5: Interface Completeness
-
-Are external interfaces well-defined?
-
-- Are all CLI commands/API endpoints explicitly declared?
-- Are input/output formats unambiguous?
-- Are error cases handled?
-- Could ambiguous interfaces lead to misuse?
-
-### Dimension 6: Implementability
-
-Can this actually be built as specified?
-
-- Are there circular dependencies?
-- Are there missing components that other components depend on?
-- Is the phasing realistic (Phase 1 actually standalone)?
-- Are there implicit assumptions that should be explicit?
-
-## Output Format
-
-```markdown
-# Design Review
-
-## Dimensional Assessment
-
-### 1. Concept Compliance
-**Assessment:** [Pass / Concerns / Fail]
-[Specific findings]
-
-### 2. Abstraction Quality
-**Assessment:** [Pass / Concerns / Fail]
-[Specific findings]
-
-### 3. Duplication Avoidance
-**Assessment:** [Pass / Concerns / Fail]
-[Specific findings]
-
-### 4. Data Structure Clarity
-**Assessment:** [Pass / Concerns / Fail]
-[Specific findings]
-
-### 5. Interface Completeness
-**Assessment:** [Pass / Concerns / Fail]
-[Specific findings]
-
-### 6. Implementability
-**Assessment:** [Pass / Concerns / Fail]
-[Specific findings]
-
----
-
-## Issues by Severity
-
-### Critical (Must address before implementation)
-- [Issue]: [Description] — [Which dimension]
-
-### Major (Should address)
-- [Issue]: [Description] — [Which dimension]
-
-### Minor (Consider addressing)
-- [Issue]: [Description] — [Which dimension]
-
----
-
-## Specific Recommendations
-
-1. [Most important fix with concrete suggestion]
-2. [Second priority]
-3. [Additional suggestions]
-
----
-
-**Overall:** [Approve / Revise / Rework]
-```
-
-Be specific. Reference exact sections. Every issue should have a suggested resolution.
-
-YOUR ENTIRE RESPONSE IS THE OUTPUT FILE. Start directly with "# Design Review".
-Do not summarize, describe, or comment on the review — just produce it.
-No preamble, no explanation.
-
----
-
-CONCEPT:
-
-PROMPT_END
-)
+REVIEW_PROMPT=$(load_prompt "review.prompt.md")
 
 REVIEW_INPUT="${REVIEW_PROMPT}${CONCEPT_CONTENT}
 
@@ -633,45 +617,40 @@ log_timestamp "END   Step 4: Success"
 
 fi
 
+fi  # review stage
+
 # -----------------------------------------------------------------------------
 # Step 3c: Refine Design Based on Review
 # -----------------------------------------------------------------------------
 
-if [[ "$RESUME" = true ]] && step_complete 5 "Refined design" "DESIGN.md"; then
+if should_run_stage "refine"; then
+
+if [[ -n "$DESIGN_FILE" ]] && [[ "$REVIEW_DESIGN" != true ]]; then
+    log_info "[refine] Skipped — using provided design file"
+elif [[ "$RESUME" = true ]] && step_complete 5 "Refined design" "DESIGN.md"; then
     DESIGN_DOC=$(cat DESIGN.md)
 else
 
-log_step "Step 5/10: Refining design based on review"
+# Prerequisite: load DESIGN_v1.md if not in memory
+if [[ -z "$DESIGN_DOC" ]] && [[ -f "DESIGN_v1.md" ]]; then
+    DESIGN_DOC=$(cat DESIGN_v1.md)
+    log_info "Loaded DESIGN_v1.md from disk"
+elif [[ -z "$DESIGN_DOC" ]]; then
+    log_error "refine stage requires DESIGN_v1.md but it does not exist. Run the design stage first."
+fi
+
+# Prerequisite: load DESIGN_REVIEW.md if not in memory
+if [[ -z "${DESIGN_REVIEW:-}" ]] && [[ -f "DESIGN_REVIEW.md" ]]; then
+    DESIGN_REVIEW=$(cat DESIGN_REVIEW.md)
+    log_info "Loaded DESIGN_REVIEW.md from disk"
+elif [[ -z "${DESIGN_REVIEW:-}" ]]; then
+    log_error "refine stage requires DESIGN_REVIEW.md but it does not exist. Run the review stage first."
+fi
+
+log_step "$(step_header refine 5 10 "Refining design based on review")"
 log_timestamp "START Step 5: Refining design based on review"
 
-REFINE_PROMPT=$(cat << 'PROMPT_END'
-Below is an initial design document (V1) and a critical review of that design.
-Produce a REFINED DESIGN (V2) that addresses the review findings.
-
-Instructions:
-1. Read the review carefully — especially Critical and Major issues
-2. Address each issue explicitly in the refined design
-3. Keep what works — don't rewrite sections that passed review
-4. For each significant change, add a brief note explaining the change
-
-At the end of the refined design, include a section:
-
-## Changes from V1
-
-- [Change 1]: [Why — which review issue it addresses]
-- [Change 2]: [Why]
-- ...
-
-YOUR ENTIRE RESPONSE IS THE OUTPUT FILE. Start directly with the markdown
-content (e.g., "# Design Document ..."). Do not summarize, describe, or
-comment on the document — just produce it. No preamble, no explanation.
-
----
-
-ORIGINAL CONCEPT:
-
-PROMPT_END
-)
+REFINE_PROMPT=$(load_prompt "refine.prompt.md")
 
 REFINE_INPUT="${REFINE_PROMPT}${CONCEPT_CONTENT}
 
@@ -695,81 +674,30 @@ log_timestamp "END   Step 5: Success"
 
 fi
 
+fi  # refine stage
+
 # -----------------------------------------------------------------------------
 # Step 4: Generate Specs from Design
 # -----------------------------------------------------------------------------
+
+if should_run_stage "specs"; then
+
+# Prerequisite: load DESIGN.md if not in memory
+if [[ -z "$DESIGN_DOC" ]] && [[ -f "DESIGN.md" ]]; then
+    DESIGN_DOC=$(cat DESIGN.md)
+    log_info "Loaded DESIGN.md from disk"
+elif [[ -z "$DESIGN_DOC" ]]; then
+    log_error "specs stage requires DESIGN.md but it does not exist. Run the design stages first."
+fi
 
 if resume_step6; then
     :
 else
 
-log_step "Step 6/10: Generating specification files"
+log_step "$(step_header specs 6 10 "Generating specification files")"
 log_timestamp "START Step 6: Generating specification files"
 
-SPECS_PROMPT=$(cat << 'PROMPT_END'
-I'm setting up a Ralph Wiggum loop to build this system. Ralph loops work by 
-having an AI agent iterate in a bash loop, each iteration getting fresh context. 
-The agent reads specs, picks a task from an implementation plan, implements it, 
-runs tests, commits, and exits.
-
-Break this design into individual specification files for a `specs/` directory. 
-Each spec should cover ONE topic of concern — a distinct capability area that 
-can be described in one sentence without using "and" to conjoin unrelated things.
-
-For EACH spec file, use this exact format:
-
-```markdown specs/[filename].md
-# [Topic Name]
-
-## Purpose
-[One sentence describing what this component does]
-
-## Requirements
-[Behavioral outcomes as bullet points - what observable results indicate success?]
-
-## Acceptance Criteria
-[Specific, testable conditions using Given/When/Then or similar]
-
-## Interfaces
-[How this connects to other components - inputs, outputs, data formats]
-[Reference other spec files by name where relevant]
-
-## Constraints
-[Non-negotiable rules - what must NEVER happen?]
-
-## Out of Scope
-[What this spec explicitly does NOT cover]
-```
-
-Important:
-- Use the EXACT format above with ```markdown specs/filename.md as the code fence
-- Each spec should be 50-150 lines
-- Order specs by dependency (foundational first)
-- Acceptance criteria should be machine-verifiable where possible
-- Think about what tests would catch bad implementations
-
-CRITICAL FORMAT REQUIREMENT:
-Your output will be parsed by a machine. The parser scans for lines matching
-exactly: ```markdown specs/FILENAME.md  (opening fence with path)
-and extracts content until the next ``` (closing fence).
-
-If the parser finds ZERO matching fences, the entire step FAILS.
-Common mistakes that cause FAIL:
-- Writing a prose summary like "I've created 16 specification files..."
-- Using ```md instead of ```markdown
-- Omitting the specs/ path prefix
-- Adding extra text before the first fenced block
-
-Start DIRECTLY with the first ```markdown specs/... fenced block.
-Do NOT include any introductory text, summary, or explanation before or between spec blocks.
-
----
-
-DESIGN DOCUMENT:
-
-PROMPT_END
-)
-
+SPECS_PROMPT=$(load_prompt "specs.prompt.md")
 SPECS_FULL_PROMPT="${SPECS_PROMPT}${DESIGN_DOC}"
 SPECS_OUTPUT=$(claude_generate "$SPECS_FULL_PROMPT" "Specification files")
 
@@ -852,57 +780,30 @@ log_timestamp "END   Step 6: Success"
 
 fi
 
+fi  # specs stage
+
 # -----------------------------------------------------------------------------
 # Step 5: Generate AGENTS.md
 # -----------------------------------------------------------------------------
+
+if should_run_stage "agents"; then
+
+# Prerequisite: load DESIGN.md if not in memory
+if [[ -z "$DESIGN_DOC" ]] && [[ -f "DESIGN.md" ]]; then
+    DESIGN_DOC=$(cat DESIGN.md)
+    log_info "Loaded DESIGN.md from disk"
+elif [[ -z "$DESIGN_DOC" ]]; then
+    log_error "agents stage requires DESIGN.md but it does not exist. Run the design stages first."
+fi
 
 if [[ "$RESUME" = true ]] && step_complete 7 "AGENTS.md" "AGENTS.md"; then
     :
 else
 
-log_step "Step 7/10: Generating AGENTS.md"
+log_step "$(step_header agents 7 10 "Generating AGENTS.md")"
 log_timestamp "START Step 7: Generating AGENTS.md"
 
-AGENTS_PROMPT=$(cat << 'PROMPT_END'
-Generate an AGENTS.md file for a Ralph Wiggum loop. This is the operational 
-guide loaded into EVERY iteration. It must be:
-
-- BRIEF (~60 lines max). Every token costs context in every iteration.
-- OPERATIONAL ONLY. No status, no progress, no changelogs.
-- Focused on HOW TO BUILD AND TEST.
-
-The project uses:
-- Python with UV for package management
-- pytest for testing
-- ruff for linting  
-- mypy for type checking
-
-Include ONLY these sections:
-
-## Build & Run
-[Exact commands to install deps and run the project]
-
-## Validation
-[Exact commands for tests, typecheck, lint - these are the backpressure]
-
-## Codebase Patterns
-[Key conventions: project structure, imports, error handling]
-[Any critical rules from the design constraints]
-
-## Known Gotchas
-[Common agent pitfalls for this specific project]
-
-YOUR ENTIRE RESPONSE IS THE OUTPUT FILE. Start directly with the markdown
-content (e.g., "## Build & Run"). Do not summarize, describe, or comment
-on the document — just produce it. No preamble, no explanation.
-
----
-
-DESIGN DOCUMENT:
-
-PROMPT_END
-)
-
+AGENTS_PROMPT=$(load_prompt "agents.prompt.md")
 AGENTS_OUTPUT=$(claude_generate "${AGENTS_PROMPT}${DESIGN_DOC}" "AGENTS.md")
 echo "$AGENTS_OUTPUT" > AGENTS.md
 
@@ -911,113 +812,53 @@ log_timestamp "END   Step 7: Success"
 
 fi
 
+fi  # agents stage
+
 # -----------------------------------------------------------------------------
-# Step 6: Write PROMPT_plan.md (hard-coded template)
+# Step 6: Write PROMPT_plan.md and PROMPT_build.md
 # -----------------------------------------------------------------------------
 
+if should_run_stage "prompts"; then
+
+# PROMPT_plan.md
 if [[ "$RESUME" = true ]] && step_complete 8 "PROMPT_plan.md" "PROMPT_plan.md"; then
     :
 else
 
-log_step "Step 8/10: Writing PROMPT_plan.md"
+log_step "$(step_header prompts 8 10 "Writing PROMPT_plan.md")"
 log_timestamp "START Step 8: Writing PROMPT_plan.md"
 
-cat << 'PROMPT_PLAN' > PROMPT_plan.md
-You are a PLANNING agent in a Ralph Wiggum loop. No code edits, no commits.
-
-## Process
-
-1. **Study all specs** — launch parallel subagents to study each file in specs/
-2. **Study existing code** — search src/ to understand what's already built
-3. **Study IMPLEMENTATION_PLAN.md** if it exists — note completed vs pending tasks
-4. **Gap analysis** — compare spec requirements against current codebase
-   - Don't assume not implemented — always search first (Glob, Grep, Read)
-   - Use Ultrathink for cross-spec dependency analysis
-5. **Produce IMPLEMENTATION_PLAN.md** — create or update with prioritized tasks
-
-## Task Format (markdown bullets, not JSON)
-
-- **Task name** [spec-NNN]
-  - What: concrete deliverable (~5 files max, one iteration)
-  - Why: which spec requirement(s) it satisfies
-  - Verified by: what backpressure proves it works (test, mypy, ruff)
-  - Depends on: prerequisite tasks if any
-
-## Rules
-
-- PLANNING ONLY — no implementation, no file edits, no commits
-- Prioritize: critical path first, dependencies before dependents
-- Size tasks for ONE iteration (completable in a single agent run)
-- IMPLEMENTATION_PLAN.md lives at repository root, not in subdirectories
-PROMPT_PLAN
+cp "$(resolve_prompt prompt_plan.tpl.md)" PROMPT_plan.md
 
 log_info "Written: PROMPT_plan.md"
 log_timestamp "END   Step 8: Success"
 
 fi
 
-# -----------------------------------------------------------------------------
-# Step 7: Write PROMPT_build.md (hard-coded template)
-# -----------------------------------------------------------------------------
-
+# PROMPT_build.md
 if [[ "$RESUME" = true ]] && step_complete 9 "PROMPT_build.md" "PROMPT_build.md"; then
     :
 else
 
-log_step "Step 9/10: Writing PROMPT_build.md"
+log_step "$(step_header prompts 9 10 "Writing PROMPT_build.md")"
 log_timestamp "START Step 9: Writing PROMPT_build.md"
 
-cat << PROMPT_BUILD > PROMPT_build.md
-You are a BUILD agent in a Ralph Wiggum loop. Complete exactly ONE task per iteration.
-
-## Workflow
-
-1. **Study** specs/* for requirements and constraints
-2. **Study** IMPLEMENTATION_PLAN.md — pick the highest-priority incomplete task
-3. **Search** the codebase before assuming anything is missing (Glob, Grep, Read)
-4. **Implement** the task completely — no TODOs, no placeholders, no stubs
-5. **Test** — write tests that validate behavior against spec requirements
-6. **Validate**
-   - \`uv run pytest tests/\` — all tests must pass
-   - \`uv run mypy src/\` — no type errors
-   - \`uv run ruff check src/ tests/ && uv run ruff format src/ tests/\`
-7. **Update IMPLEMENTATION_PLAN.md** — mark task [DONE], add discoveries/blockers
-8. **Commit** — \`git add -A && git commit -m "descriptive message"\`
-
-## Guardrails (ascending criticality)
-
-- 999: Capture the why in docs and tests
-- 9999: Single sources of truth — no migrations, no adapters
-- 99999: Implement completely. No placeholders, no stubs.
-- 999999: Keep IMPLEMENTATION_PLAN.md current with learnings
-- 9999999: AGENTS.md is operational ONLY — no status, no progress, no checklists
-- 99999999: For bugs found, resolve or document in IMPLEMENTATION_PLAN.md
-- 999999999: Clean completed items from IMPLEMENTATION_PLAN.md periodically
-- 9999999999: Don't assume not implemented — always search first
-- 99999999999: NEVER put implementation status in AGENTS.md — that goes in IMPLEMENTATION_PLAN.md
-
-## What goes where
-
-- **IMPLEMENTATION_PLAN.md** (root): task status, progress, blockers, discoveries
-- **AGENTS.md**: operational guide ONLY (build commands, gotchas, conventions) — NEVER status
-
-## Environment
-
-- Python with UV — \`uv run pytest\`, \`uv run mypy src/\`, \`uv run ruff check/format\`
-- Source: src/${PACKAGE_NAME}/
-- Tests: tests/
-PROMPT_BUILD
+sed "s|\${PACKAGE_NAME}|$PACKAGE_NAME|g" "$(resolve_prompt prompt_build.tpl.md)" > PROMPT_build.md
 
 log_info "Written: PROMPT_build.md"
 log_timestamp "END   Step 9: Success"
 
 fi
 
+fi  # prompts stage
+
 # -----------------------------------------------------------------------------
 # Step 8: Create Loop Script and Scaffold
 # -----------------------------------------------------------------------------
 
-log_step "Step 10/10: Creating loop.sh and project scaffold"
+if should_run_stage "scaffold"; then
+
+log_step "$(step_header scaffold 10 10 "Creating loop.sh and project scaffold")"
 log_timestamp "START Step 10: Creating loop.sh and project scaffold"
 
 if [[ "$RESUME" = true ]] && [[ -f "loop.sh" ]] && [[ -f "pyproject.toml" ]]; then
@@ -1110,7 +951,7 @@ PYPROJECT
 mkdir -p "src/$PACKAGE_NAME"
 echo '"""Ralph project package."""' > "src/$PACKAGE_NAME/__init__.py"
 
-# Create test scaffold  
+# Create test scaffold
 cat << 'CONFTEST' > tests/conftest.py
 """Pytest configuration and fixtures."""
 import pytest
@@ -1137,43 +978,50 @@ log_info "Created: pyproject.toml, src/$PACKAGE_NAME/, tests/"
 
 fi
 
-# Commit all changes
+# Build commit message dynamically based on which files exist
+COMMIT_BODY=""
+[[ -f "DESIGN_v1.md" ]] && COMMIT_BODY="${COMMIT_BODY}- DESIGN_v1.md: Initial design from concept
+"
+[[ -f "DESIGN_REVIEW.md" ]] && COMMIT_BODY="${COMMIT_BODY}- DESIGN_REVIEW.md: Critical review of initial design
+"
+[[ -f "DESIGN.md" ]] && COMMIT_BODY="${COMMIT_BODY}- DESIGN.md: Refined design (addresses review)
+"
+[[ -d "specs" ]] && [[ "$(find specs -maxdepth 1 -name '*.md' ! -name '_raw_output*' -size +0c 2>/dev/null | wc -l)" -gt 0 ]] && COMMIT_BODY="${COMMIT_BODY}- specs/: Individual specifications
+"
+[[ -f "AGENTS.md" ]] && COMMIT_BODY="${COMMIT_BODY}- AGENTS.md: Operational guide
+"
+[[ -f "PROMPT_plan.md" ]] && COMMIT_BODY="${COMMIT_BODY}- PROMPT_plan.md: Planning mode prompt
+"
+[[ -f "PROMPT_build.md" ]] && COMMIT_BODY="${COMMIT_BODY}- PROMPT_build.md: Building mode prompt
+"
+[[ -f "loop.sh" ]] && COMMIT_BODY="${COMMIT_BODY}- loop.sh: Ralph loop script
+"
+[[ -f "pyproject.toml" ]] && COMMIT_BODY="${COMMIT_BODY}- Python project scaffold
+"
+
+COMMIT_SUBJECT="ralph-init: scaffold for $PROJECT_NAME"
+[[ "$RESUME" = true ]] && COMMIT_SUBJECT="${COMMIT_SUBJECT} (resumed)"
+
 git add -A
 if ! git diff --cached --quiet 2>/dev/null; then
     if [[ "$RESUME" = true ]] && git log --oneline -1 2>/dev/null | grep -q "ralph-init: scaffold"; then
-        git commit --amend -m "ralph-init: scaffold for $PROJECT_NAME (resumed)
+        git commit --amend -m "${COMMIT_SUBJECT}
 
 Generated by ralph-init.sh:
-- DESIGN_v1.md: Initial design from concept
-- DESIGN_REVIEW.md: Critical review of initial design
-- DESIGN.md: Refined design (addresses review)
-- specs/: Individual specifications
-- AGENTS.md: Operational guide
-- PROMPT_plan.md: Planning mode prompt
-- PROMPT_build.md: Building mode prompt
-- loop.sh: Ralph loop script
-- Python project scaffold
-"
+${COMMIT_BODY}"
     else
-        git commit -m "ralph-init: scaffold for $PROJECT_NAME
+        git commit -m "${COMMIT_SUBJECT}
 
 Generated by ralph-init.sh:
-- DESIGN_v1.md: Initial design from concept
-- DESIGN_REVIEW.md: Critical review of initial design
-- DESIGN.md: Refined design (addresses review)
-- specs/: Individual specifications
-- AGENTS.md: Operational guide
-- PROMPT_plan.md: Planning mode prompt
-- PROMPT_build.md: Building mode prompt
-- loop.sh: Ralph loop script
-- Python project scaffold
-"
+${COMMIT_BODY}"
     fi
     log_info "Created initial commit"
 else
     log_info "No new changes to commit"
 fi
 log_timestamp "END   Step 10: Success"
+
+fi  # scaffold stage
 
 # -----------------------------------------------------------------------------
 # Summary
@@ -1184,14 +1032,14 @@ echo -e "${GREEN}✓ Ralph setup complete!${NC}"
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"
 
 echo "Generated files:"
-echo "  📄 DESIGN_v1.md        — Initial design (pre-review)"
-echo "  📄 DESIGN_REVIEW.md    — Critical review of initial design"
-echo "  📄 DESIGN.md           — Refined design (addresses review)"
-echo "  📁 specs/              — $SPEC_COUNT specification files"
-echo "  📄 AGENTS.md           — Operational guide"
-echo "  📄 PROMPT_plan.md      — Planning mode prompt"
-echo "  📄 PROMPT_build.md     — Building mode prompt"
-echo "  📄 loop.sh             — Ralph loop script"
+[[ -f "DESIGN_v1.md" ]] && echo "  📄 DESIGN_v1.md        — Initial design (pre-review)"
+[[ -f "DESIGN_REVIEW.md" ]] && echo "  📄 DESIGN_REVIEW.md    — Critical review of initial design"
+[[ -f "DESIGN.md" ]] && echo "  📄 DESIGN.md           — Refined design (addresses review)"
+[[ -d "specs" ]] && [[ "$SPEC_COUNT" -gt 0 ]] && echo "  📁 specs/              — $SPEC_COUNT specification files"
+[[ -f "AGENTS.md" ]] && echo "  📄 AGENTS.md           — Operational guide"
+[[ -f "PROMPT_plan.md" ]] && echo "  📄 PROMPT_plan.md      — Planning mode prompt"
+[[ -f "PROMPT_build.md" ]] && echo "  📄 PROMPT_build.md     — Building mode prompt"
+[[ -f "loop.sh" ]] && echo "  📄 loop.sh             — Ralph loop script"
 echo ""
 echo "Next steps:"
 echo ""
