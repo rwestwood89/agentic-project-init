@@ -153,6 +153,18 @@ if [ -d "$CLAUDE_PACK/scripts" ]; then
     done
 fi
 
+# Symlink prompt directories (used by ralph-init.sh and other scripts)
+echo ""
+echo "Setting up prompts..."
+create_dir "$TARGET_DIR/prompts"
+if [ -d "$CLAUDE_PACK/prompts" ]; then
+    for dir in "$CLAUDE_PACK"/prompts/*/; do
+        [ -d "$dir" ] || continue
+        dirname=$(basename "$dir")
+        create_symlink "$dir" "$TARGET_DIR/prompts/$dirname" "$dirname/"
+    done
+fi
+
 # Configure settings.json (hook configuration)
 echo ""
 echo "Configuring hooks..."
