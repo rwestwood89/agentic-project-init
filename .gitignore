@@ -16,3 +16,10 @@ Thumbs.db
 .idea/
 .vscode/
 .project/memories
+
+# Comment system build artifacts
+comment-system/.venv/
+comment-system/.pytest_cache/
+comment-system/uv.lock
+__pycache__/
+*.pyc

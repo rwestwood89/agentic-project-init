@@ -384,6 +384,23 @@ Check `~/.claude/settings.json` has the PreCompact hook configured:
 }
 ```
 
+## Comment System
+
+A file-native threaded comment system for code review. Comments are stored as sidecar YAML files in `.comments/` directories, tracked in git, and accessible to both humans and AI agents via CLI, MCP tools, and an optional VSCode extension.
+
+### Install
+
+```bash
+./scripts/setup-comments.sh
+
+# With VSCode inline comment UI
+./scripts/setup-comments.sh --vscode
+```
+
+This installs the `comment` CLI via `uv tool install` and configures the MCP server for Claude Code agent integration.
+
+See [comment-system/README.md](comment-system/README.md) for full documentation.
+
 ## License
 
 MIT License - Customize as needed for your organization.

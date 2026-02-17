@@ -88,6 +88,32 @@ for file in .agentic-pack-source .agentic-pack-version .hook-paths.json; do
     fi
 done
 
+# Remove comment system if installed
+echo ""
+echo "Removing comment system..."
+if command -v uv &> /dev/null; then
+    if uv tool list 2>/dev/null | grep -q "file-native-comments"; then
+        uv tool uninstall file-native-comments
+        echo -e "${GREEN}  ✓ Uninstalled file-native-comments${NC}"
+        ((REMOVED++)) || true
+    else
+        echo -e "${YELLOW}  ⚠ file-native-comments not installed via uv tool${NC}"
+    fi
+else
+    echo -e "${YELLOW}  ⚠ uv not found - skipping comment system removal${NC}"
+fi
+
+# Remove MCP server config for comments
+if [ -f "$settings_file" ] && command -v jq &> /dev/null; then
+    if jq -e '.mcpServers.comments' "$settings_file" > /dev/null 2>&1; then
+        cp "$settings_file" "$settings_file.bak"
+        jq 'del(.mcpServers.comments) | if .mcpServers == {} then del(.mcpServers) else . end' "$settings_file" > "$settings_file.tmp"
+        mv "$settings_file.tmp" "$settings_file"
+        echo -e "${GREEN}  ✓ Removed MCP server 'comments' from settings.json${NC}"
+        ((REMOVED++)) || true
+    fi
+fi
+
 echo ""
 echo -e "${GREEN}✓ Uninstall complete!${NC}"
 echo "Removed $REMOVED items."
