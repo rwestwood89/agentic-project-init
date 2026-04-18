@@ -9,14 +9,16 @@
 You are a design partner helping the user develop a design concept. The output should describe **how things should work together** — not implementation details, not execution steps.
 
 A good design concept is:
-- **Easy to follow.** A human or agent can read it cold and understand the design.
+- **Readable cold by someone who does not know the codebase.** The Problem and Goals sections should land without any prior knowledge of identifiers, classes, or file layout.
+- **Conceptual upfront, specific downstream.** Problem/Goals/Principles describe the *system's* behavior and meanings. Core Model/Invariants name the *code* that enforces them. The reader understands what's wrong before meeting any field name.
 - **Specific enough to critique.** "Where does this pattern fail?" should be answerable.
 - **Clean.** If you can't describe the design simply, it's probably a bad design.
 
 A good design concept is NOT:
-- A detailed spec with field names, file paths, and implementation steps
-- A problem statement with success criteria (that's `/_my_concept`)
-- An execution plan with slices and dependencies (that's `/_my_spec` → `/_my_plan`)
+- A wall of backticked identifiers. If every bullet in Problem or Goals starts with a code name, you're writing a spec.
+- A detailed spec with field names, file paths, and implementation steps.
+- A problem statement with success criteria (that's `/_my_concept`).
+- An execution plan with slices and dependencies (that's `/_my_spec` → `/_my_plan`).
 
 When invoked:
 - If design area provided via `$ARGUMENTS`: proceed to design process
@@ -24,11 +26,45 @@ When invoked:
 
 ## Core Values
 
+- **Two registers, one document.** The upper half (Overview, Problem, Goals, Principles) describes what the *system* does — meanings, behaviors, outcomes. The lower half (Core Model, Invariants, Vocabulary, Scenarios) names the *code* that enforces it. Identifiers, class names, field names, and specific metrics do not appear in the upper half. This is the defining property of a good concept doc — violate it and the reader cannot follow.
+- **Goals are functionality. Invariants are mechanism.** A goal describes an outcome the system delivers ("support stale-market replans without reinterpretation"). An invariant describes the code rule that makes it true ("`dispatch_valid_steps` is the sole authority for plan validity"). Never swap them.
 - **Decision clarity.** The primary goal is to make clear what key decisions we are committing to. Implementation details obscure this — strip them. A reader should finish knowing exactly what bets we're making.
 - **Architectural clarity.** The design should explain how responsibilities are separated and how components interact.
 - **Pattern-focused.** Name the patterns. Define the vocabulary. Make the mental model explicit.
 - **Critiqueable.** Every design decision should be specific enough that someone could say "that won't work because..."
 - **Minimal.** If a section isn't pulling its weight, cut it. 250 lines max forces discipline.
+
+## The Two-Register Rule
+
+This is the single most important rule in this command. Read the contrast before writing.
+
+**Upper half** (Overview, Problem, Goals, Principles) — describe the WORLD:
+- Use prose and plain-language bullets.
+- Describe meanings being conflated, behaviors that fail, outcomes that drift.
+- No backticked identifiers. No class names. No field names. No metrics from test runs.
+- A colleague on another team should be able to follow.
+
+**Lower half** (Core Model, Invariants, How It Works, Vocabulary, Validation) — describe the CODE:
+- Identifiers, types, field names, and specific mechanisms belong here.
+- This is where concepts get wired to the codebase.
+
+**The test:** hand the doc to someone who has never read this codebase. They should finish Problem and Goals knowing what's wrong and what we want. If they need to look up a type or field name to follow, the register has leaked.
+
+**Contrast (from real concept docs):**
+
+Bad Problem bullet (spec register, identifier-heavy):
+> **Validity is inferred, not signaled.** `RHBPerfModelSimple` computes pointer bounds from `DispatchGuidanceConfig.horizon_step_count` (a static config value, typically 24). The interface field `dispatch_valid_steps` exists but no controller emits it.
+
+Good Problem bullet (conceptual register):
+> The cache stores upstream payload timing. Replans reuse that timing as plan timing. The consumer's pointer clamp then masks the resulting expiry rather than surfacing it.
+
+Bad Goal (mechanism masquerading as goal):
+> `dispatch_valid_steps` is the sole authority for plan validity — no config fallbacks.
+
+Good Goal (outcome):
+> Make the consumer's expiry behavior correct by construction.
+
+The bad versions aren't *wrong* — they're in the wrong section. Move them to Invariants.
 
 ## Process
 
@@ -131,14 +167,16 @@ Only enter when the user tells you to.
 
    ## Problem
 
-   [2-3 paragraphs. What is structurally wrong today? What failure modes does this create? Why can't incremental fixes work?]
+   [2-3 paragraphs of prose. Describe what the *system* does wrong — meanings being conflated, behaviors that fail, outcomes that drift. Written so a colleague on another team can follow. NO backticked identifiers. NO class names. NO field names. NO metrics from test runs. Evidence at the code level belongs in the spec, not here. If you want to write "`FooBar` does X instead of Y", stop and rewrite as "the system treats upstream timing as if it were activation timing".]
 
    ---
 
    ## Goals
 
-   - [What this design must achieve]
-   - [What this design must achieve]
+   Each goal is an OUTCOME — something the system *does* or *delivers*. Start each bullet with a verb describing behavior. No field names. If a bullet reads "`field_x` is the sole authority for Y," that's a mechanism — move it to Invariants.
+
+   - [Verb-led outcome the system delivers]
+   - [Verb-led behavior the system exhibits]
 
    ## Non-Goals
 
@@ -148,6 +186,8 @@ Only enter when the user tells you to.
    ---
 
    ## Design Principles
+
+   Principles are rules for thinking about the system. Express them conceptually. If a principle cannot be stated without naming a specific field or type, it's probably an invariant.
 
    ### 1. [Principle Name]
 
@@ -161,6 +201,8 @@ Only enter when the user tells you to.
 
    ## Core Model
 
+   *The register shifts here.* From this section on, identifiers, field names, and specific types are welcome. The upper half was about concepts; this is where concepts meet code.
+
    Define the key abstractions and their responsibilities.
 
    ### [Concept 1]
@@ -170,6 +212,14 @@ Only enter when the user tells you to.
    ### [Concept 2]
 
    [What it is. What it's responsible for. What it is NOT responsible for.]
+
+   ---
+
+   ## Diagram (Optional)
+
+   If the design involves data flow, state transitions, or component interactions that are easier to see than read, include a simple ASCII or Mermaid diagram here.
+
+   Keep it minimal — if it needs a legend longer than the diagram, use prose instead.
 
    ---
 
@@ -260,6 +310,8 @@ After writing or patching the document:
    - If any item needs work, you MUST patch the document
 
 4. **Identify gaps in your own output:**
+   - **Register leakage (CRITICAL)**: Scan Problem, Goals, and Principles. Are there backticked identifiers, class names, field names, or specific metrics? If yes, rewrite those parts in conceptual terms — describe the behavior, not the code. Move field-level rules to Invariants. Apply the cold-reader test: would a colleague who has never seen this codebase follow the upper half?
+   - **Goals that are really mechanisms**: Does any goal describe a specific field's behavior (e.g., "`X` is the sole authority for Y")? That's an invariant. Goals describe system outcomes — what it delivers, not how.
    - **Failure modes**: What situations would break this design that aren't documented?
    - **Ambiguous terms**: Are there words used without definition, or used with multiple meanings?
    - **Mixed concepts**: Does any section conflate two distinct ideas that should be separated?
@@ -302,7 +354,10 @@ After writing or patching the document:
 
 ### What You MUST NOT Do
 - **Skip codebase research.** NEVER design without first exploring the code. NEVER iterate without re-verifying against code. A design that ignores reality is worthless.
-- **Include implementation details.** No field names, file paths, specific commits, or code changes
+- **Leak identifiers into the upper half.** No backticked names, class names, field names, or specific metrics in Overview, Problem, Goals, or Principles. These belong in Core Model, Invariants, and below. A cold reader must be able to follow the upper half without looking up a single identifier.
+- **Confuse goals with mechanisms.** Goals describe what the system *does* (outcomes, functionality). Mechanisms describe *how the code enforces it* — those belong in Invariants. If a goal bullet names a specific field as "the sole authority" for something, you wrote an invariant. Move it.
+- **Use spec-register numbered sub-headers in Problem.** Bolded taxonomies like "**1. Validity is inferred, not signaled.**" turn Problem into an acceptance-criteria list. Write prose paragraphs that a colleague could read aloud.
+- **Include implementation details.** No file paths, specific commits, or code changes in the lower half either — those belong in the spec.
 - **Write a spec.** This is about design shape, not execution steps
 - **Skip to solutions.** Understand the structural problem first
 - **Write vague principles.** "Keep it simple" is not a design principle
@@ -321,6 +376,14 @@ After writing or patching the document:
 ## Design Concept Rubric
 
 Use this checklist during self-review. Every item must pass before presenting to user.
+
+### Register Discipline (THE COLD-READER TEST — CHECK THIS FIRST)
+- [ ] **Overview reads without identifiers.** Describes the design's purpose and insight in plain terms.
+- [ ] **Problem is prose, not taxonomy.** No bolded numbered sub-headers (`**1. X is Y.**`). Paragraphs that flow. No backticked identifiers. No class names. No metrics (`7-8% drift`, `day 8 crash`).
+- [ ] **Goals describe outcomes.** Each bullet starts with a verb (Make, Let, Support, Keep, Preserve). No bullet names a specific field as "the sole authority" or similar — that's an invariant.
+- [ ] **Principles are conceptual.** No principle requires naming a specific type or field to state.
+- [ ] **Cold-reader test passes.** Imagine a colleague on another team reading the upper half. Do they finish Problem and Goals knowing what's wrong and what we want, without having to look up any identifier? If not, rewrite.
+- [ ] **Lower half earns its identifiers.** Core Model, Invariants, Vocabulary, and How It Works DO name types and fields — that's correct. The split is intentional.
 
 ### Codebase Grounding (VERIFY EVERY ITERATION)
 - [ ] **Explored before designing.** Used subagents to understand the codebase before any design discussion.
@@ -357,6 +420,7 @@ Use this checklist during self-review. Every item must pass before presenting to
 - [ ] **Proportional complexity.** Simple problems have simple designs.
 - [ ] **Under 500 lines.** If over, the design needs simplification, not compression.
 - [ ] **Logical flow.** Overview → Problem → Principles → Model → Invariants → Flows → Edge Cases
+- [ ] **Visual clarity.** If the design involves data flow, state transitions, or timestamp relationships, consider whether a diagram would help a cold reader.
 
 ### Design Quality (from `/_my_design`)
 - [ ] **Simplicity.** Could this be done with fewer moving parts?
@@ -371,4 +435,4 @@ Use this checklist during self-review. Every item must pass before presenting to
 - For scope/outcomes: `/_my_concept` for problem statement and success criteria
 - After design concept: `/_my_spec` for detailed work item requirements
 
-**Last Updated**: 2026-04-18
+**Last Updated**: 2026-04-18 — added two-registers discipline (conceptual upper half, code-level lower half) after Problem/Goals leaked identifiers.
