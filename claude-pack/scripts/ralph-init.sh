@@ -75,7 +75,7 @@ step_complete() {
 resume_step6() {
     [[ "$RESUME" != true ]] && return 1
     local count
-    count=$(find specs -maxdepth 1 -name '*.md' ! -name '_raw_output.md' -size +0c 2>/dev/null | wc -l)
+    count=$(find specs -maxdepth 1 -name '*.md' -size +0c 2>/dev/null | wc -l)
     [[ "$count" -gt 0 ]] || return 1
     SPEC_COUNT=$count
     log_timestamp "SKIP  Step 6: Specification files — $count specs already exist"
@@ -83,35 +83,17 @@ resume_step6() {
     return 0
 }
 
-# Run claude headless and capture output
-claude_generate() {
+# Run claude headless — Claude writes files directly via tools, stdout goes to log
+claude_run() {
     local prompt="$1"
     local description="$2"
+    local model="${3:-$MODEL}"
 
-    log_info "Generating: $description"
-    local output
-    output=$(echo "$prompt" | claude -p --model "$MODEL" --output-format text)
-
-    if [[ -z "$output" ]]; then
-        log_error "Generation failed (empty output): $description. Re-run with --resume to retry."
-    fi
-
-    echo "$output"
-}
-
-claude_generate_design() {
-    local prompt="$1"
-    local description="$2"
-
-    log_info "Generating: $description (using $DESIGN_MODEL)"
-    local output
-    output=$(echo "$prompt" | claude -p --model "$DESIGN_MODEL" --output-format text)
-
-    if [[ -z "$output" ]]; then
-        log_error "Generation failed (empty output): $description. Re-run with --resume to retry."
-    fi
-
-    echo "$output"
+    log_info "Generating: $description (using $model)" >&2
+    echo "$prompt" | claude -p \
+        --model "$model" \
+        --dangerously-skip-permissions \
+        --output-format text
 }
 
 # -----------------------------------------------------------------------------
@@ -327,7 +309,7 @@ Keep the design:
 - Abstract enough that implementation details are left to the agent
 - Focused on WHAT and WHY, not line-by-line HOW
 
-Output the design as a single markdown document.
+Write the design document to DESIGN_v1.md.
 
 ---
 
@@ -336,8 +318,12 @@ PROJECT CONCEPT:
 PROMPT_END
 )
 
-DESIGN_DOC=$(claude_generate_design "${DESIGN_PROMPT}${CONCEPT_CONTENT}" "Initial design")
-echo "$DESIGN_DOC" > DESIGN_v1.md
+claude_run "${DESIGN_PROMPT}${CONCEPT_CONTENT}" "Initial design" "$DESIGN_MODEL"
+
+if [[ ! -s DESIGN_v1.md ]]; then
+    log_error "DESIGN_v1.md not created. Re-run with --resume to retry."
+fi
+DESIGN_DOC=$(cat DESIGN_v1.md)
 
 log_info "Generated: DESIGN_v1.md"
 log_timestamp "END   Step 3: Success"
@@ -483,6 +469,8 @@ Can this actually be built as specified?
 
 Be specific. Reference exact sections. Every issue should have a suggested resolution.
 
+Write your review to DESIGN_REVIEW.md.
+
 ---
 
 CONCEPT:
@@ -498,8 +486,12 @@ DESIGN DOCUMENT TO REVIEW:
 
 ${DESIGN_DOC}"
 
-DESIGN_REVIEW=$(claude_generate_design "$REVIEW_INPUT" "Design review")
-echo "$DESIGN_REVIEW" > DESIGN_REVIEW.md
+claude_run "$REVIEW_INPUT" "Design review" "$DESIGN_MODEL"
+
+if [[ ! -s DESIGN_REVIEW.md ]]; then
+    log_error "DESIGN_REVIEW.md not created. Re-run with --resume to retry."
+fi
+DESIGN_REVIEW=$(cat DESIGN_REVIEW.md)
 
 log_info "Generated: DESIGN_REVIEW.md"
 log_timestamp "END   Step 4: Success"
@@ -537,7 +529,7 @@ At the end of the refined design, include a section:
 - [Change 2]: [Why]
 - ...
 
-Output the complete refined design document (not just the changes).
+Write the complete refined design document (not just the changes) to DESIGN.md.
 
 ---
 
@@ -560,8 +552,12 @@ DESIGN REVIEW:
 
 ${DESIGN_REVIEW}"
 
-DESIGN_DOC=$(claude_generate_design "$REFINE_INPUT" "Refined design")
-echo "$DESIGN_DOC" > DESIGN.md
+claude_run "$REFINE_INPUT" "Refined design" "$DESIGN_MODEL"
+
+if [[ ! -s DESIGN.md ]]; then
+    log_error "DESIGN.md not created. Re-run with --resume to retry."
+fi
+DESIGN_DOC=$(cat DESIGN.md)
 
 log_info "Generated: DESIGN.md (refined)"
 log_timestamp "END   Step 5: Success"
@@ -585,13 +581,14 @@ having an AI agent iterate in a bash loop, each iteration getting fresh context.
 The agent reads specs, picks a task from an implementation plan, implements it, 
 runs tests, commits, and exits.
 
-Break this design into individual specification files for a `specs/` directory. 
-Each spec should cover ONE topic of concern — a distinct capability area that 
+Break this design into individual specification files. Write each spec file
+directly to the specs/ directory (e.g. specs/data-model.md, specs/cli.md).
+
+Each spec should cover ONE topic of concern — a distinct capability area that
 can be described in one sentence without using "and" to conjoin unrelated things.
 
-For EACH spec file, use this exact format:
+For EACH spec file, use this structure:
 
-```markdown specs/[filename].md
 # [Topic Name]
 
 ## Purpose
@@ -612,10 +609,9 @@ For EACH spec file, use this exact format:
 
 ## Out of Scope
 [What this spec explicitly does NOT cover]
-```
 
 Important:
-- Use the EXACT format above with ```markdown specs/filename.md as the code fence
+- Write each spec directly to specs/[filename].md
 - Each spec should be 50-150 lines
 - Order specs by dependency (foundational first)
 - Acceptance criteria should be machine-verifiable where possible
@@ -628,32 +624,15 @@ DESIGN DOCUMENT:
 PROMPT_END
 )
 
-SPECS_OUTPUT=$(claude_generate "${SPECS_PROMPT}${DESIGN_DOC}" "Specification files")
+claude_run "${SPECS_PROMPT}${DESIGN_DOC}" "Specification files"
 
-# Parse specs from output - look for ```markdown specs/*.md blocks
-echo "$SPECS_OUTPUT" | awk '
-{ gsub(/\r$/, "") }
-/^```markdown specs\/[^`]+\.md[[:space:]]*$/ {
-    match($0, /specs\/[^`]+\.md/)
-    filename = substr($0, RSTART, RLENGTH)
-    getline
-    content = ""
-    while (getline > 0 && !/^```[[:space:]]*$/) {
-        content = content $0 "\n"
-    }
-    print content > filename
-    close(filename)
-}
-'
-
-# Count generated specs (use find to avoid pipefail issues with ls)
-SPEC_COUNT=$(find specs -maxdepth 1 -name '*.md' ! -name '_raw_output.md' -size +0c 2>/dev/null | wc -l)
+# Count generated specs
+SPEC_COUNT=$(find specs -maxdepth 1 -name '*.md' -size +0c 2>/dev/null | wc -l)
 log_info "Generated: $SPEC_COUNT spec files in specs/"
 
-# Fail hard if no specs were parsed
+# Fail hard if no specs were written
 if [[ "$SPEC_COUNT" -eq 0 ]]; then
-    echo "$SPECS_OUTPUT" > specs/_raw_output.md
-    log_error "Failed to parse any specs from Claude output. Raw output saved to specs/_raw_output.md. Re-run with --resume to retry this step."
+    log_error "No spec files created in specs/. Re-run with --resume to retry this step."
 fi
 
 log_timestamp "END   Step 6: Success"
@@ -700,7 +679,7 @@ Include ONLY these sections:
 ## Known Gotchas
 [Common agent pitfalls for this specific project]
 
-Output ONLY the AGENTS.md content, no explanations.
+Write the content directly to AGENTS.md. No explanations, just the file.
 
 ---
 
@@ -709,8 +688,11 @@ DESIGN DOCUMENT:
 PROMPT_END
 )
 
-AGENTS_OUTPUT=$(claude_generate "${AGENTS_PROMPT}${DESIGN_DOC}" "AGENTS.md")
-echo "$AGENTS_OUTPUT" > AGENTS.md
+claude_run "${AGENTS_PROMPT}${DESIGN_DOC}" "AGENTS.md"
+
+if [[ ! -s AGENTS.md ]]; then
+    log_error "AGENTS.md not created. Re-run with --resume to retry."
+fi
 
 log_info "Generated: AGENTS.md"
 log_timestamp "END   Step 7: Success"
@@ -752,12 +734,15 @@ Rules:
 
 The prompt should be ~25-35 lines. Concise and direct.
 
-Output ONLY the prompt content, no explanations or markdown fences.
+Write the prompt content directly to PROMPT_plan.md. No explanations or markdown fences, just the prompt.
 PROMPT_END
 )
 
-PLAN_OUTPUT=$(claude_generate "$PLAN_PROMPT" "PROMPT_plan.md")
-echo "$PLAN_OUTPUT" > PROMPT_plan.md
+claude_run "$PLAN_PROMPT" "PROMPT_plan.md"
+
+if [[ ! -s PROMPT_plan.md ]]; then
+    log_error "PROMPT_plan.md not created. Re-run with --resume to retry."
+fi
 
 log_info "Generated: PROMPT_plan.md"
 log_timestamp "END   Step 8: Success"
@@ -804,12 +789,15 @@ Project uses Python with UV, pytest, ruff, mypy.
 
 The prompt should be ~35-45 lines. Concise and direct.
 
-Output ONLY the prompt content, no explanations or markdown fences.
+Write the prompt content directly to PROMPT_build.md. No explanations or markdown fences, just the prompt.
 PROMPT_END
 )
 
-BUILD_OUTPUT=$(claude_generate "$BUILD_PROMPT" "PROMPT_build.md")
-echo "$BUILD_OUTPUT" > PROMPT_build.md
+claude_run "$BUILD_PROMPT" "PROMPT_build.md"
+
+if [[ ! -s PROMPT_build.md ]]; then
+    log_error "PROMPT_build.md not created. Re-run with --resume to retry."
+fi
 
 log_info "Generated: PROMPT_build.md"
 log_timestamp "END   Step 9: Success"
