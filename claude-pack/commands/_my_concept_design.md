@@ -34,13 +34,26 @@ When invoked:
 
 ### Stage 1: Understand the Design Problem
 
+**MANDATORY: You MUST explore the codebase before discussing ANY design ideas.**
+
+A design concept that isn't grounded in the actual codebase is useless. You cannot design what you don't understand.
+
 1. **Parse the Request**
    - What area of the system is this design for?
    - Is this a new design or a redesign of something broken?
 
-2. **Explore Current State**
-   - Use `Agent` tool with `subagent_type=Explore` to understand existing patterns
-   - Identify what exists, what's broken, what's missing
+2. **Explore the Codebase (REQUIRED — DO NOT SKIP)**
+   
+   Use `Agent` tool with `subagent_type=Explore` to understand:
+   - How the relevant area currently works
+   - What patterns exist today
+   - What's broken or missing
+   - How components interact
+   
+   **You MUST complete this exploration before moving to Stage 2.**
+   **You MUST report your findings to the user before proceeding.**
+   
+   If you cannot explore the codebase (no access, empty repo, etc.), STOP and tell the user. Do not proceed with abstract design work.
 
 3. **Read Referenced Documents**
    - Read any documents the user specifically cites
@@ -227,33 +240,48 @@ After writing or patching the document:
 
 1. **Re-read the complete document from disk** (use Read tool)
 
-2. **Assess against the Design Concept Rubric** (see below)
+2. **Verify against the codebase (REQUIRED EVERY ITERATION)**
+   
+   Use `Agent` tool with `subagent_type=Explore` to verify:
+   - Does each component/abstraction in "Core Model" actually map to something in the code?
+   - Are the "Required Invariants" consistent with how the code actually behaves?
+   - Do the scenarios in "How It Works" reflect real code paths?
+   - Are there existing patterns the design ignores or contradicts?
+   
+   **If the subagent finds discrepancies between the document and reality:**
+   - The document is wrong, not the code
+   - Patch the document to match reality
+   - Do NOT proceed until the design is grounded in actual code
+   
+   **This step is not optional.** A design concept that doesn't match the codebase is worse than no design at all.
+
+3. **Assess against the Design Concept Rubric** (see below)
    - Score each item: pass / needs work
    - If any item needs work, you MUST patch the document
 
-3. **Identify gaps in your own output:**
+4. **Identify gaps in your own output:**
    - **Failure modes**: What situations would break this design that aren't documented?
    - **Ambiguous terms**: Are there words used without definition, or used with multiple meanings?
    - **Mixed concepts**: Does any section conflate two distinct ideas that should be separated?
    - **Unstated invariants**: Are there assumptions the design relies on that aren't explicit?
    - **Statements that could be misread**: Would a reader unfamiliar with the conversation interpret anything differently than intended?
 
-4. **Check standalone quality:**
+5. **Check standalone quality:**
    - This document (plus any cited references) must be definitive
    - A reader with no prior context should understand the design completely
    - If understanding requires conversation history, the document is incomplete
 
-5. **Check readability:**
+6. **Check readability:**
    - If fixing the above issues makes the document too complex, the design itself needs simplification
    - Cut scope, merge concepts, or remove unnecessary distinctions
    - The 250-line limit exists because good designs are describable simply
 
-6. **If any issues found:**
+7. **If any issues found:**
    - Patch the document
    - Return to step 1 (re-read from disk)
    - Continue until clean
 
-**EXIT CONDITION: All rubric items pass AND no gaps identified in step 3-5.**
+**EXIT CONDITION: All rubric items pass AND codebase verification passes AND no gaps identified in steps 4-6.**
 
 #### Step 3: Present to User
 
@@ -263,7 +291,8 @@ After writing or patching the document:
 ## Guidelines
 
 ### What You MUST Do
-- Explore the codebase before discussing design
+- **Explore the codebase FIRST.** Before any design discussion. Use subagents. Report findings. This is non-negotiable.
+- **Verify against code on EVERY self-review iteration.** Use subagents to confirm assumptions match reality.
 - Keep the focus on architecture, patterns, and responsibilities
 - Make design principles specific and non-obvious
 - Define invariants that are testable
@@ -272,6 +301,7 @@ After writing or patching the document:
 - Stay within 250 lines
 
 ### What You MUST NOT Do
+- **Skip codebase research.** NEVER design without first exploring the code. NEVER iterate without re-verifying against code. A design that ignores reality is worthless.
 - **Include implementation details.** No field names, file paths, specific commits, or code changes
 - **Write a spec.** This is about design shape, not execution steps
 - **Skip to solutions.** Understand the structural problem first
@@ -291,6 +321,13 @@ After writing or patching the document:
 ## Design Concept Rubric
 
 Use this checklist during self-review. Every item must pass before presenting to user.
+
+### Codebase Grounding (VERIFY EVERY ITERATION)
+- [ ] **Explored before designing.** Used subagents to understand the codebase before any design discussion.
+- [ ] **Core Model maps to real code.** Each abstraction in the design corresponds to actual components.
+- [ ] **Invariants match reality.** Each invariant reflects how the code actually behaves, not how you wish it behaved.
+- [ ] **Scenarios are real code paths.** "How It Works" describes actual execution flows, not hypotheticals.
+- [ ] **No fantasy architectures.** The design extends or improves existing patterns, not replaces them with imagined ones.
 
 ### Decision Clarity
 - [ ] **Key decisions are explicit.** A reader finishes knowing what bets we're making.
