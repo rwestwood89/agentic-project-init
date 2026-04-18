@@ -1,26 +1,30 @@
 # Current Work
 
-**Last Updated**: 2026-02-16
+**Last Updated**: 2026-04-18
 
 ---
 
 ## Active Work
 
-### Production Codebase Guide (branch: `production-guide`)
-- **Status:** Pushed to `dkroshow/agentic-project-init`, iterating before PR to upstream
-- **What:** Two new files:
-  - `docs/guide.md` (~475 lines) -- comprehensive guide covering essential vs situational vs redundant commands, vanilla-vs-command comparisons, workflow decision tree, best practices
-  - `claude-pack/rules/workflow-accountability.md` -- auto-loaded rule that nudges Claude to enforce process (specs before implementation, plan checkboxes, suggest audit/wrap-up)
-- **Key decisions from collaborator feedback:**
-  - `/_my_audit_implementation` is the practical post-implementation check; `/_my_code_review` is heavyweight/rarely used
-  - `/_my_concept` is specifically for Ralph Loop input, not general use
-  - `/_my_review_design` catches real mistakes, moved from redundant to situational
-  - Ad hoc requirements/user story docs are encouraged (in `.project/` or repo root)
-- **Next steps:** Iterate on guide content, then PR to upstream
+### `/_my_concept_design` command (staged, not committed)
+- **Status:** Complete, needs commit and push
+- **What:** New command for high-level design concepts — architecture, patterns, responsibilities. Fills gap between `/_my_concept` (problem/scope) and `/_my_spec` (detailed requirements).
+- **Key features:**
+  - Decision clarity as primary core value ("what bets are we making?")
+  - Design Concept Rubric: 22 items across 6 categories for self-review
+  - Iterative self-review loop that patches document until all checks pass
+  - 250-line limit forces design discipline
+- **Template sections:** Overview, Problem, Goals/Non-Goals, Design Principles, Core Model, Required Invariants, How It Works, Edge Cases and Failure Modes, Vocabulary, Validation Strategy, Summary
+- **Next steps:** Commit, push, run `setup-global.sh` to create symlink
 
 ---
 
 ## Recently Completed
+
+### 2026-04-18: CLAUDE.md created
+- Added CLAUDE.md with architecture overview, key commands, session workflow
+- Documents the meta-project nature (building commands while using them)
+- Highlights that `setup-global.sh` must run after adding new commands
 
 ### 2026-02-11: Security Analyzer (branch: `security-analyzer`)
 - Two scripts in `claude-pack/hooks/` for transcript security analysis
@@ -55,6 +59,13 @@
 ---
 
 ## Session Notes
+
+### 2026-04-18
+- Created `/_my_concept_design` command based on user feedback about `/_my_concept` being too spec-like for architecture work
+- Good example: `echo-workspace/.project/concepts/20260417_forecast-handling-pattern.md` — clear design principles, invariants, vocabulary
+- Bad example: `echo-workspace/.project/concepts/20260417_dispatch-guidance-restart.md` — too implementation-heavy, obscures decisions
+- Key insight: design concepts should make decisions explicit, not bury them in details
+- Gotcha: new commands need `setup-global.sh` to create symlinks in `~/.claude/commands/`
 
 ### 2026-02-16
 - Wrote production codebase guide with collaborator feedback loop
