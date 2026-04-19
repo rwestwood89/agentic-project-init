@@ -2,7 +2,7 @@
 
 **Purpose:** Feature requirements definition with business goals and acceptance criteria
 **Input:** Feature ideas, user stories, requirements, optional research reference
-**Output:** `.project/active/{feature-name}/spec.md`
+**Output:** `.project/active/{feature-name}/spec.md` (main body should stay concise; optional appendices excluded)
 
 ## Overview
 
@@ -13,15 +13,6 @@ You are a requirements specialist agent. Your goal is to create clear, actionabl
 When invoked:
 - If feature description provided: proceed to spec process
 - If no description: ask "What feature would you like to specify?" and request problem description, desired outcomes, and any constraints
-
-## RFC 2119 Keywords
-
-Use standard definitions throughout:
-- **MUST / SHALL** - Absolute requirement; no deviation permitted
-- **MUST NOT / SHALL NOT** - Absolute prohibition
-- **SHOULD** - Recommended; valid reasons may exist to deviate, but implications must be understood
-- **SHOULD NOT** - Not recommended; valid reasons may exist to do it, but implications must be understood
-- **MAY** - Truly optional; implementer's choice
 
 ## Process
 
@@ -99,6 +90,17 @@ Use standard definitions throughout:
    - Only add implementation requirements if user explicitly requests after seeing investigation results
    - Continue until user approves the scoping
 
+### Normative Language (Use Only After Alignment Is Clear)
+
+Use RFC 2119 language in the **Requirements** section, after the problem, scope, and key bets are clear:
+- **MUST / SHALL** - Absolute requirement; no deviation permitted
+- **MUST NOT / SHALL NOT** - Absolute prohibition
+- **SHOULD** - Recommended; valid reasons may exist to deviate, but implications must be understood
+- **SHOULD NOT** - Not recommended; valid reasons may exist to do it, but implications must be understood
+- **MAY** - Truly optional; implementer's choice
+
+**Important:** Do not manufacture a long list of normative requirements just because the format allows it. Only write requirements for things we have actually decided need to be true. If a point would prematurely shape the design, keep it out of the requirements and hand it to the design stage instead.
+
 ### Stage 2: Document Creation
 
 1. **Get Metadata**
@@ -130,6 +132,22 @@ Use standard definitions throughout:
    **Created:** [Date/Time]
    **Complexity:** [LOW | MEDIUM | HIGH]
    **Branch:** [Branch name if applicable]
+
+   ---
+
+   ## Work Item Summary
+
+   [One short paragraph. What this work item is, why it exists, and what "done" changes for the user or system.]
+
+   ## Why This Matters Now
+
+   [1 short paragraph. Why this work is worth doing now, and what pain or opportunity it addresses.]
+
+   ## Key Bets / Constraints
+
+   - **Bet:** [What approach or product assumption this spec is leaning on]
+   - **Constraint:** [Important boundary or condition downstream stages must preserve]
+   - **Non-goal:** [What this work item explicitly does not try to solve]
 
    ---
 
@@ -175,11 +193,19 @@ Use standard definitions throughout:
 
    ---
 
+   ## Requirement Selection Notes
+
+   [1 short paragraph. Explain which requirements are truly normative here, and which questions are intentionally deferred to design.]
+
+   ---
+
    ## Requirements
 
    ### Functional Requirements
 
    > Requirements below are from user's request unless marked [INFERRED] or [FROM INVESTIGATION]
+   >
+   > Include only requirements we have actually decided MUST/SHOULD be true. Do not use this section to speculate or to force premature design detail.
 
    1. **FR-1**: [Requirement from user]
    2. **FR-2**: [Requirement from user]
@@ -203,6 +229,19 @@ Use standard definitions throughout:
 
    ---
 
+   ## Next-Stage Handoff
+
+   **Settled in this spec:**
+   - [Requirement or scope boundary downstream stages should treat as fixed]
+
+   **Design must figure out:**
+   - [Architecture or implementation-strategy question intentionally left open]
+
+   **Watch-outs for design:**
+   - [Risk, ambiguity, or edge case to keep in view]
+
+   ---
+
    ## Related Artifacts
 
    - **Research:** `.project/research/{file}.md` (if exists)
@@ -211,14 +250,20 @@ Use standard definitions throughout:
 
    ---
 
+   ## Appendix (Optional - does not count toward the main-body budget)
+
+   [Use for supporting evidence, longer requirement catalogs, or investigation detail that would make the main spec hard to skim.]
+
    **Next Steps:** After approval, proceed to `/_my_design`
    ```
 
 5. **Internal Review**
 
    Before presenting, verify:
+   - Does the opening summary create mental alignment before the normative detail starts?
    - Are ALL user-provided details captured?
    - Are requirements clearly marked as user-provided vs inferred?
+   - Did I keep the normative requirements selective instead of turning every thought into an FR?
    - Did I avoid adding implementation requirements the user didn't ask for?
    - Are business goals and success criteria clear?
 
@@ -233,17 +278,22 @@ Use standard definitions throughout:
 - Distinguish user requirements from your inferences
 - Offer codebase investigation before adding implementation details
 - Keep user in control of scope
+- Put mental alignment before normative detail
+- Keep the main body concise and skimmable; move supporting detail to an appendix if needed
 
 ### What You MUST NOT Do
 - Add implementation-specific requirements without user's request
 - Assume design decisions
 - Summarize away user's details
 - Skip the codebase investigation offer
+- Use RFC 2119 as an excuse to over-specify or prematurely design the solution
 
 ### Quality Standards
 - Problem statement explains "why" without prescribing "how"
+- The opening sections let a cold reader understand the work item before the FR list starts
 - Scope boundaries prevent feature creep
 - Requirements are traceable to user's request
+- Requirements only capture what really must be true
 - Edge cases identified but solutions deferred to design
 
 ---

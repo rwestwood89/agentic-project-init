@@ -2,7 +2,7 @@
 
 **Purpose:** Develop a design concept that describes architecture, patterns, and responsibilities at a level that can be critiqued and audited
 **Input:** Brief description of the design area (via `$ARGUMENTS`)
-**Output:** `.project/concepts/{design-name}.md` (≤250 lines)
+**Output:** `.project/concepts/{design-name}.md` (main body ≤250 lines; optional appendices excluded)
 
 ## Overview
 
@@ -32,7 +32,7 @@ When invoked:
 - **Architectural clarity.** The design should explain how responsibilities are separated and how components interact.
 - **Pattern-focused.** Name the patterns. Define the vocabulary. Make the mental model explicit.
 - **Critiqueable.** Every design decision should be specific enough that someone could say "that won't work because..."
-- **Minimal.** If a section isn't pulling its weight, cut it. 250 lines max forces discipline.
+- **Minimal.** If a section isn't pulling its weight, cut it. The main body stays within 250 lines; optional appendices are for evidence, not the core design.
 
 ## The Two-Register Rule
 
@@ -199,6 +199,12 @@ Only enter when the user tells you to.
 
    ---
 
+   ## Architectural Bets
+
+   [2-4 bullets. What major bets this design is making, why they are worth making, and what obvious alternative shapes are intentionally not chosen.]
+
+   ---
+
    ## Core Model
 
    *The register shifts here.* From this section on, identifiers, field names, and specific types are welcome. The upper half was about concepts; this is where concepts meet code.
@@ -275,12 +281,31 @@ Only enter when the user tells you to.
 
    ---
 
+   ## Next-Stage Handoff
+
+   **Settled here:**
+   - [What downstream artifacts should treat as fixed]
+
+   **Spec/design detail still needed next:**
+   - [What the next stage should refine without revisiting the core concept]
+
+   **First risk to de-risk:**
+   - [What should be validated early in the next stage]
+
+   ---
+
    ## Summary
 
    [2-3 sentences. The core insight restated. What makes this design better than the current state.]
+
+   ---
+
+   ## Appendix (Optional - does not count toward the main-body budget)
+
+   [Supporting evidence, deeper code references, or alternative approaches that would clutter the main concept.]
    ```
 
-3. **Ground every section in Stage 2 understanding. Stay within 250 lines.**
+3. **Ground every section in Stage 2 understanding. Keep the full document, excluding only the Appendix, within 250 lines.**
 
 #### Step 2: Self-Review Loop
 
@@ -350,7 +375,7 @@ After writing or patching the document:
 - Define invariants that are testable
 - Include edge cases and failure modes
 - Stay in Stage 2 until user says to write
-- Stay within 250 lines
+- Stay within the 250-line main-body limit
 
 ### What You MUST NOT Do
 - **Skip codebase research.** NEVER design without first exploring the code. NEVER iterate without re-verifying against code. A design that ignores reality is worthless.
@@ -362,7 +387,7 @@ After writing or patching the document:
 - **Skip to solutions.** Understand the structural problem first
 - **Write vague principles.** "Keep it simple" is not a design principle
 - **Omit failure modes.** If you can't describe where it might fail, you don't understand the design
-- **Exceed 250 lines.** If you can't describe it cleanly, simplify the design
+- **Exceed the 250-line main-body limit.** If you can't describe it cleanly, simplify the design or move support material to an appendix
 
 ### Quality Standards
 - Someone can read this cold and understand the design
@@ -414,11 +439,12 @@ Use this checklist during self-review. Every item must pass before presenting to
 - [ ] **References are explicit.** Any cited document is named and its relevance stated.
 - [ ] **Edge cases covered.** "What if X?" questions have answers in the document.
 - [ ] **Scope boundaries clear.** What's in, what's out, and why.
+- [ ] **Next-stage handoff is clear.** A downstream artifact can continue without guessing what is fixed vs open.
 
 ### Readability
 - [ ] **Cold-readable.** Someone unfamiliar with the project can follow the design.
 - [ ] **Proportional complexity.** Simple problems have simple designs.
-- [ ] **Under 500 lines.** If over, the design needs simplification, not compression.
+- [ ] **Main body fits within 250 lines.** If over, the design needs simplification or an appendix split, not compression tricks.
 - [ ] **Logical flow.** Overview → Problem → Principles → Model → Invariants → Flows → Edge Cases
 - [ ] **Visual clarity.** If the design involves data flow, state transitions, or timestamp relationships, consider whether a diagram would help a cold reader.
 
