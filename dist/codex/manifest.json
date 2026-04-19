@@ -1,0 +1,17 @@
+{
+  "generated_at": "2026-04-18T22:54:06Z",
+  "source_revision": "edf077d",
+  "source_root": "/home/rwestwood/agentic-project-init",
+  "included": {
+    "command_skills": ["my-audit-implementation", "my-code-quality", "my-code-review", "my-concept", "my-design", "my-example-command", "my-git-manage", "my-implement", "my-plan", "my-project-find", "my-project-manage", "my-quick-edit", "my-research", "my-review-design", "my-spec", "my-wrap-up"],
+    "skills": ["example-skill"],
+    "agents": ["example-agent"],
+    "hooks": []
+  },
+  "excluded": {
+    "command_skills": ["my-capture", "my-memorize", "my-recall", "my-review-compact"],
+    "skills": [],
+    "agents": ["recall"],
+    "hooks": ["capture.sh", "parse-transcript.py", "precompact-capture.sh", "query-transcript.py"]
+  }
+}
