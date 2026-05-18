@@ -14,6 +14,7 @@ When you have a new body of work to track:
    - **Executive Summary**: What this epic delivers and why (2-3 sentences)
    - **Success Criteria**: Measurable outcomes (checkboxes)
    - **Why This Epic**: Current state vs future state
+   - **Epic Strategy**: How value will be delivered and why this decomposition will make sense
 
 3. **Don't over-plan initially**: You can leave the Backlog Items section minimal until you're ready to decompose. Capture the intent first.
 
@@ -108,6 +109,14 @@ Read the epic definition and understand:
 - What are the dependencies?
 - What is the estimated total effort?
 
+#### Step 1.5: Write Epic Strategy
+
+Before enumerating backlog items, capture the top-level logic:
+- What is the value-delivery path?
+- What is the critical path?
+- Why are these chunks the right boundaries?
+- What work can stay deliberately vague until spec time?
+
 #### Step 2: Identify Natural Boundaries
 
 Look for natural separations by:
@@ -141,10 +150,10 @@ For each potential backlog item, ask:
 #### Step 4: Define Success Criteria
 
 For each item, write clear success criteria:
-- Use checkboxes for measurable outcomes
-- Include quality gates (tests pass, no errors, etc.)
-- Specify deliverables (files, reports, artifacts)
-- Define "done" unambiguously
+- Use 2-4 short checkboxes describing the meaningful postcondition: after this item, what should work or be true?
+- Keep them outcome-shaped, not implementation-shaped
+- Include quality gates only if they materially define "done"
+- Do NOT turn the item into a mini-spec
 
 #### Step 5: Document Dependencies
 
@@ -170,32 +179,24 @@ Use this template when adding backlog items to an epic document:
 
 **Objective**: [One sentence: what this item accomplishes]
 
-**Current State**:
-- ✅ [What exists and works]
-- ⚠️ [What exists but has issues]
-- ❌ [What doesn't exist yet]
-- ❓ [What's unclear or needs investigation]
+**Why This Is One Work Item**:
+- [Why these tasks belong together]
+- [Why this should be spec'd/designed/planned as a unit]
 
-**Scope**:
-1. **[Major Component 1]**:
-   - Detail 1
-   - Detail 2
-2. **[Major Component 2]**:
-   - Detail 1
-   - Detail 2
-3. [etc.]
+**In Scope (High Level)**:
+- [High-level capability or task group 1]
+- [High-level capability or task group 2]
+- [High-level capability or task group 3]
 
-**Out of Scope**:
+**Non-Goals / Out of Scope**:
 - [Explicitly call out what is NOT included]
 - [Things that might be confused with this item]
 - [Work deferred to other items or phases]
 
-**Success Criteria**:
-- [ ] [Measurable outcome 1]
-- [ ] [Measurable outcome 2]
-- [ ] [Quality gate: tests pass, no errors, etc.]
-- [ ] [Deliverable exists and is complete]
-- [ ] [Final validation or report complete]
+**Success / Done State**:
+- [ ] [After this item, X capability or confidence exists]
+- [ ] [After this item, Y integration/path works]
+- [ ] [If needed, a single quality gate that materially defines done]
 
 **Estimated Effort**: [X days] (spec Xh, design Xh, plan Xh, execute Xh)
 
@@ -235,6 +236,7 @@ Use this template when adding backlog items to an epic document:
 - Related tasks combined (extraction with navigation, not separate)
 - Clear sequential dependencies
 - Each produces meaningful deliverables
+- Each item has a crisp "after this, X works" success shape
 
 ---
 
@@ -254,6 +256,11 @@ Use this template when adding backlog items to an epic document:
 **Problem**: Item mixing modeling AND code AND execution
 **Why Bad**: Different skillsets, hard to plan coherently
 **Fix**: Separate by task type
+
+#### ❌ The "Mini-Spec Backlog Item"
+**Problem**: Item contains detailed requirements, solution shape, and implementation rules before spec time
+**Why Bad**: Front-loads detail at the wrong stage and makes decomposition harder to skim
+**Fix**: Keep the item strategic: objective, boundary, done state, dependencies
 
 #### ❌ The "Dependency Tangle" Item
 **Problem**: Item depends on 3+ other items

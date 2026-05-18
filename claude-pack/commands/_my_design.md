@@ -2,7 +2,7 @@
 
 **Purpose:** Technical design for code implementation
 **Input:** Spec document (`.project/active/{feature-name}/spec.md`), research findings
-**Output:** `.project/active/{feature-name}/design.md`
+**Output:** `.project/active/{feature-name}/design.md` (main body target ~300 lines; optional appendices excluded)
 
 ## Overview
 
@@ -13,6 +13,7 @@ You are a specialist design agent. Your goal is to create technical specificatio
 - Explain HOW parts relate and WHY this approach is right
 - Describe interfaces, data flows, and integration points
 - Code snippets: interfaces/schemas/pseudo-code only, ~10 lines max each. If you're writing implementation, stop — that belongs in the plan.
+- Optimize the main body for mental alignment. Use optional appendices for supporting evidence that would otherwise bloat the design.
 
 **Critical Research Requirements:**
 - **MUST** thoroughly explore the codebase for existing patterns and utilities
@@ -79,7 +80,7 @@ CYCLE:
    - Add header (feature name, status: Draft, owner, dates, git info)
    - Add overview (1-2 sentence summary from spec)
    - Add "Related Artifacts" section linking to spec, research, epic
-   - Create empty sections: "Research Findings", "Core Concept", "Architecture", "Key Decisions", "Component Overview", "Implementation Notes"
+   - Create empty sections: "Research Findings", "Core Concept", "Key Bets & Decisions", "Architecture", "Required Invariants", "Component Overview", "Non-Goals", "Implementation Notes"
 
 3. **Identify investigation areas**:
    - What existing code might be relevant?
@@ -134,11 +135,14 @@ On the first cycle, draft the "Core Concept" section in the design document. On 
 
 - **Draft/update design sections** (add detail progressively):
   - **Architecture**: How parts relate — boundaries, data flows, integration points. Focus on relationships, not code.
-  - **Key Decisions**: Design choices with rationale and alternatives considered
+  - **Key Bets & Decisions**: The design bets we are making, why they are worth making, and what alternatives we are not choosing
+  - **Required Invariants**: What must remain true for the design to work
   - **Component Overview**: Brief description of each part — purpose, location, responsibility. No implementation detail.
+  - **Non-Goals**: What this design explicitly does not try to solve
   - **Implementation Notes**: Only critical gotchas, patterns to follow, constraints for the plan phase
 
 **Code cap**: Snippets limited to ~10 lines — interfaces, schemas, type signatures, or pseudo-code only. If you're writing more than ~10 lines, you're writing implementation, not design. Stop and describe the concept instead.
+**Main-body budget**: Prefer the main body to stay within ~300 lines. If supporting evidence would push it beyond that, move the extra material to an optional appendix.
 
 #### Step D: REFLECT
 
@@ -164,7 +168,7 @@ On the first cycle, draft the "Core Concept" section in the design document. On 
 - User judgment needed (e.g., performance vs simplicity, new file vs extend existing)
 
 **Actions**:
-1. Add alternatives to the "Key Decisions" section with:
+1. Add alternatives to the "Key Bets & Decisions" section with:
    - Context (why this decision matters)
    - 2-3 options with structure, pros/cons, code reuse, integration approach
    - Your recommendation with rationale
@@ -176,7 +180,7 @@ On the first cycle, draft the "Core Concept" section in the design document. On 
    - **WAIT for user's decision** - do NOT proceed
 
 3. **After user responds**:
-   - Document decision in "Key Decisions" section (what was chosen and why)
+   - Document decision in "Key Bets & Decisions" section (what was chosen and why)
    - If user asks for more investigation → return to RESEARCH
    - If decision is clear → continue to OUTCOME (c) or more cycles if needed
 
@@ -237,6 +241,7 @@ On the first cycle, draft the "Core Concept" section in the design document. On 
    - **"Potential Risks"**: What could go wrong, mitigation strategies
    - **"Integration Strategy"**: How this fits into existing workflows, what it complements/replaces
    - **"Validation Approach"**: Testing strategy, success criteria, manual verification steps
+   - **"Next-Stage Handoff"**: What the plan/implementation stage should treat as fixed, open, and risky
    - **"Next Steps"**: Typically `/_my_implement` or `/_my_plan` for implementation after approval
 
 2. **Review complete document**:
@@ -270,16 +275,21 @@ On the first cycle, draft the "Core Concept" section in the design document. On 
 ## Core Concept
 [Plain-language description of the approach. Key insight. Why this is right.]
 
+## Key Bets & Decisions
+[The main bets this design is making. Why these bets are worth making. What obvious alternatives are intentionally not chosen.]
+
 ## Architecture
 [How parts relate — boundaries, data flows, integration points. No code listings.]
 
-## Key Decisions
-[Design choices with rationale and alternatives considered.
- Includes user-approved decisions if any.]
+## Required Invariants
+[What must remain true for the design to work. Testable assertions or strong constraints.]
 
 ## Component Overview
 [Brief description of each part — purpose, location, responsibility.
  No implementation detail. No code.]
+
+## Non-Goals
+[What this design explicitly does not solve.]
 
 ## Implementation Notes
 [Critical gotchas only. Patterns to follow. Constraints for the plan phase.
@@ -293,6 +303,12 @@ On the first cycle, draft the "Core Concept" section in the design document. On 
 
 ## Validation Approach
 [Testing strategy, success criteria]
+
+## Next-Stage Handoff
+[What the plan should treat as fixed. What remains open. What risk to de-risk first.]
+
+## Appendix (Optional - does not count toward the main-body budget)
+[Detailed file inventories, longer codebase evidence, or alternative approaches that would clutter the main design.]
 
 ---
 Next Step: After approval → `/_my_implement` or `/_my_plan`
@@ -308,6 +324,7 @@ Next Step: After approval → `/_my_implement` or `/_my_plan`
 - **More components than the problem needs**: Simpler is always better. Ask "would I want to maintain this?"
 - **"Technically works" is not good design**: A design that works but is awkward, unintuitive, or fragile is a bad design
 - **Solving the wrong problem**: If you're drawn to a more "interesting" adjacent problem, check yourself against the spec
+- **Restating the spec or research in prose**: If a section is mostly repeated context, link to the source artifact and keep the design focused on strategy
 
 ### Critical Requirements
 - Read spec FULLY before starting, especially business goals
@@ -319,6 +336,7 @@ Next Step: After approval → `/_my_implement` or `/_my_plan`
 
 ### Design Quality
 - Articulates what the system IS, not just what files to create
+- Makes the main bets, invariants, and non-goals obvious on a skim
 - Explains interfaces, data flows, and WHY decisions were made
 - Every abstraction earns its existence
 - Code in design: interfaces/schemas/pseudo-code only, ~10 lines max per snippet
@@ -340,6 +358,7 @@ Next Step: After approval → `/_my_implement` or `/_my_plan`
 - Complexity is proportional to the problem
 - Addresses all spec requirements; serves the business goals
 - Can be understood by developers unfamiliar with the codebase
+- Main body is concise enough to skim; supporting detail lives in an appendix if needed
 - Architecture, data flows, and rationale clearly described
 - Existing code thoroughly analyzed with specific references
 - Passed self-review gate before presentation to user
