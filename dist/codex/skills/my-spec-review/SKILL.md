@@ -84,18 +84,29 @@ Every finding is either an **issue the reviewer should act on** or a **claim the
 Pick from these based on the finding:
 
 **Question to the user** — when resolution depends on context only the human has. Ask the actual question; don't just flag that one exists.
-> FR-4 requires the cache to be invalidated on every write. This is the right call if writes are rare and staleness is unacceptable, but it will tank throughput if writes are common. **How often do writes happen in the hot path? If it's more than a few per second, we should talk about a different invalidation strategy before this becomes a requirement.**
+> **L2-1 · Question to the user:** FR-4 requires the cache to be invalidated on every write. This is the right call if writes are rare and staleness is unacceptable, but it will tank throughput if writes are common. **How often do writes happen in the hot path? If it's more than a few per second, we should talk about a different invalidation strategy before this becomes a requirement.**
 
 **If-then tradeoff** — when the reviewer can partially evaluate but the answer depends on a condition the user knows.
-> The spec locks the storage format to JSON. This is the right call **if** other services already consume this as JSON, but problematic **if** this is an internal-only format where we could use a more compact encoding. Which one is it?
+> **L2-2 · If-then tradeoff:** The spec locks the storage format to JSON. This is the right call **if** other services already consume this as JSON, but problematic **if** this is an internal-only format where we could use a more compact encoding. Which one is it?
 
 **Direct claim** — when something is just wrong. False code claim, internal contradiction, inverted logic. State it flatly.
-> FR-7 claims `ClipDischarge.validate()` rejects negative values. It doesn't — it clamps to zero (see `clip_discharge.py:47`). Either the FR is wrong or the code is wrong; the spec can't rest on this claim as written.
+> **L1-1 · Direct claim:** FR-7 claims `ClipDischarge.validate()` rejects negative values. It doesn't — it clamps to zero (see `clip_discharge.py:47`). Either the FR is wrong or the code is wrong; the spec can't rest on this claim as written.
 
 **Rewrite request** — for wording, structure, or section-hygiene problems. Describe what's wrong and what needs to be true; do not draft the replacement text. The spec agent handles the rewrite.
-> The "Desired Outcome" reads like a list of implementation steps rather than an outcome. Ask the spec agent to rewrite it from the user's perspective: what changes for them when this ships?
+> **L4-1 · Rewrite request:** The "Desired Outcome" reads like a list of implementation steps rather than an outcome. Ask the spec agent to rewrite it from the user's perspective: what changes for them when this ships?
 
 Mix framings freely within a lens. The goal is that each finding is actionable in the fastest way.
+
+## Finding IDs
+
+**Every finding must have a unique ID** so the user and downstream agents can refer to it unambiguously.
+
+- Format: `L{lens}-{n}` — `L1-1`, `L1-2`, `L2-1`, etc. Numbering resets per lens.
+- Lead every audit bullet with the ID in bold, followed by the framing label: `**L2-1 · Question to the user:** ...`
+- Engagement-summary items MUST reference the ID(s) they point back to, bracketed: `**[L2-1]** Decide whether...`
+- A single summary item may reference multiple findings if they're one decision: `**[L2-1, L3-2]** ...`
+
+IDs are stable per review file. When the spec is revised and the review is regenerated, IDs are free to change — they're not persistent across review runs.
 
 ## When Invoked
 
@@ -126,7 +137,7 @@ If the answer to any of these is clearly no, the spec fails Stage 0. Skip the fu
 
 ### Stage 1: Lens Audit
 
-Walk the four lenses. For each lens, produce a handful of findings using whichever framing fits each one (question / if-then / direct claim / rewrite request). Reference exact spec sections and exact files/lines when citing code.
+Walk the four lenses. For each lens, produce a handful of findings using whichever framing fits each one (question / if-then / direct claim / rewrite request). **Give each finding a unique ID** of the form `L{lens}-{n}` (see "Finding IDs" above). Reference exact spec sections and exact files/lines when citing code.
 
 Do not force a fixed number of findings per lens. If Lens 1 surfaces eight problems and Lens 4 surfaces none, that is the right shape.
 
@@ -135,7 +146,7 @@ Do not force a fixed number of findings per lens. If Lens 1 surfaces eight probl
 After the audit body, write a short summary aimed at the human reviewer:
 
 - **Overall take** in 2–3 sentences. What is the headline judgment?
-- **Here's what I need you to weigh in on** — the 3–8 highest-stakes findings from the audit, each pointing back to its entry in the body. These are the things the reviewer should actually resolve before the spec moves forward.
+- **Here's what I need you to weigh in on** — the 3–8 highest-stakes findings from the audit. Each summary item MUST start with the bracketed ID(s) of the finding(s) it points back to, e.g. `**[L2-1]** Decide whether...`. These are the things the reviewer should actually resolve before the spec moves forward.
 
 The summary is not new analysis. It's the "engagement layer" — the shortest path from "I opened the review" to "I know what to do."
 
@@ -174,19 +185,21 @@ End with one of:
 
 ### Lens 1 — Faithfulness
 
-[Findings. Each one uses the framing that best resolves it — question, if-then, direct claim, or rewrite request. Cite exact spec sections and code paths.]
+**L1-1 · [Framing]:** [Finding. Cite exact spec sections and code paths.]
+
+**L1-2 · [Framing]:** [Finding.]
 
 ### Lens 2 — Problem & Approach
 
-[Findings.]
+**L2-1 · [Framing]:** [Finding.]
 
 ### Lens 3 — Pipeline Risk
 
-[Findings.]
+**L3-1 · [Framing]:** [Finding.]
 
 ### Lens 4 — Hygiene
 
-[Brief. Only if material.]
+**L4-1 · [Framing]:** [Brief. Only if material.]
 
 ---
 
@@ -196,9 +209,9 @@ End with one of:
 
 **Here's what I need you to weigh in on:**
 
-1. [Highest-stakes finding, restated briefly, pointing back to the lens where it lives]
-2. [Next]
-3. [Next]
+1. **[L2-1]** [Highest-stakes finding, restated briefly. ID bracketed at the start.]
+2. **[L3-1]** [Next.]
+3. **[L1-2, L2-3]** [A summary item may span multiple findings when they're one decision.]
    ...
 
 ---
@@ -214,6 +227,7 @@ If Stage 0 fails, the `Audit` section collapses to a single short paragraph expl
 - **Devil's advocate, not rubber-stamp.** Assume serious faults. Find them.
 - **Write for the human reviewer.** They're deciding. Help them decide.
 - **Pick the finding framing that resolves the finding fastest.** No forced templates.
+- **Every finding gets an ID.** `L{lens}-{n}`, in bold at the start of the bullet. Engagement summary items reference those IDs in brackets.
 - **Describe rewrites, don't draft them.** If a section needs rewording, say what's wrong and what needs to be true. The spec agent handles the edit.
 - **Verify, don't trust.** Check code, check upstream artifacts, check traceability from requirements back to the user's actual words.
 - **Do not penalize omitted later-stage detail.** A spec doesn't need to solve design.

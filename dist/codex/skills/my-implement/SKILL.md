@@ -149,6 +149,60 @@ When invoked:
 - Test assertions check real behavior
 - Failures are immediate and obvious
 
+### ABSTRACTION QUALITY (CRITICAL - DON'T SHIP SLOP)
+
+The plan and design don't spell out every boundary. Function shape, parameter lists, and where policy lives are yours to decide — and that's where slop enters. These are hard rules, not style preferences.
+
+**One function, one job.** If the contract needs "it depends on the mode" to describe, it's doing multiple jobs. Split along the responsibility boundary.
+- Red flag: branching on a sentinel (`None`, `-1`, a flag bool) to select between unrelated behaviors.
+- Red flag: a parameter that's only used in some of the function's internal branches.
+- Red flag: you can't summarize the signature in one sentence without "or".
+
+**Policy at the call site, mechanism in utilities.** Decisions about *what to warn about*, *when to clip*, *what default to use when data is missing*, *which failure mode is acceptable* — those are policy. Policy belongs at the call site so the reader sees the decision in context. Utilities should be mechanical.
+
+**Name it for what it does, not for what it's used for.** If a function named `splice_segment_into_buffer` also handles cold-start seeding, the name is lying. Rename or split.
+
+**Contract readable from the signature alone.** A fresh reader should guess what a function does from name + parameters + return type before reading the body. If they can't, the abstraction is leaking.
+
+**Depth is a smell.** Three or more levels of nested control flow usually means two functions glued together. Extract.
+
+**Respect auto-memory.** Project-specific feedback on code quality lives in auto-memory (e.g., `feedback_*` entries). Skim before writing non-trivial code. Past rejections repeat.
+
+#### Self-check before marking a phase complete
+
+Re-read each non-trivial function you wrote and answer:
+
+- Can I describe this function's contract in one sentence without "or"?
+- Is there a parameter that only some branches use?
+- Is policy living inside a utility that should be mechanical?
+- Would the name + signature tell a fresh reader what this does?
+
+If any answer is no, **fix it before claiming the phase is done**. Don't hand slop to the audit agent.
+
+### FAIL LOUDLY (CRITICAL - DON'T COVER UP BUGS)
+
+When a design invariant is violated, the system is broken and the user wants to know. Silent fallbacks, defensive defaults, and "backwards compatibility" shims are how bugs hide for months. Do not add them.
+
+**No silent fallbacks on invariant violations.** If reaching a code path implies something upstream is broken, raise. Do not return a "safe default" so the run limps along publishing lies. A crashing sim is better than a lying sim.
+
+**No `except Exception: return default`.** Catch the specific exception you can handle and re-raise everything else. A broad except that swallows errors into a sensible-looking return value is an apology, not error handling.
+
+**No backwards-compatibility for code with no backwards.** If nothing currently depends on the old behavior, delete the old behavior. Don't keep deprecated flags, don't branch on old signatures, don't re-export removed types, don't leave `# kept for compatibility` comments on code no caller uses.
+
+**No optional parameters papering over missing data.** If the caller doesn't have the data, that's the caller's bug. Making the parameter optional with a fallback default hides the bug inside a utility. Fix the caller.
+
+**Fallback as policy, not as mechanism.** If a "degrade gracefully" behavior is genuinely wanted, the call site decides it explicitly — catches the error and calls the fallback helper. A utility that silently serves a default when its inputs are malformed is policy smuggled into mechanism, and the reader at the call site has no idea a fallback is even in play.
+
+#### Self-check before marking a phase complete
+
+Sweep every `try/except`, every `if x is None: return default`, every `or sensible_default`, and every parameter defaulting to a sentinel. For each, ask:
+
+- If this path fires, does it mean something is broken that the user would want to know about?
+- Is "raise" more useful than "keep going with a plausible value"?
+- Did I add this because I wasn't sure how to handle the case, rather than because a real scenario needs it?
+
+If the answer trends toward yes, rip it out.
+
 ### UNDERSTANDING (CRITICAL - BL-001)
 **NEVER:**
 - Blindly follow the plan without understanding rationale
