@@ -120,12 +120,20 @@ CYCLE:
 - Write a plain-language paragraph: what IS this system and how does it work conceptually?
 - State the key insight or principle that makes the design work
 - Explain why this is the RIGHT approach, not just a working one
+- Name the existing pieces this design composes with and what each handles. Route concerns to existing pieces where they fit; do not design parallel mechanisms.
 
 On the first cycle, draft the "Core Concept" section in the design document. On subsequent cycles, revisit and sharpen it based on new research.
 
 **Do NOT proceed to REFINE until the concept is articulated.** If you can't explain the design in one paragraph, you need more research.
 
 #### Step C: REFINE
+
+**Re-read the Core Concept before drafting.** It is the anchor for every section that follows. While drafting, if a section starts to introduce mechanisms, components, or behaviors not foreshadowed by the Core Concept, **STOP and ask: are we making this too complicated?** The honest answer is one of two:
+
+- The new mechanism belongs but the Core Concept didn't capture it — sharpen the concept first, then resume drafting against the updated anchor.
+- The new mechanism doesn't belong — drop it.
+
+Drift between the concept and the supporting sections is the signal that structure is being used to hide a gap in understanding. Treat it as a stop condition, not a refinement opportunity.
 
 **Update design document based on research and concept:**
 

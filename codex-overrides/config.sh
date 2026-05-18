@@ -26,6 +26,7 @@ declare -A COMMAND_SKILL_DESCRIPTIONS=(
   ["code-quality"]="Run code quality checks and fix issues systematically. Use when you want tests, lint, or validation work driven to closure."
   ["code-review"]="Review implementation against requirements and design. Use when you want a bug-focused audit or requirements check."
   ["concept"]="Develop a feature concept with scope and success criteria. Use when an idea needs definition before specification."
+  ["concept-design"]="Develop a design concept describing architecture, patterns, and responsibilities. Use when a design area needs a critiqueable, auditable conceptual sketch before detailed design."
   ["design"]="Create a technical design for an approved feature spec. Use when a feature needs architecture, interfaces, and tradeoff analysis."
   ["example-command"]="Example Codex prompt generated from the example Claude command."
   ["git-manage"]="Handle git workflow tasks such as worktrees, merges, and conflict resolution. Use when you need structured git help."
@@ -37,6 +38,7 @@ declare -A COMMAND_SKILL_DESCRIPTIONS=(
   ["research"]="Research a topic or code area deeply and save findings. Use when you need investigation before design or implementation."
   ["review-design"]="Critically review a design document before implementation. Use when you need flaws, risks, or open questions surfaced."
   ["spec"]="Create a feature specification with goals and acceptance criteria. Use when a feature needs requirements clarified and documented."
+  ["spec-review"]="Adversarially review a spec before it becomes the design contract. Use when a spec needs a devil's-advocate audit for faithfulness, problem framing, and pipeline risk."
   ["wrap-up"]="Summarize session work and update project context. Use when closing a session and refreshing .project/CURRENT_WORK.md or related docs."
 )
 

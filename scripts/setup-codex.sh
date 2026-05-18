@@ -14,6 +14,12 @@ source "$OVERRIDES_DIR/config.sh"
 
 DRY_RUN=false
 COPY_MODE=false
+FORCE=false
+
+is_managed_file() {
+    local path="$1"
+    [ -f "$path" ] && head -n 20 "$path" 2>/dev/null | grep -q "Generated from"
+}
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -25,12 +31,17 @@ while [[ $# -gt 0 ]]; do
             COPY_MODE=true
             shift
             ;;
+        --force)
+            FORCE=true
+            shift
+            ;;
         -h|--help)
-            echo "Usage: $0 [--dry-run] [--copy]"
+            echo "Usage: $0 [--dry-run] [--copy] [--force]"
             echo ""
             echo "Options:"
             echo "  --dry-run  Show what would be installed without changing ~/.codex"
             echo "  --copy     Copy files instead of creating symlinks"
+            echo "  --force    Overwrite existing files even if not previously managed"
             exit 0
             ;;
         *)
@@ -93,9 +104,18 @@ install_path() {
     fi
 
     if [ -e "$target" ]; then
-        echo "  ! Skipping existing file: $target"
-        managed_skipped=$((managed_skipped + 1))
-        return 0
+        if is_managed_file "$target" || [ "$FORCE" = true ]; then
+            if [ "$DRY_RUN" = true ]; then
+                echo "[DRY RUN] Would overwrite managed file: $target"
+                managed_installed=$((managed_installed + 1))
+                return 0
+            fi
+            rm "$target"
+        else
+            echo "  ! Skipping user-authored file (use --force to overwrite): $target"
+            managed_skipped=$((managed_skipped + 1))
+            return 0
+        fi
     fi
 
     if [ "$DRY_RUN" = true ]; then

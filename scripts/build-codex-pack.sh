@@ -103,9 +103,12 @@ extract_heading() {
 extract_purpose() {
     local file="$1"
     awk '
-        /^\*\*Purpose\*\*:/ || /^\*\*Purpose:\*\*/ || /^\*\*Purpose\*\*:|^\*\*Purpose\*\*:/ {
+        /^\*\*Purpose[:*]/ {
             line = $0
             sub(/^\*\*Purpose\*\*:?[[:space:]]*/, "", line)
+            sub(/^\*\*Purpose:\*\*[[:space:]]*/, "", line)
+            gsub(/\*\*/, "", line)
+            sub(/[[:space:]]+$/, "", line)
             print line
             exit
         }
