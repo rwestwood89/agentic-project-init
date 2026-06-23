@@ -109,6 +109,15 @@ Are routes explicit and well-defined?
 - Are fallback behaviors safe and predictable?
 - Could ambiguous routing lead to security issues?
 
+#### Dimension 7: Bets & Decisions Integrity
+
+Does the design separate bets from decisions, and are its bets honest?
+
+- Are the "Key Bets" genuine claims about reality (each with a stated "if false → what fails"), or are mechanism choices dressed as bets? A bet you could "swap X for Y" on is a decision, not a bet.
+- **Hunt for hidden bets**: what load-bearing belief does the design rest on that it does NOT state? An unstated bet that turns out wrong is the most expensive failure mode — surface it.
+- For the riskiest stated bet, is it actually likely true? What evidence in the spec, research, or codebase supports it?
+- Do "Key Decisions" each name the alternative considered and why it was rejected — or are reversible mechanism choices presented as if inevitable?
+
 ### Stage 2: Issue Aggregation
 
 After completing the dimensional review, aggregate all findings (include any Stage 0 findings):
@@ -177,6 +186,10 @@ Provide the structured review to the user:
 **Assessment:** [Pass / Concerns / Fail]
 [Findings and specific observations]
 
+### 7. Bets & Decisions Integrity
+**Assessment:** [Pass / Concerns / Fail]
+[Findings and specific observations — including any hidden bets surfaced]
+
 ---
 
 ## Issues by Severity
@@ -218,4 +231,4 @@ Provide the structured review to the user:
 - Before review: `/_my_design` to create the design
 - After approval: `/_my_implement` or `/_my_plan` to proceed
 
-**Last Updated:** 2025-01-25
+**Last Updated:** 2026-06-07
