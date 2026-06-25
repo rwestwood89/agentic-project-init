@@ -6,24 +6,21 @@
 
 ## Active Work
 
-### `agent-working-voice` (branch `agent-working-voice`, committed `ddb7e7d`, not PR'd)
-- **Status:** Implementation complete and installed locally; pending PR.
-- **What:** One global rule for the agent's working voice (`claude-pack/rules/working-voice.md`) plus a reader-comprehension check in the two artifact reviewers.
-- **Why it matters:** The model's default voice (dense, jargon-laden, block text) was the upstream bottleneck — bad voice compounds through spec→design→plan. The rule owns *how prose reads*; it does not touch a command's task stance or artifact structure.
-- **Shipped:** the rule (auto-loads + propagates to Codex); pilot voice fixes to `_my_implement.md` and `_my_concept_design.md`; Lens 5 in `_my_spec_review.md` and Dimension 8 in `_my_review_design.md`.
-- **Key finding:** the command prompts were in better shape than the audit claimed — real levers are the rule + the review check, not heavy prompt surgery.
-- **Next steps:** open PR; rebuild and commit `dist/codex/` *after* the unrelated `handoff` WIP is resolved (the current rebuild entangles a `my-handoff` skill and `my-design` staleness, so dist was left out of `ddb7e7d`).
-
-(`/_my_concept_design` from the prior session is now merged via PR #20.)
+_Nothing in progress. Last session's work — the working-voice rule and the `/_my_handoff` command — is merged to `main`. See Recently Completed._
 
 ---
 
 ## Recently Completed
 
-### 2026-06-25: agent-working-voice rule (branch, committed `ddb7e7d`)
+### 2026-06-25: agent-working-voice rule (merged, PR #21)
 - Global working-voice rule + reader-comprehension checks in spec/design reviewers; 2 surgical prompt fixes.
 - Full pipeline run: spec → design → plan → implement, with user checkpoints on the rule and pilot rewrites.
 - Two feedback memories saved: plain-writing voice, and dislike of the Q&A tool for complex decisions.
+- Merged to `main` via PR #21; Codex dist rebuilt and committed (`aa652a9`).
+
+### 2026-06-25: /_my_handoff command (committed `22e4437`)
+- New command: writes a handoff doc to the OS temp dir for a fresh agent (focus, references to read, key discoveries, suggested skills).
+- Spec at `.project/active/handoff-command/spec.md`; Codex skill + description added; pushed to `main`.
 
 ### 2026-04-18: CLAUDE.md created
 - Added CLAUDE.md with architecture overview, key commands, session workflow
@@ -56,10 +53,8 @@
 
 ## Up Next
 
-1. PR the `agent-working-voice` branch; rebuild and commit `dist/codex/` once the `handoff` WIP is sorted out
-2. Resolve the pending `handoff` WIP (`_my_handoff.md`, `.project/active/handoff-command/`) — unrelated, currently riding in the working tree
-3. Finalize production guide and PR to upstream
-4. Iterate on security-analyzer: tune rules, reduce false positives, PR when ready
+1. Finalize production guide and PR to upstream
+2. Iterate on security-analyzer: tune rules, reduce false positives, PR when ready
 
 ---
 
