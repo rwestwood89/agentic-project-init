@@ -75,6 +75,32 @@ The bad versions aren't *wrong* — they're in the wrong section. Move them to I
 
 ## Process
 
+> **The work is small — don't pad it.** A concept-design phase is: read the input and
+> everything it references, inventory what's settled in your own head, resolve the 2–3
+> genuinely open questions, write the doc. A good run lands in a handful of exchanges,
+> not twenty. Manufactured questions, abstract restatements, and code forensics are
+> motion substituting for the work.
+>
+> While discussing with the user:
+> - **Don't manufacture questions.** Most "open questions" are already answered in the
+>   input or the docs it references — you just read them (Stage 1). Find the answer there
+>   first. Only raise a question you can tie to a specific gap: quote the input sentence
+>   that *should* settle it but doesn't. Can't find that sentence? You haven't read
+>   carefully, or the question is invented — either way, don't ask it.
+> - **The two-register rule governs the document, not the conversation.** Ask the most
+>   concrete question that settles the point: show two candidate dicts and ask "which
+>   one," not "should the registry encode the distinction explicitly." Work out what a
+>   thing must contain *before* asking about it — arrive at "an entry needs
+>   `provenance: direct | derived`" by thinking, don't hand the user an abstract regress
+>   to narrow. A question that takes two messages to parse is a bad question.
+> - **When the user corrects a premise, drop it — don't re-encode it one layer up.** "The
+>   library isn't poor, don't model around it" means abandon that framing, not "then the
+>   registry must encode the distinction." Doubling down on a rejected premise wastes rounds.
+> - **Don't turn design discussion into implementation forensics.** State the invariant you
+>   need from existing code, verify only that, move on. Before escalating a suspected
+>   dependency bug into a design prerequisite, check whether a cited report already
+>   explains the behavior.
+
 ### Stage 1: Understand the Design Problem
 
 **MANDATORY: You MUST explore the codebase before discussing ANY design ideas.**
@@ -98,10 +124,18 @@ A design concept that isn't grounded in the actual codebase is useless. You cann
    
    If you cannot explore the codebase (no access, empty repo, etc.), STOP and tell the user. Do not proceed with abstract design work.
 
-3. **Read Referenced Documents**
-   - Read any documents the user specifically cites
-   - Read any documents referenced in materials you encounter during exploration
-   - Do NOT speculatively read research docs or concepts — only follow explicit references
+3. **Read Referenced Documents (REQUIRED — DO NOT SKIP)**
+
+   Before any design discussion, gather every document reference recursively:
+   the input/concept doc itself, every file path and "Related:" entry it names,
+   and every reference inside those, followed to its source. Read all of them in
+   full — not a grep, not a subagent skim. A "Related:" or "see report X" line is
+   an explicit reference, not a speculative one: mandatory.
+
+   Then report a one-line summary of each before proceeding. Not optional, not
+   conditional. If a cited document answers a question, you have your answer — do
+   NOT "rediscover" it by re-deriving from code.
+   - The only thing you don't read: unreferenced docs you merely guess might be relevant.
 
 ### Stage 2: Build Design Understanding
 
@@ -388,7 +422,7 @@ After writing or patching the document:
 - **Skip codebase research.** NEVER design without first exploring the code. NEVER iterate without re-verifying against code. A design that ignores reality is worthless.
 - **Leak identifiers into the upper half.** No backticked names, class names, field names, or specific metrics in Overview, Problem, Goals, or Principles. These belong in Core Model, Invariants, and below. A cold reader must be able to follow the upper half without looking up a single identifier.
 - **Confuse goals with mechanisms.** Goals describe what the system *does* (outcomes, functionality). Mechanisms describe *how the code enforces it* — those belong in Invariants. If a goal bullet names a specific field as "the sole authority" for something, you wrote an invariant. Move it.
-- **Use spec-register numbered sub-headers in Problem.** Bolded taxonomies like "**1. Validity is inferred, not signaled.**" turn Problem into an acceptance-criteria list. Write prose paragraphs that a colleague could read aloud.
+- **Turn Problem into a numbered taxonomy.** Bolded lists like "**1. Validity is inferred, not signaled.**" make Problem read like a spec's acceptance criteria. Write flowing prose paragraphs a colleague could read aloud.
 - **Include implementation details.** No file paths, specific commits, or code changes in the lower half either — those belong in the spec.
 - **Write a spec.** This is about design shape, not execution steps
 - **Skip to solutions.** Understand the structural problem first

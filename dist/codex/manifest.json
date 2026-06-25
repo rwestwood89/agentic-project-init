@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-04-21T18:10:07Z",
-  "source_revision": "cabce46",
+  "generated_at": "2026-06-25T20:24:55Z",
+  "source_revision": "63961fd",
   "source_root": "/home/rwestwood/agentic-project-init",
   "included": {
     "command_skills": ["my-audit-implementation", "my-code-quality", "my-code-review", "my-concept", "my-concept-design", "my-design", "my-example-command", "my-git-manage", "my-implement", "my-plan", "my-project-find", "my-project-manage", "my-quick-edit", "my-research", "my-review-design", "my-spec", "my-spec-review", "my-wrap-up"],

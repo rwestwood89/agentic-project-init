@@ -40,20 +40,8 @@ When invoked:
    - Note all requirements (distinguish user-provided vs inferred)
    - Understand acceptance criteria
 
-3. **Offer Codebase Exploration**:
-   ```
-   Before I begin implementing, would you like me to explore any parts of
-   the codebase to deepen my understanding?
-
-   I can investigate:
-   - Existing patterns similar to what we're building
-   - Integration points mentioned in the design
-   - Test patterns to follow
-
-   Or say "proceed" to start implementation.
-   ```
-
-   If user requests exploration, use `Task` tool with `subagent_type=Explore`.
+3. **Optional Codebase Exploration**:
+   - Use the `Explore` agent to fetch any information or details to address any ambiguities in the spec and design
 
 ### Stage 1: Plan Analysis & Scope Confirmation
 
@@ -76,7 +64,9 @@ When invoked:
    ```
    If you see boxes checked, confirm where you should pick up implementation.
 
-4. **Create TodoWrite** - Mirror plan with individual tasks
+   NEVER EXECUTE MULTIPLE STAGES SEQUENTIALLY UNLESS THE USER EXPLICITLY OK'S IT. **EVEN IF YOU ARE IN AUTO MODE**
+
+4. **Create TodoWrite** - Use this to track GRANULAR TASKS as per the plan. If executing one phase, OUTLINE THE STEPS WITHIN THE PHASE!!
 
 ### Stage 2: Sequential Implementation
 
@@ -151,14 +141,14 @@ When invoked:
 
 ### ABSTRACTION QUALITY (CRITICAL - DON'T SHIP SLOP)
 
-The plan and design don't spell out every boundary. Function shape, parameter lists, and where policy lives are yours to decide — and that's where slop enters. These are hard rules, not style preferences.
+The plan and design don't spell out every boundary. Function shape, parameter lists, and where policy lives are yours to decide. That freedom is where slop creeps in. These are hard rules, not style preferences.
 
 **One function, one job.** If the contract needs "it depends on the mode" to describe, it's doing multiple jobs. Split along the responsibility boundary.
 - Red flag: branching on a sentinel (`None`, `-1`, a flag bool) to select between unrelated behaviors.
 - Red flag: a parameter that's only used in some of the function's internal branches.
 - Red flag: you can't summarize the signature in one sentence without "or".
 
-**Policy at the call site, mechanism in utilities.** Decisions about *what to warn about*, *when to clip*, *what default to use when data is missing*, *which failure mode is acceptable* — those are policy. Policy belongs at the call site so the reader sees the decision in context. Utilities should be mechanical.
+**Policy at the call site, mechanism in utilities.** Some decisions are policy: what to warn about, when to clip, what default to use when data is missing, which failure mode is acceptable. Policy belongs at the call site, where the reader sees the decision in context. Utilities should just do the mechanical work.
 
 **Name it for what it does, not for what it's used for.** If a function named `splice_segment_into_buffer` also handles cold-start seeding, the name is lying. Rename or split.
 

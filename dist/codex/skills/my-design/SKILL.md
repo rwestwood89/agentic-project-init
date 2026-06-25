@@ -87,7 +87,7 @@ CYCLE:
    - Add header (feature name, status: Draft, owner, dates, git info)
    - Add overview (1-2 sentence summary from spec)
    - Add "Related Artifacts" section linking to spec, research, epic
-   - Create empty sections: "Research Findings", "Core Concept", "Key Bets & Decisions", "Architecture", "Required Invariants", "Component Overview", "Non-Goals", "Implementation Notes"
+   - Create empty sections: "Research Findings", "Core Concept", "Key Bets", "Key Decisions", "Architecture", "Required Invariants", "Component Overview", "Non-Goals", "Implementation Notes"
 
 3. **Identify investigation areas**:
    - What existing code might be relevant?
@@ -127,12 +127,20 @@ CYCLE:
 - Write a plain-language paragraph: what IS this system and how does it work conceptually?
 - State the key insight or principle that makes the design work
 - Explain why this is the RIGHT approach, not just a working one
+- Name the existing pieces this design composes with and what each handles. Route concerns to existing pieces where they fit; do not design parallel mechanisms.
 
 On the first cycle, draft the "Core Concept" section in the design document. On subsequent cycles, revisit and sharpen it based on new research.
 
 **Do NOT proceed to REFINE until the concept is articulated.** If you can't explain the design in one paragraph, you need more research.
 
 #### Step C: REFINE
+
+**Re-read the Core Concept before drafting.** It is the anchor for every section that follows. While drafting, if a section starts to introduce mechanisms, components, or behaviors not foreshadowed by the Core Concept, **STOP and ask: are we making this too complicated?** The honest answer is one of two:
+
+- The new mechanism belongs but the Core Concept didn't capture it — sharpen the concept first, then resume drafting against the updated anchor.
+- The new mechanism doesn't belong — drop it.
+
+Drift between the concept and the supporting sections is the signal that structure is being used to hide a gap in understanding. Treat it as a stop condition, not a refinement opportunity.
 
 **Update design document based on research and concept:**
 
@@ -142,7 +150,8 @@ On the first cycle, draft the "Core Concept" section in the design document. On 
 
 - **Draft/update design sections** (add detail progressively):
   - **Architecture**: How parts relate — boundaries, data flows, integration points. Focus on relationships, not code.
-  - **Key Bets & Decisions**: The design bets we are making, why they are worth making, and what alternatives we are not choosing
+  - **Key Bets**: The beliefs about reality this design rests on, stated as claims, each with its "if false → what fails" failure mode
+  - **Key Decisions**: The mechanism choices we made (X over Y), each naming the alternative considered and why it was rejected
   - **Required Invariants**: What must remain true for the design to work
   - **Component Overview**: Brief description of each part — purpose, location, responsibility. No implementation detail.
   - **Non-Goals**: What this design explicitly does not try to solve
@@ -175,7 +184,7 @@ On the first cycle, draft the "Core Concept" section in the design document. On 
 - User judgment needed (e.g., performance vs simplicity, new file vs extend existing)
 
 **Actions**:
-1. Add alternatives to the "Key Bets & Decisions" section with:
+1. Add alternatives to the "Key Decisions" section with:
    - Context (why this decision matters)
    - 2-3 options with structure, pros/cons, code reuse, integration approach
    - Your recommendation with rationale
@@ -187,7 +196,7 @@ On the first cycle, draft the "Core Concept" section in the design document. On 
    - **WAIT for user's decision** - do NOT proceed
 
 3. **After user responds**:
-   - Document decision in "Key Bets & Decisions" section (what was chosen and why)
+   - Document decision in "Key Decisions" section (what was chosen and why)
    - If user asks for more investigation → return to RESEARCH
    - If decision is clear → continue to OUTCOME (c) or more cycles if needed
 
@@ -282,8 +291,28 @@ On the first cycle, draft the "Core Concept" section in the design document. On 
 ## Core Concept
 [Plain-language description of the approach. Key insight. Why this is right.]
 
-## Key Bets & Decisions
-[The main bets this design is making. Why these bets are worth making. What obvious alternatives are intentionally not chosen.]
+## Key Bets
+
+> A bet is a *belief about reality* this design rests on. If the bet is wrong,
+> the design fails — not "we'd pick a different mechanism," but "we built the
+> wrong thing." State each bet as a claim about the world, then explicitly name
+> the failure mode: "If false → <what breaks>."
+>
+> Bets are NOT: choices between mechanisms, naming conventions, file layouts,
+> or anything where "we could swap X for Y" would still leave the design intact.
+> Those are Decisions.
+
+- **B1.** [Claim about reality]. *If false → [what fails].*
+- **B2.** ...
+
+## Key Decisions
+
+> A decision is a mechanism choice: we picked X over Y for these reasons.
+> Decisions are reversible without invalidating the design's premise. Each
+> decision must name the alternative considered and why it was rejected.
+
+- **D1.** [Chosen mechanism]. *Rejected: [alternative] ([reason]).*
+- **D2.** ...
 
 ## Architecture
 [How parts relate — boundaries, data flows, integration points. No code listings.]
@@ -332,6 +361,7 @@ Next Step: After approval → ``my-implement`` or ``my-plan``
 - **"Technically works" is not good design**: A design that works but is awkward, unintuitive, or fragile is a bad design
 - **Solving the wrong problem**: If you're drawn to a more "interesting" adjacent problem, check yourself against the spec
 - **Restating the spec or research in prose**: If a section is mostly repeated context, link to the source artifact and keep the design focused on strategy
+- **Mechanism dressed as a bet**: If your "bet" reads like "we use X to do Y," it's a decision, not a bet. Bets are claims about reality ("Opus can produce better cross-concept judgment than a fixed pipeline"). Decisions are mechanism choices ("we orchestrate via Task subagents rather than a Python fan-out loop"). If you can't state a clean "if false → ..." failure mode for a bullet, it's a decision.
 
 ### Critical Requirements
 - Read spec FULLY before starting, especially business goals
