@@ -134,14 +134,14 @@ When invoked:
 
 ### ABSTRACTION QUALITY (CRITICAL - DON'T SHIP SLOP)
 
-The plan and design don't spell out every boundary. Function shape, parameter lists, and where policy lives are yours to decide — and that's where slop enters. These are hard rules, not style preferences.
+The plan and design don't spell out every boundary. Function shape, parameter lists, and where policy lives are yours to decide. That freedom is where slop creeps in. These are hard rules, not style preferences.
 
 **One function, one job.** If the contract needs "it depends on the mode" to describe, it's doing multiple jobs. Split along the responsibility boundary.
 - Red flag: branching on a sentinel (`None`, `-1`, a flag bool) to select between unrelated behaviors.
 - Red flag: a parameter that's only used in some of the function's internal branches.
 - Red flag: you can't summarize the signature in one sentence without "or".
 
-**Policy at the call site, mechanism in utilities.** Decisions about *what to warn about*, *when to clip*, *what default to use when data is missing*, *which failure mode is acceptable* — those are policy. Policy belongs at the call site so the reader sees the decision in context. Utilities should be mechanical.
+**Policy at the call site, mechanism in utilities.** Some decisions are policy: what to warn about, when to clip, what default to use when data is missing, which failure mode is acceptable. Policy belongs at the call site, where the reader sees the decision in context. Utilities should just do the mechanical work.
 
 **Name it for what it does, not for what it's used for.** If a function named `splice_segment_into_buffer` also handles cold-start seeding, the name is lying. Rename or split.
 

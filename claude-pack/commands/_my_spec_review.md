@@ -22,9 +22,9 @@ Write for the human. Surface tradeoffs. Ask questions where the right answer dep
 
 This is not a rubric audit. You are not grading sections. You are stress-testing whether this spec reflects what the user actually wants and whether it would produce good downstream work.
 
-## The Four Lenses
+## The Five Lenses
 
-Organize your audit around these four lenses. They are not a checklist — they are the angles you attack the spec from.
+Organize your audit around these five lenses. They are not a checklist — they are the angles you attack the spec from.
 
 ### Lens 1: Faithfulness
 
@@ -69,6 +69,20 @@ Spec defects that won't show up until design or implementation.
 **Short. Only if it materially damages the spec.**
 
 Convention adherence, prose clarity, structure. Do not let this lens expand. If the worst thing you can say is "this sentence is awkward," leave it out.
+
+### Lens 5: Reader Comprehension
+
+**Can the human reviewer skim this once and know the work item, the bets, and what they have to decide?**
+
+The human is ~75% of the audience. A spec they can't follow on one read has failed its main job, however correct it is. This is a higher bar than Lens 4. You are not flagging awkward sentences. You are flagging voice that blocks understanding, measured against `claude-pack/rules/working-voice.md`.
+
+Raise a finding only when the voice materially gets in the way:
+
+- A key point or decision is buried under jargon, or behind a term the spec coined but never defined.
+- A requirement can't be understood without rereading earlier sections to decode it.
+- A paragraph leads with mechanism and never plainly states the point.
+
+Frame these as rewrite requests: name what blocks comprehension and what needs to be true. The spec agent rewrites.
 
 ## How to Frame Each Finding
 
@@ -130,7 +144,7 @@ If the answer to any of these is clearly no, the spec fails Stage 0. Skip the fu
 
 ### Stage 1: Lens Audit
 
-Walk the four lenses. For each lens, produce a handful of findings using whichever framing fits each one (question / if-then / direct claim / rewrite request). **Give each finding a unique ID** of the form `L{lens}-{n}` (see "Finding IDs" above). Reference exact spec sections and exact files/lines when citing code.
+Walk the five lenses. For each lens, produce a handful of findings using whichever framing fits each one (question / if-then / direct claim / rewrite request). **Give each finding a unique ID** of the form `L{lens}-{n}` (see "Finding IDs" above). Reference exact spec sections and exact files/lines when citing code.
 
 Do not force a fixed number of findings per lens. If Lens 1 surfaces eight problems and Lens 4 surfaces none, that is the right shape.
 
@@ -193,6 +207,10 @@ End with one of:
 ### Lens 4 — Hygiene
 
 **L4-1 · [Framing]:** [Brief. Only if material.]
+
+### Lens 5 — Reader Comprehension
+
+**L5-1 · [Framing]:** [Only when voice materially blocks comprehension. Usually a rewrite request.]
 
 ---
 

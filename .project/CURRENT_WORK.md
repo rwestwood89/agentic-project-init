@@ -1,25 +1,29 @@
 # Current Work
 
-**Last Updated**: 2026-04-18
+**Last Updated**: 2026-06-25
 
 ---
 
 ## Active Work
 
-### `/_my_concept_design` command (staged, not committed)
-- **Status:** Complete, needs commit and push
-- **What:** New command for high-level design concepts — architecture, patterns, responsibilities. Fills gap between `/_my_concept` (problem/scope) and `/_my_spec` (detailed requirements).
-- **Key features:**
-  - Decision clarity as primary core value ("what bets are we making?")
-  - Design Concept Rubric: 22 items across 6 categories for self-review
-  - Iterative self-review loop that patches document until all checks pass
-  - 250-line limit forces design discipline
-- **Template sections:** Overview, Problem, Goals/Non-Goals, Design Principles, Core Model, Required Invariants, How It Works, Edge Cases and Failure Modes, Vocabulary, Validation Strategy, Summary
-- **Next steps:** Commit, push, run `setup-global.sh` to create symlink
+### `agent-working-voice` (branch `agent-working-voice`, committed `ddb7e7d`, not PR'd)
+- **Status:** Implementation complete and installed locally; pending PR.
+- **What:** One global rule for the agent's working voice (`claude-pack/rules/working-voice.md`) plus a reader-comprehension check in the two artifact reviewers.
+- **Why it matters:** The model's default voice (dense, jargon-laden, block text) was the upstream bottleneck — bad voice compounds through spec→design→plan. The rule owns *how prose reads*; it does not touch a command's task stance or artifact structure.
+- **Shipped:** the rule (auto-loads + propagates to Codex); pilot voice fixes to `_my_implement.md` and `_my_concept_design.md`; Lens 5 in `_my_spec_review.md` and Dimension 8 in `_my_review_design.md`.
+- **Key finding:** the command prompts were in better shape than the audit claimed — real levers are the rule + the review check, not heavy prompt surgery.
+- **Next steps:** open PR; rebuild and commit `dist/codex/` *after* the unrelated `handoff` WIP is resolved (the current rebuild entangles a `my-handoff` skill and `my-design` staleness, so dist was left out of `ddb7e7d`).
+
+(`/_my_concept_design` from the prior session is now merged via PR #20.)
 
 ---
 
 ## Recently Completed
+
+### 2026-06-25: agent-working-voice rule (branch, committed `ddb7e7d`)
+- Global working-voice rule + reader-comprehension checks in spec/design reviewers; 2 surgical prompt fixes.
+- Full pipeline run: spec → design → plan → implement, with user checkpoints on the rule and pilot rewrites.
+- Two feedback memories saved: plain-writing voice, and dislike of the Q&A tool for complex decisions.
 
 ### 2026-04-18: CLAUDE.md created
 - Added CLAUDE.md with architecture overview, key commands, session workflow
@@ -52,13 +56,20 @@
 
 ## Up Next
 
-1. Finalize production guide and PR to upstream
-2. Iterate on security-analyzer: tune rules, reduce false positives, PR when ready
-3. Consider whether EPIC-002 (migrate commands from artifacts) is still relevant or superseded
+1. PR the `agent-working-voice` branch; rebuild and commit `dist/codex/` once the `handoff` WIP is sorted out
+2. Resolve the pending `handoff` WIP (`_my_handoff.md`, `.project/active/handoff-command/`) — unrelated, currently riding in the working tree
+3. Finalize production guide and PR to upstream
+4. Iterate on security-analyzer: tune rules, reduce false positives, PR when ready
 
 ---
 
 ## Session Notes
+
+### 2026-06-25
+- Diagnosed the voice problem as two axes: clarity/structure (partly handled) and texture/voice (the real gap). Settled a three-register model; this work owns only the *working voice* (chat + internal artifacts), not external explainers, not a command's task stance, not artifact structure.
+- Core bet: the agent mirrors the register of its own prompts — so the lever was rewriting dense prompts, not just adding a rule. Pilots showed the prompts were already mostly good, which reframed the win toward the rule + review check.
+- Rule grew real teeth from live user examples: a "precision is the work behind the voice" section, and "decompose into points; avoid block text" (a console wall-of-text was the trigger).
+- `dist/codex/` deliberately excluded from the commit — the local rebuild entangled unrelated `handoff` WIP and `my-design` staleness.
 
 ### 2026-04-18
 - Created `/_my_concept_design` command based on user feedback about `/_my_concept` being too spec-like for architecture work

@@ -118,6 +118,15 @@ Does the design separate bets from decisions, and are its bets honest?
 - For the riskiest stated bet, is it actually likely true? What evidence in the spec, research, or codebase supports it?
 - Do "Key Decisions" each name the alternative considered and why it was rejected — or are reversible mechanism choices presented as if inevitable?
 
+#### Dimension 8: Reader Comprehension
+
+A design exists to build mental alignment. Can a reader actually get the model from it?
+
+- Can a reader unfamiliar with the work skim this once and come away knowing what the system is, the core bets, and the key decisions?
+- Is the core concept stated plainly before the mechanism, or buried under jargon and undefined terms?
+- Does any section hide complexity behind a coined label instead of giving the reader a mental model to hang it on?
+- Measure against `claude-pack/rules/working-voice.md`. Flag only voice that blocks understanding, not awkward sentences. A correct design no one can follow hasn't done its job.
+
 ### Stage 2: Issue Aggregation
 
 After completing the dimensional review, aggregate all findings (include any Stage 0 findings):
@@ -190,6 +199,10 @@ Provide the structured review to the user:
 **Assessment:** [Pass / Concerns / Fail]
 [Findings and specific observations — including any hidden bets surfaced]
 
+### 8. Reader Comprehension
+**Assessment:** [Pass / Concerns / Fail]
+[Findings — only voice that blocks the design's mental model, not style nits]
+
 ---
 
 ## Issues by Severity
@@ -220,7 +233,7 @@ Provide the structured review to the user:
 - **No assumed backwards compatibility**: Unless the spec explicitly requires it, do not penalize designs for breaking changes
 - **Be specific**: Reference exact sections of the design and spec
 - **Be constructive**: Every issue should have a suggested resolution
-- **Focus on substance**: Ignore stylistic preferences unless they affect clarity
+- **Focus on substance; comprehension is substance**: Ignore stylistic preferences and awkward sentences. But voice dense enough to block the design's mental model is a real finding (Dimension 8), not a style nit — a correct design no one can follow hasn't done its job
 - **Prefer "Concerns" and "Fail" over "Pass"**: If you're unsure whether something is fine, it's "Concerns" not "Pass." A "Pass" means you'd bet your reputation on it being right. Default to surfacing potential issues rather than assuming things are fine.
 - **Simpler is always better**: If you can describe a simpler design that meets the spec, the current design needs to justify its additional complexity. "It works" is not sufficient justification.
 - **Challenge the abstractions**: For every new abstraction (class, interface, module boundary), ask: does this earn its existence? Would removing it make the code harder to understand, or easier?
