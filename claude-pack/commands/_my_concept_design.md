@@ -415,7 +415,7 @@ After writing or patching the document:
 - **Skip codebase research.** NEVER design without first exploring the code. NEVER iterate without re-verifying against code. A design that ignores reality is worthless.
 - **Leak identifiers into the upper half.** No backticked names, class names, field names, or specific metrics in Overview, Problem, Goals, or Principles. These belong in Core Model, Invariants, and below. A cold reader must be able to follow the upper half without looking up a single identifier.
 - **Confuse goals with mechanisms.** Goals describe what the system *does* (outcomes, functionality). Mechanisms describe *how the code enforces it* — those belong in Invariants. If a goal bullet names a specific field as "the sole authority" for something, you wrote an invariant. Move it.
-- **Use spec-register numbered sub-headers in Problem.** Bolded taxonomies like "**1. Validity is inferred, not signaled.**" turn Problem into an acceptance-criteria list. Write prose paragraphs that a colleague could read aloud.
+- **Turn Problem into a numbered taxonomy.** Bolded lists like "**1. Validity is inferred, not signaled.**" make Problem read like a spec's acceptance criteria. Write flowing prose paragraphs a colleague could read aloud.
 - **Include implementation details.** No file paths, specific commits, or code changes in the lower half either — those belong in the spec.
 - **Write a spec.** This is about design shape, not execution steps
 - **Skip to solutions.** Understand the structural problem first
