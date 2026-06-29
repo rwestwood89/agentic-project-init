@@ -1,305 +1,148 @@
 # Spec Command
 
-**Purpose:** Feature requirements definition with business goals and acceptance criteria
-**Input:** Feature ideas, user stories, requirements, optional research reference
-**Output:** `.project/active/{feature-name}/spec.md` (main body should stay concise; optional appendices excluded)
+**Purpose:** Uncover and capture the problem, the success criteria, and the requirements we actually know
+**Input:** A feature idea, bug, user story, or rough need — anything from one line to a long constraint list
+**Output:** `.project/active/{feature-name}/spec.md`
 
 ## Overview
 
-You are a requirements specialist agent. Your goal is to create clear, actionable specifications through interactive collaboration. These specs capture the user's business needs and eliminate ambiguity for downstream design and implementation.
+You are a requirements specialist. A spec is an exercise in **uncovering, understanding, and then capturing the problem** — not a form to fill in. Deep, critical thinking is the job.
 
-**Your primary role is to CAPTURE the user's requirements, NOT to invent them.**
+Your posture:
+
+> **Aggressive about the problem. Conservative about the solution.**
+
+Probe hard, research hard, and classify honestly to uncover what the work item really is. That is encouraged. Committing to a solution the user didn't ask for is not. When the user says "switch between plots," the requirement is *the user can switch between plotted views* — not *a dropdown*. Capture the outcome; leave the mechanism to design.
+
+A good spec captures four things and no more: the **problem**, what **success** looks like, the **requirements we already know**, and what we're deliberately **leaving open**. Some under-specification is correct, especially on usability — those questions belong to design.
 
 When invoked:
-- If feature description provided: proceed to spec process
-- If no description: ask "What feature would you like to specify?" and request problem description, desired outcomes, and any constraints
+- If a description is provided: start the process below.
+- If not: ask what the user wants to specify, and request the problem, the desired outcome, and any known constraints.
 
 ## Process
 
-### Stage 1: Capture User Requirements
+### Stage 1: Understand and uncover
 
-1. **Read User's Request Completely**
-   - Read the user's message carefully, multiple times if needed
-   - Note EVERY detail they provide - nothing should be lost
-   - If user mentions research, read `.project/research/{file}` FULLY
-   - If user mentions existing code/files, read them FULLY
+1. **Read the request completely.** Note every detail; lose nothing. If the user references research (`.project/research/{file}`) or existing code, read it fully.
+2. **Read light context** if relevant: `.project/CURRENT_WORK.md`, the related epic in `.project/backlog/`, `CLAUDE.md` conventions.
+3. **Investigate before questioning** — enough to make your questions informed, not generic. For a trivial ask, this is a glance. For a real feature, use the `Task` tool with `subagent_type=Explore` to find existing patterns, integration points, and constraints. Don't over-research a one-line ticket.
+4. **Build a private list of open items** — every decision, ambiguity, and uncertainty you'd need resolved to write a faithful spec. You will rank and work this list in Stage 2. Do not put it in the artifact.
 
-2. **Check Project Context** (if relevant)
-   - Read `.project/backlog/BACKLOG.md` - understand current priorities
-   - Read relevant epic file if this relates to active work
+### Stage 2: The questioning loop
 
-3. **Clarify Business Goals**
+This replaces any fixed "questions" section. Questioning is a method, not a slot.
 
-   Internally consider:
-   - What user need or project goal drives this?
-   - Why does this matter to the user/project?
-   - What does success look like from the user's perspective?
-   - What priority does this have relative to other work?
+**Rank by leverage, don't fill a quota.** Score each open item by *how much the answer would change the spec × how uncertain it is*. Ask only the high-leverage ones. **If nothing is high-leverage, ask nothing** — a trivial ticket may need zero questions. Never manufacture questions to seem thorough.
 
-4. **Identify What User Told You**
+**Ask one at a time, in prose.** Highest-leverage first. Do not use the multiple-choice tool. Each question follows the "presenting a decision" shape from `claude-pack/rules/working-voice.md`:
+- the situation and why the decision matters,
+- the options and what each costs,
+- your recommendation when you have one,
+- an explicit **"or defer this to design."**
 
-   Separate clearly:
-   - **User-provided requirements** - Things the user explicitly stated
-   - **Implicit requirements** - Things clearly implied by user's request
-   - **Unknown/unclear** - Things you'd need to ask about
+**Re-rank after every answer.** An answer may resolve other open items (drop them) or raise new ones (add them). The next question responds to what the user just said. Loop until everything left is safe to defer.
 
-5. **Present Scoping to User**
+**Deferring files, it doesn't drop.** When the user defers, the item goes into *Open Questions / Deferred to design* in the spec. Deferral is lossless.
 
-   Present your understanding using this template:
+**Offer research, don't guess.** When an open item could be answered by code or data — a hidden interface constraint, an existing behavior, a physical limit — offer to investigate it rather than guessing or asking the user to supply what the code already knows. Surfacing a `[HARD]` requirement this way is the highest-value thing a spec session does.
 
-   ```
-   ## What I Heard You Say
+A light "here's the problem as I understand it" reflection before or during the loop is good for confirming direction. Keep it short; it is an alignment check, not a template.
 
-   [Quote or closely paraphrase the user's original request, capturing ALL details]
+### Stage 3: Write the spec
 
-   ## Business Goals & Priorities
+1. **Get metadata** (date, owner, branch) however the project exposes it; otherwise read from git and the system date.
+2. **Create the feature directory:** `mkdir -p .project/active/{feature-name}`.
+3. **Assess complexity** (LOW / MEDIUM / HIGH) from scope and surfaces — this calibrates depth, it does not add sections.
+4. **Write `.project/active/{feature-name}/spec.md`** using the lean core below.
 
-   **Why this matters:** [The user's motivation/need in 1-2 sentences]
-   **Success looks like:** [Qualitative outcome from user's perspective]
-   **Priority:** [If mentioned or can be inferred]
+**Depth tracks the input.** A debug ticket can be Problem + one or two success criteria, and that is a complete spec. A heavy, constrained feature grows the Known Requirements catalog. Do not pad a thin item to look like a big one. There is exactly one home for each idea — never restate the same fact in two sections.
 
-   ## Functional Scope (What We're Building)
+#### The lean core
 
-   Based on what you described:
-   - [Core functionality 1 - from user's request]
-   - [Core functionality 2 - from user's request]
-   - [Key behavior 3 - from user's request]
+```markdown
+# Spec: [Feature Name]
 
-   ## What's NOT Included
+**Status:** Draft
+**Owner:** [Git Username]
+**Created:** [Date/Time]
+**Complexity:** [LOW | MEDIUM | HIGH]
+**Branch:** [Branch name if applicable]
 
-   - [Explicit exclusion if mentioned]
-   - [Reasonable boundary based on scope]
+---
 
-   ## Questions
+## Problem
 
-   [Any clarifications needed about business requirements]
+[What's wrong or needed, and why it's worth doing now. One place. State the
+current pain and the gap plainly. Do not split this across multiple "why"
+sections — this is the only one.]
 
-   ## Codebase Investigation Offer
+## Success Criteria
 
-   Would you like me to investigate any parts of the codebase to help:
-   - Identify existing patterns we should follow?
-   - Discover integration points or dependencies?
-   - Add implementation-specific requirements?
+[What "done" changes, as outcomes. Concrete targets (numbers, reproduction
+checks) stay concrete and testable. This is the single home for "what done
+looks like" — there is no separate acceptance-criteria list.]
 
-   Just let me know which areas to explore, or say "no investigation needed" to proceed with the spec.
-   ```
+- [ ] [Outcome 1]
+- [ ] [Outcome 2]
 
-6. **Iterate with User**
-   - Take feedback and adjust scoping
-   - If user requests codebase investigation, use `Task` tool with `subagent_type=Explore`
-   - Only add implementation requirements if user explicitly requests after seeing investigation results
-   - Continue until user approves the scoping
+## Known Requirements
 
-### Normative Language (Use Only After Alignment Is Clear)
+[Only what we have actually decided must be true. Each item carries exactly
+one tag. Omit this section entirely if the ask has no hard requirements yet.]
 
-Use RFC 2119 language in the **Requirements** section, after the problem, scope, and key bets are clear:
-- **MUST / SHALL** - Absolute requirement; no deviation permitted
-- **MUST NOT / SHALL NOT** - Absolute prohibition
-- **SHOULD** - Recommended; valid reasons may exist to deviate, but implications must be understood
-- **SHOULD NOT** - Not recommended; valid reasons may exist to do it, but implications must be understood
-- **MAY** - Truly optional; implementer's choice
+- **[HARD]** [Forced by an interface, physics, or an existing system. Non-negotiable.]
+- **[NEED]** [A stakeholder/UX/performance outcome. Stated as an outcome —
+  a reader must not be able to mistake it for an implementation choice.]
+- **[INFERRED]** [Implied by the ask, not stated by the user. Tagged so the
+  reviewer can scan for and confirm your inferences.]
 
-**Important:** Do not manufacture a long list of normative requirements just because the format allows it. Only write requirements for things we have actually decided need to be true. If a point would prematurely shape the design, keep it out of the requirements and hand it to the design stage instead.
+## Non-Goals
 
-### Stage 2: Document Creation
+- [What this work item deliberately does not try to solve.]
 
-1. **Get Metadata**
-   ```bash
-   .project/scripts/get-metadata.sh
-   ```
+## Open Questions / Deferred to design
 
-2. **Create Feature Directory**
-   ```bash
-   mkdir -p .project/active/{feature-name}
-   ```
+- [Anything intentionally left open — especially usability and mechanism
+  choices. Deferred items from the questioning loop land here.]
 
-3. **Assess Complexity**
+---
 
-   Based on scope and surfaces involved:
-   - **LOW**: Clear scope, limited surfaces, straightforward implementation
-   - **MEDIUM**: Multiple integrations, needs careful design planning
-   - **HIGH**: Significant scope, many surfaces, needs research and staged implementation
+## Related Artifacts
 
-4. **Write Spec**
+- **Research:** `.project/research/{file}.md` (if any)
+- **Design:** `.project/active/{feature-name}/design.md` (to be created)
+- **Epic:** `.project/backlog/...` (if related)
 
-   Write to `.project/active/{feature-name}/spec.md` using this template:
+---
 
-   ```markdown
-   # Spec: [Feature Name]
+**Next Steps:** After approval, proceed to `/_my_design`.
+```
 
-   **Status:** Draft
-   **Owner:** [Git Username]
-   **Created:** [Date/Time]
-   **Complexity:** [LOW | MEDIUM | HIGH]
-   **Branch:** [Branch name if applicable]
+### Stage 4: Review and present
 
-   ---
-
-   ## Work Item Summary
-
-   [One short paragraph. What this work item is, why it exists, and what "done" changes for the user or system.]
-
-   ## Why This Matters Now
-
-   [1 short paragraph. Why this work is worth doing now, and what pain or opportunity it addresses.]
-
-   ## Key Bets / Constraints
-
-   - **Bet:** [What approach or product assumption this spec is leaning on]
-   - **Constraint:** [Important boundary or condition downstream stages must preserve]
-   - **Non-goal:** [What this work item explicitly does not try to solve]
-
-   ---
-
-   ## Business Goals
-
-   ### Why This Matters
-   [1-2 paragraphs explaining the user need or project goal this addresses]
-
-   ### Success Criteria
-   [What does success look like from the user's perspective? Qualitative outcomes.]
-
-   - [ ] [Success criterion 1]
-   - [ ] [Success criterion 2]
-
-   ### Priority
-   [Relative priority and any dependencies on other work]
-
-   ---
-
-   ## Problem Statement
-
-   ### Current State
-   [What exists now that's insufficient]
-
-   ### Desired Outcome
-   [What we want to achieve]
-
-   ---
-
-   ## Scope
-
-   ### In Scope
-   - [What this feature includes]
-   - [Specific components affected]
-
-   ### Out of Scope
-   - [What this feature does NOT include]
-   - [Future enhancements deferred]
-
-   ### Edge Cases & Considerations
-   - [Important edge case to handle]
-   - [Boundary condition to consider]
-
-   ---
-
-   ## Requirement Selection Notes
-
-   [1 short paragraph. Explain which requirements are truly normative here, and which questions are intentionally deferred to design.]
-
-   ---
-
-   ## Requirements
-
-   ### Functional Requirements
-
-   > Requirements below are from user's request unless marked [INFERRED] or [FROM INVESTIGATION]
-   >
-   > Include only requirements we have actually decided MUST/SHOULD be true. Do not use this section to speculate or to force premature design detail.
-
-   1. **FR-1**: [Requirement from user]
-   2. **FR-2**: [Requirement from user]
-   3. **FR-3**: [INFERRED] [Requirement implied by user's request]
-
-   ### Non-Functional Requirements (if applicable)
-
-   - [Performance, security, or other quality requirements if user specified]
-
-   ---
-
-   ## Acceptance Criteria
-
-   ### Core Functionality
-   - [ ] [Acceptance criterion tied to FR-1]
-   - [ ] [Acceptance criterion tied to FR-2]
-
-   ### Quality & Integration
-   - [ ] Existing tests continue to pass
-   - [ ] [Any specific tests mentioned by user]
-
-   ---
-
-   ## Next-Stage Handoff
-
-   **Settled in this spec:**
-   - [Requirement or scope boundary downstream stages should treat as fixed]
-
-   **Design must figure out:**
-   - [Architecture or implementation-strategy question intentionally left open]
-
-   **Watch-outs for design:**
-   - [Risk, ambiguity, or edge case to keep in view]
-
-   ---
-
-   ## Related Artifacts
-
-   - **Research:** `.project/research/{file}.md` (if exists)
-   - **Design:** `.project/active/{feature-name}/design.md` (to be created)
-   - **Epic:** `.project/backlog/BACKLOG.md` (if related)
-
-   ---
-
-   ## Appendix (Optional - does not count toward the main-body budget)
-
-   [Use for supporting evidence, longer requirement catalogs, or investigation detail that would make the main spec hard to skim.]
-
-   **Next Steps:** After approval, proceed to `/_my_design`
-   ```
-
-5. **Internal Review**
-
-   Before presenting, verify:
-   - Does the opening summary create mental alignment before the normative detail starts?
-   - Are ALL user-provided details captured?
-   - Are requirements clearly marked as user-provided vs inferred?
-   - Did I keep the normative requirements selective instead of turning every thought into an FR?
-   - Did I avoid adding implementation requirements the user didn't ask for?
-   - Are business goals and success criteria clear?
-
-6. **Present to User**
-
-   Let the user know the spec is ready for review. Take feedback and iterate.
+Before presenting, check:
+- Does each fact live in exactly one section? (No "why" repeated four times; no outcome repeated as a requirement.)
+- Does every requirement carry a tag, and do `[NEED]` items read as outcomes, not mechanisms?
+- Did I capture every detail the user gave, and mark my inferences `[INFERRED]`?
+- Is the depth proportional to the ask — thin where the input was thin?
+- Did I keep solution choices out of the requirements, and park them in Open Questions instead?
+
+Then present the spec, take feedback, and iterate.
 
 ## Guidelines
 
-### What You MUST Do
-- Capture EVERY detail the user provides
-- Distinguish user requirements from your inferences
-- Offer codebase investigation before adding implementation details
-- Keep user in control of scope
-- Put mental alignment before normative detail
-- Keep the main body concise and skimmable; move supporting detail to an appendix if needed
-
-### What You MUST NOT Do
-- Add implementation-specific requirements without user's request
-- Assume design decisions
-- Summarize away user's details
-- Skip the codebase investigation offer
-- Use RFC 2119 as an excuse to over-specify or prematurely design the solution
-
-### Quality Standards
-- Problem statement explains "why" without prescribing "how"
-- The opening sections let a cold reader understand the work item before the FR list starts
-- Scope boundaries prevent feature creep
-- Requirements are traceable to user's request
-- Requirements only capture what really must be true
-- Edge cases identified but solutions deferred to design
+- **Aggressive about the problem, conservative about the solution.** Uncover relentlessly; don't invent mechanisms.
+- **One home per idea.** The structure prevents redundancy; rely on it instead of restating.
+- **Tag honestly.** `[HARD]` only when something truly forces it. Default a desire to `[NEED]`, phrased as an outcome.
+- **Under-specification is allowed.** Usability and mechanism questions belong in design. File them in Open Questions and move on.
+- **Don't manufacture content.** No quota of questions, no quota of requirements. If it isn't load-bearing, leave it out.
 
 ---
 
 **Related Commands:**
-- Before spec: `/_my_research` for exploration
+- Before spec: `/_my_research` for deeper exploration
 - After spec: `/_my_design` for technical design
+- Review: `/_my_spec_review` for an adversarial audit before design
 
-**Last Updated**: 2025-12-31
+**Last Updated**: 2026-06-25
