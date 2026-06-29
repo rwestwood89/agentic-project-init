@@ -30,11 +30,11 @@ Organize your audit around these five lenses. They are not a checklist — they 
 
 **Does the spec faithfully capture what the user asked for, grounded in real context?**
 
-The spec prompt's core rule is "CAPTURE the user's requirements, NOT invent them." Most spec failures here look like fidelity failures — drift, invention, omission, or stale interpretation — not decision failures.
+The spec's posture is "aggressive about the problem, conservative about the solution": probe and uncover relentlessly, but never commit to a solution the user didn't ask for. Faithfulness failures look like drift, omission, stale interpretation, or — the cardinal sin — a *solution* invented and frozen as a requirement. Note the asymmetry: deep probing and honestly-tagged inferences are *good*, not invention. Penalize invented mechanisms, not thorough understanding.
 
 - Are requirements in the spec actually traceable to the user's ask, or were they invented?
 - Did the spec drop details the user explicitly said?
-- Are inferred items honestly marked (`[INFERRED]`, `[FROM INVESTIGATION]`)? Are they really inferable, or are they guesses masquerading as inference?
+- Are the tags honest? Each requirement should carry `[HARD]` (forced by an interface/physics/existing system), `[NEED]` (a stakeholder outcome), or `[INFERRED]` (implied, not stated). Is anything tagged `[HARD]` that is really just one option among several? Are `[INFERRED]` items genuinely inferable, or guesses masquerading as inference?
 - Were upstream artifacts (research, concept, epic, prior design) interpreted correctly, or cherry-picked / misread?
 - Are code-facing claims true? When the spec says "X currently works like Y" or "component Z does not support W," check the code. Not the comments — the code.
 
@@ -44,7 +44,7 @@ The spec prompt's core rule is "CAPTURE the user's requirements, NOT invent them
 
 A spec can be faithful and still be pointed at the wrong thing. This lens attacks the decisions the spec is making — whether or not they were captured correctly.
 
-- Is the Work Item Summary framing the problem correctly, or an adjacent problem?
+- Is the Problem section framing the problem correctly, or an adjacent problem?
 - What bet is this spec making? Is it articulated, or is it silently baked in? Is it defensible?
 - What alternative framings is the spec silently rejecting? Are those alternatives actually worse, or just un-considered?
 - Abstractions and ontology: does the spec talk about the system the way the system actually works, or does it introduce a mental model that will fight the codebase? (e.g., "users" when the system thinks in "tenant accounts")
@@ -57,12 +57,12 @@ A spec can be faithful and still be pointed at the wrong thing. This lens attack
 
 Spec defects that won't show up until design or implementation.
 
-- **Too specific:** Does the spec lock design decisions that should stay open? Is it sneaking implementation choices in as requirements?
-- **Too vague:** Would two strong engineers build materially different things from this spec? Which exact sentence is the ambiguity in?
-- **Contradictions:** Do any requirements conflict with each other, with the scope, or with the stated bet?
+- **Too specific:** Does the spec lock design decisions that should stay open? The sharpest test is the tags: is a mechanism dressed up as `[HARD]`, or a `[NEED]` written as an implementation ("a dropdown") instead of an outcome ("the user can switch views")? A locked solution the user didn't ask for is the spec's signature failure.
+- **Too vague:** Would two strong engineers build materially different things from this spec? Which exact sentence is the ambiguity in? (Distinguish this from deliberate, filed deferral — an item parked in Open Questions is not a defect.)
+- **Contradictions:** Do any requirements conflict with each other, with the scope, or with each other's tags?
 - **Process/merge/ops leakage:** Are any "requirements" actually process instructions, merge strategy, or operational guesses rather than contract obligations?
-- **Missing content:** Edge cases that must be handled, constraints that must be preserved, acceptance criteria tied to no FR, FRs tied to no acceptance criterion.
-- **Handoff accuracy:** Is "settled in this spec" actually settled? Are the "design questions" genuinely design-stage, or are they still spec-stage questions being punted?
+- **Missing content:** Edge cases that must be handled, constraints that must be preserved, success criteria with no matching requirement, or `[HARD]` requirements that no success criterion would catch if violated.
+- **Deferral accuracy:** Are the items in "Open Questions / Deferred to design" genuinely design-stage, or are they spec-stage questions (the user could answer now) being punted? Conversely, is anything stated as settled that the user never actually decided?
 
 ### Lens 4: Hygiene
 
@@ -100,7 +100,7 @@ Pick from these based on the finding:
 > **L1-1 · Direct claim:** FR-7 claims `ClipDischarge.validate()` rejects negative values. It doesn't — it clamps to zero (see `clip_discharge.py:47`). Either the FR is wrong or the code is wrong; the spec can't rest on this claim as written.
 
 **Rewrite request** — for wording, structure, or section-hygiene problems. Describe what's wrong and what needs to be true; do not draft the replacement text. The spec agent handles the rewrite.
-> **L4-1 · Rewrite request:** The "Desired Outcome" reads like a list of implementation steps rather than an outcome. Ask the spec agent to rewrite it from the user's perspective: what changes for them when this ships?
+> **L4-1 · Rewrite request:** A Success Criterion reads like a list of implementation steps rather than an outcome. Ask the spec agent to rewrite it from the user's perspective: what changes for them when this ships?
 
 Mix framings freely within a lens. The goal is that each finding is actionable in the fastest way.
 
@@ -136,7 +136,7 @@ Before the full audit, establish whether the spec is fundamentally correct about
 Then ask:
 
 - Is this spec even about the right work item?
-- Is the Work Item Summary materially accurate?
+- Is the Problem section materially accurate?
 - Are the core requirements directionally correct?
 - Would design be badly misled if it treated this spec as the contract?
 
@@ -253,4 +253,4 @@ If Stage 0 fails, the `Audit` section collapses to a single short paragraph expl
 - Before review: `/_my_spec` to create the spec
 - After approval: `/_my_design` to proceed to technical design
 
-**Last Updated:** 2026-04-19
+**Last Updated:** 2026-06-25

@@ -38,7 +38,7 @@ declare -A COMMAND_SKILL_DESCRIPTIONS=(
   ["quick-edit"]="Handle a small focused change without the full spec-design-plan flow. Use when the task is scoped and implementation-ready."
   ["research"]="Research a topic or code area deeply and save findings. Use when you need investigation before design or implementation."
   ["review-design"]="Critically review a design document before implementation. Use when you need flaws, risks, or open questions surfaced."
-  ["spec"]="Create a feature specification with goals and acceptance criteria. Use when a feature needs requirements clarified and documented."
+  ["spec"]="Uncover and capture the problem, success criteria, and known requirements through critical questioning. Use when a feature or change needs its requirements clarified and documented before design."
   ["spec-review"]="Adversarially review a spec before it becomes the design contract. Use when a spec needs a devil's-advocate audit for faithfulness, problem framing, and pipeline risk."
   ["wrap-up"]="Summarize session work and update project context. Use when closing a session and refreshing .project/CURRENT_WORK.md or related docs."
 )
