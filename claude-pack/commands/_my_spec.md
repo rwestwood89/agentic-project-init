@@ -142,7 +142,8 @@ Then present the spec, take feedback, and iterate.
 
 **Related Commands:**
 - Before spec: `/_my_research` for deeper exploration
+- After spec (optional): `/_my_product_design` for experience/interaction design on UX-heavy items
 - After spec: `/_my_design` for technical design
 - Review: `/_my_spec_review` for an adversarial audit before design
 
-**Last Updated**: 2026-06-25
+**Last Updated**: 2026-06-29
