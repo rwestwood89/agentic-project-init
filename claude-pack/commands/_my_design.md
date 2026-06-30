@@ -68,8 +68,11 @@ CYCLE:
    - Check `CLAUDE.md` for project-specific conventions, patterns, and commands
    - Check any project documentation referenced in CLAUDE.md
    - Feature spec: `.project/active/{feature-name}/spec.md` (read FULLY)
-     - Pay special attention to **Business Goals** - your design must serve these
-     - Note all requirements and acceptance criteria
+     - Pay special attention to **Success Criteria** - your design must serve these
+     - Note all requirements (tagged `[HARD]`, `[NEED]`, `[INFERRED]`) and open questions
+   - Product design: `.project/active/{feature-name}/product-design.md` (if it exists, read FULLY)
+     - This is an optional artifact from `/_my_product_design` that settles experience and interaction decisions
+     - Treat its decisions as settled input — flag only where a genuine technical constraint conflicts
    - Related research files in `.project/research/` (if they exist)
 
 2. **Create design file** at `.project/active/{feature-name}/design.md`:

@@ -149,8 +149,9 @@ Then present the spec, take feedback, and iterate.
 
 **Related Commands:**
 - Before spec: ``my-research`` for deeper exploration
+- After spec (optional): ``my-product-design`` for experience/interaction design on UX-heavy items
 - After spec: ``my-design`` for technical design
 - Review: ``my-spec-review`` for an adversarial audit before design
 
-**Last Updated**: 2026-06-25
+**Last Updated**: 2026-06-29
 

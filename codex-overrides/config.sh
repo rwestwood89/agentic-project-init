@@ -33,6 +33,7 @@ declare -A COMMAND_SKILL_DESCRIPTIONS=(
   ["handoff"]="Write a handoff document to the OS temp directory so a fresh agent can continue the work. Use when ending a session and the next agent needs focus, context references, key discoveries, and suggested skills."
   ["implement"]="Execute an approved implementation plan with validation. Use when plan work should be carried through in the codebase."
   ["plan"]="Create a phased implementation plan from a spec and design. Use when work needs sequencing, validation, and file-level execution steps."
+  ["product-design"]="Flesh out experience and interaction design for a consumer-facing surface before technical design. Use when a spec has UX, API, or interface decisions that should be resolved from the consumer's perspective."
   ["project-find"]="Find relevant project management context in .project/. Use when you need to locate specs, plans, designs, or recent research quickly."
   ["project-manage"]="Review project status, identify gaps, and suggest next steps. Use when coordinating work across backlog, active items, and completed artifacts."
   ["quick-edit"]="Handle a small focused change without the full spec-design-plan flow. Use when the task is scoped and implementation-ready."
