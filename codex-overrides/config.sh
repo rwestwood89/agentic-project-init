@@ -28,6 +28,7 @@ declare -A COMMAND_SKILL_DESCRIPTIONS=(
   ["concept"]="Develop a feature concept with scope and success criteria. Use when an idea needs definition before specification."
   ["concept-design"]="Develop a design concept describing architecture, patterns, and responsibilities. Use when a design area needs a critiqueable, auditable conceptual sketch before detailed design."
   ["design"]="Create a technical design for an approved feature spec. Use when a feature needs architecture, interfaces, and tradeoff analysis."
+  ["epic-plan"]="Decompose shaping output into a scoped epic with backlog items. Use when concepts or research are ready to become an implementation plan."
   ["example-command"]="Example Codex prompt generated from the example Claude command."
   ["git-manage"]="Handle git workflow tasks such as worktrees, merges, and conflict resolution. Use when you need structured git help."
   ["handoff"]="Write a handoff document to the OS temp directory so a fresh agent can continue the work. Use when ending a session and the next agent needs focus, context references, key discoveries, and suggested skills."

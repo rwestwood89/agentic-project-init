@@ -22,6 +22,53 @@ When you have a new body of work to track:
 
 ---
 
+## Source Documents and Required Reading
+
+Shaping-tier work (concepts, concept-designs, research) produces the ideas and constraints that motivate an epic. But when the workflow crosses from shaping into scoping, that context can get lost — downstream commands have no formal link back to the files that shaped the work.
+
+Two sections in the epic template fix this:
+
+```
+concept / concept-design / research
+  │
+  │  listed in the epic's "Source Documents" section
+  ▼
+epic
+  │
+  │  each backlog item lists "Required Reading"
+  ▼
+spec → product-design → design → plan → implement → audit
+       (all read Required Reading from the epic)
+```
+
+### Source Documents
+
+A top-level epic section listing the shaping-tier files the epic was built from. This is the provenance record — where the epic's goals came from.
+
+- Goes after Executive Summary, before "Why This Epic?"
+- Lists file paths with type annotations (concept, concept-design, research)
+- Filled in when the epic is created (by `/_my_epic_plan` or manually)
+
+### Required Reading
+
+A per-item field listing the specific files the work-item pipeline must read for that backlog item.
+
+- Goes after Dependencies in each backlog item
+- Usually a subset of Source Documents — the concepts, concept-designs, or research files relevant to that specific item
+- **Optional.** Not every item needs upstream shaping context. Mechanical items (cleanup, renames) may have no Required Reading.
+
+### How Required Reading flows through the pipeline
+
+When a work item belongs to an epic, every scoping and execution command reads the Required Reading files for that item:
+
+- **Spec** treats them as primary input — they inform requirements and success criteria.
+- **Product-design** and **design** treat them as background context — they check decisions against upstream intent without re-deriving requirements.
+- **Audit** reads them to verify the implementation traces back to the original shaping-tier intent.
+
+Items with no epic, or items with no Required Reading listed, skip this. The pipeline works the same way — it just doesn't have upstream shaping context to draw on.
+
+---
+
 ## Decomposition
 
 **Purpose**: How to break down epics into well-scoped backlog items
@@ -203,6 +250,8 @@ Use this template when adding backlog items to an epic document:
 **Location**: `.project/active/[item_name]/`
 
 **Dependencies**: [None | Item N must complete first | Epic X must complete]
+**Required Reading**: [Files the work-item pipeline must read for this item. Usually a subset of Source Documents. Optional for items that need no upstream shaping context.]
+- `{path}`
 
 **Deliverables**:
 - `.project/active/[item_name]/spec.md` - [What it specifies]

@@ -16,6 +16,15 @@
 
 ---
 
+## Source Documents
+
+[Shaping-tier files this epic was built from. These are the provenance
+record — where the epic's goals came from.]
+
+- `{path}` — [concept | concept-design | research]
+
+---
+
 ## Why This Epic?
 
 **Current State**:
@@ -59,6 +68,8 @@
 **Type**: Research | Implementation | Integration | Testing
 **Effort**: [X days] (spec Xh, design Xh, plan Xh, execute Xh)
 **Dependencies**: None | Item N
+**Required Reading**: [Files the work-item pipeline must read for this item. Usually a subset of Source Documents — concepts, concept-designs, or research relevant to this specific item. Optional for items that need no upstream shaping context.]
+- `{path}`
 
 **Objective**: [One sentence]
 

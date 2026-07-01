@@ -112,6 +112,32 @@ Use `{keyword}` pattern where possible to enable script-based customization.
 
 ---
 
+## P0 - Critical / Active
+
+### [WORKFLOW-V2] Workflow v2 Redesign
+
+**Priority:** P0
+**Status:** In Progress
+**Estimate:** 6-8 days (9 work items)
+**Category:** Workflow Redesign
+
+Pipeline redesign: new bridge command (epic_plan), certification step (audit), archive command (close), consolidated pre-PR gate, Required Reading traceability from concepts through implementation. See README_v2 artifact for full target state.
+
+**Items**:
+- [x] Item 1: Epic Template Foundation (0.5 days)
+- [x] Item 2: `/_my_epic_plan` command (1-1.5 days) — depends on 1
+- [ ] Item 3: Pipeline Required Reading (1 day) — depends on 1
+- [ ] Item 4: `/_my_audit` certification (1-1.5 days)
+- [ ] Item 5: `/_my_close` command (0.5-1 day)
+- [ ] Item 6: `/_my_pre_pr` command (0.5-1 day)
+- [ ] Item 7: `/_my_status` command (0.5 days)
+- [ ] Item 8: `/_my_design_review` rename (0.5 days)
+- [ ] Item 9: Cleanup + Codex rebuild (0.5 days) — depends on 2-8
+
+**File**: `epic_workflow_v2.md`
+
+---
+
 ## P1 - High Priority
 
 ### [BL-001] Improve `/implement` command code scrutiny

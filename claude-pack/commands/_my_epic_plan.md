@@ -1,0 +1,56 @@
+# Epic Plan
+
+**Purpose:** Bridge shaping to scoping — take concept, concept-design, and research files and produce a scoped epic with backlog items.
+**Input:** Shaping-tier files (via `$ARGUMENTS` or interactive discovery)
+**Output:** `.project/backlog/epic_{name}.md` + updated `BACKLOG.md`
+
+## Before You Start
+
+Read these fully:
+- `.project/EPIC_GUIDE.md` — decomposition methodology, sizing rules, item template, quality checks. Follow it. Do not restate it here.
+- `.project/epic_template.md` — the output structure. Copy it; do not improvise a format.
+- `.project/backlog/BACKLOG.md` — existing epics, so you don't duplicate or collide.
+
+## Finding Input Files
+
+If `$ARGUMENTS` names a file path or concept name, use it. If ambiguous or missing, scan `.project/concepts/` and `.project/research/` and ask the user which files are the source material for this epic.
+
+Read every identified source file fully before proceeding.
+
+## Stage 1: Scope
+
+1. Copy `.project/epic_template.md` to `.project/backlog/epic_{name}.md`. Derive the epic name from the primary concept; you'll confirm it with the user below.
+2. Fill in these sections from the source material:
+   - **Epic ID, Status** (Draft), **Priority**, **Created**, **Estimated Effort** (rough)
+   - **Executive Summary** — what this epic delivers and why, in 2-3 sentences
+   - **Source Documents** — list every shaping-tier file you read, with type annotations (concept, concept-design, research)
+   - **Why This Epic** — current state vs. future state
+   - **Success Criteria** — measurable outcomes as checkboxes
+3. **Present to the user.** Show the epic name, executive summary, source documents, and success criteria. Ask for confirmation.
+4. **Wait for approval.** Adjust as directed. Do not proceed to decomposition until the user approves the scope.
+
+## Stage 2: Decompose
+
+1. Using the EPIC_GUIDE methodology, identify natural backlog item boundaries in the scoped work.
+2. **Present the proposed breakdown in-console** — a table or structured list showing each item's name, type, estimated effort, and one-line purpose:
+
+   ```
+   | # | Item | Type | Effort | Purpose |
+   |---|------|------|--------|---------|
+   | 1 | ... | ... | ... | ... |
+   ```
+
+   Include a brief note on the critical path and which items can run in parallel.
+3. **Wait for approval.** Adjust item boundaries, ordering, or scope as directed. Do not proceed to writing items until the user approves the decomposition.
+
+## Stage 3: Write Items
+
+1. Think through carefully:
+   - **Dependencies** between items — what must complete before what?
+   - **Required Reading** per item — which source documents carry intent relevant to each specific item? Different items may reference different subsets. Not every item needs Required Reading.
+   - **Epic Strategy** — value delivery path, critical path, decomposition rationale.
+2. Write the full backlog items into the epic file, following the item template in `EPIC_GUIDE.md`. Fill in Epic Strategy, the dependency graph, risks, and timeline sections.
+3. Add an entry to `.project/backlog/BACKLOG.md` following the existing format (priority, status, estimate, brief description, items list with checkboxes).
+4. Present the completed epic to the user.
+
+$ARGUMENTS
