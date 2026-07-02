@@ -1,7 +1,7 @@
 # Epic: Workflow v2
 
 **Epic ID**: WORKFLOW-V2
-**Status**: In Progress
+**Status**: Complete
 **Priority**: High
 **Created**: 2026-06-30
 **Estimated Effort**: 6-8 days
@@ -44,12 +44,12 @@ Implement the workflow v2 redesign: new commands, expanded commands, consolidate
 
 ## Success Criteria
 
-- [ ] An agent following the workflow can take a concept through epic decomposition, spec, design, plan, implement, audit, and close without manual intervention on tracking files
-- [ ] Every work-item command reads Required Reading from the epic when the item belongs to one
-- [ ] Audit updates plan checkboxes, spec success criteria, and epic item status
-- [ ] Close archives to `completed/` and updates BACKLOG.md, CURRENT_WORK.md, and CHANGELOG.md
-- [ ] No command references a retired command name (`_my_audit_implementation`, `_my_project_manage`, `_my_code_review`, `_my_code_quality`, `_my_review_design`)
-- [ ] Codex dist builds cleanly with the new command landscape
+- [x] An agent following the workflow can take a concept through epic decomposition, spec, design, plan, implement, audit, and close without manual intervention on tracking files
+- [x] Every work-item command reads Required Reading from the epic when the item belongs to one
+- [x] Audit updates plan checkboxes, spec success criteria, and epic item status
+- [x] Close archives to `completed/` and updates BACKLOG.md, CURRENT_WORK.md, and CHANGELOG.md
+- [x] No command references a retired command name (`_my_audit_implementation`, `_my_project_manage`, `_my_code_review`, `_my_code_quality`, `_my_review_design`)
+- [x] Codex dist builds cleanly with the new command landscape
 
 ---
 
@@ -137,7 +137,7 @@ Implement the workflow v2 redesign: new commands, expanded commands, consolidate
 
 ---
 
-### Item 3: Pipeline Required Reading
+### Item 3: Pipeline Required Reading ✅
 
 **Type**: Implementation
 **Effort**: 1 day (spec 0.5h, design 0.5h, plan 0.5h, execute 4-5h)
@@ -160,9 +160,9 @@ Implement the workflow v2 redesign: new commands, expanded commands, consolidate
 - Changing what these commands produce (only what they read)
 
 **Success / Done State**:
-- [ ] Spec, product-design, and design all read Required Reading when the item belongs to an epic
-- [ ] Spec updates CURRENT_WORK.md when creating a new item folder
-- [ ] Commands work correctly for items with no epic (standalone usage)
+- [x] Spec, product-design, and design all read Required Reading when the item belongs to an epic
+- [x] Spec updates CURRENT_WORK.md when creating a new item folder
+- [x] Commands work correctly for items with no epic (standalone usage)
 
 **Location**: `.project/active/pipeline-required-reading/`
 
@@ -195,15 +195,15 @@ Implement the workflow v2 redesign: new commands, expanded commands, consolidate
 - Archiving (that's close's job)
 
 **Success / Done State**:
-- [ ] `/_my_audit {item}` evaluates and updates plan/spec/epic checkboxes, writes audit.md
-- [ ] `/_my_audit {epic}` reviews entire epic including against source documents
-- [ ] Old `_my_audit_implementation.md` file retired
+- [x] `/_my_audit {item}` evaluates and updates plan/spec/epic checkboxes, writes audit.md
+- [x] `/_my_audit {epic}` reviews entire epic including against source documents
+- [x] Old `_my_audit_implementation.md` file retired
 
 **Location**: `.project/active/audit-certification/`
 
 ---
 
-### Item 5: `/_my_close` Command
+### Item 5: `/_my_close` Command ✅
 
 **Type**: Implementation
 **Effort**: 0.5-1 day (spec 0.5h, design 0.5h, plan 0.5h, execute 3-4h)
@@ -227,15 +227,15 @@ Implement the workflow v2 redesign: new commands, expanded commands, consolidate
 - Session context persistence (that's wrap-up's job)
 
 **Success / Done State**:
-- [ ] `/_my_close {item}` archives a work item and updates tracking files
-- [ ] `/_my_close {epic}` archives an epic and all child items
-- [ ] User is prompted for confirmation before archiving
+- [x] `/_my_close {item}` archives a work item and updates tracking files
+- [x] `/_my_close {epic}` archives an epic and all child items
+- [x] User is prompted for confirmation before archiving
 
 **Location**: `.project/active/close-command/`
 
 ---
 
-### Item 6: `/_my_pre_pr` Command
+### Item 6: `/_my_pre_pr` Command ✅
 
 **Type**: Implementation
 **Effort**: 0.5-1 day (spec 0.5h, design 0.5h, plan 0.5h, execute 3-5h)
@@ -260,14 +260,14 @@ Implement the workflow v2 redesign: new commands, expanded commands, consolidate
 - Writing review artifacts to a work item directory
 
 **Success / Done State**:
-- [ ] `/_my_pre_pr` runs quality checks and reports findings
-- [ ] No spec/design conformance logic — purely code quality
+- [x] `/_my_pre_pr` runs quality checks and reports findings
+- [x] No spec/design conformance logic — purely code quality
 
 **Location**: `.project/active/pre-pr-command/`
 
 ---
 
-### Item 7: `/_my_status` Command
+### Item 7: `/_my_status` Command ✅
 
 **Type**: Implementation
 **Effort**: 0.5 days (spec 0h, design 0h, plan 0h, execute 3-4h)
@@ -291,15 +291,15 @@ Implement the workflow v2 redesign: new commands, expanded commands, consolidate
 - Archiving (that's close)
 
 **Success / Done State**:
-- [ ] `/_my_status` produces a clear status report covering active work, backlog, and gaps
-- [ ] Includes backlog orientation (what's prioritized, what's stale) — absorbs the backlog mode from `_my_project_manage`
-- [ ] No mode flags required
+- [x] `/_my_status` produces a clear status report covering active work, backlog, and gaps
+- [x] Includes backlog orientation (what's prioritized, what's stale) — absorbs the backlog mode from `_my_project_manage`
+- [x] No mode flags required
 
 **Location**: `.project/active/status-command/`
 
 ---
 
-### Item 8: `/_my_design_review` Rename
+### Item 8: `/_my_design_review` Rename ✅
 
 **Type**: Implementation
 **Effort**: 0.5 days (spec 0h, design 0h, plan 0h, execute 2-3h)
@@ -321,14 +321,14 @@ Implement the workflow v2 redesign: new commands, expanded commands, consolidate
 - Cross-reference cleanup (that's Item 9)
 
 **Success / Done State**:
-- [ ] Command exists as `/_my_design_review`
-- [ ] Writes `design-review.md` artifact to the work item directory
+- [x] Command exists as `/_my_design_review`
+- [x] Writes `design-review.md` artifact to the work item directory
 
 **Location**: `.project/active/design-review-rename/`
 
 ---
 
-### Item 9: Cross-Reference Cleanup and Codex Rebuild
+### Item 9: Cross-Reference Cleanup and Codex Rebuild ✅
 
 **Type**: Implementation
 **Effort**: 0.5 days (spec 0h, design 0h, plan 0h, execute 3-4h)
@@ -366,10 +366,10 @@ Implement the workflow v2 redesign: new commands, expanded commands, consolidate
 - Updating commands in other projects that use these commands (out of scope for this repo)
 
 **Success / Done State**:
-- [ ] `grep -r` for retired command names returns zero hits outside `completed/` and `BACKLOG.md` history
-- [ ] Codex dist builds cleanly
-- [ ] `setup-global.sh` runs without errors
-- [ ] All new commands are available via `/_my_*` in a fresh session
+- [x] `grep -r` for retired command names returns zero hits outside `completed/` and `BACKLOG.md` history
+- [x] Codex dist builds cleanly
+- [x] `setup-global.sh` runs without errors
+- [x] All new commands are available via `/_my_*` in a fresh session
 
 **Location**: `.project/active/cleanup-codex-rebuild/`
 
@@ -428,5 +428,5 @@ Items 2-8 can be done in any order (except 2 and 3 need Item 1 first). Paralleli
 
 ---
 
-**Last Updated**: 2026-06-30
-**Next Action**: Start with Item 1 (Epic Template Foundation), then Items 2 and 3 in parallel.
+**Last Updated**: 2026-07-01
+**Next Action**: All items complete. Epic ready for `/_my_close`.

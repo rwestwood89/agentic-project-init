@@ -104,7 +104,7 @@ Concisely describe changes made and impact]
 
 **Related Commands:**
 - For larger changes: ``my-spec`` → ``my-design`` → ``my-implement``
-- After changes: ``my-code-review`` for review
+- After changes: ``my-pre-pr`` for quality checks
 
 **Last Updated**: 2025-12-31
 

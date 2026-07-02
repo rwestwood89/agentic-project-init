@@ -73,6 +73,7 @@ CYCLE:
    - Product design: `.project/active/{feature-name}/product-design.md` (if it exists, read FULLY)
      - This is an optional artifact from `/_my_product_design` that settles experience and interaction decisions
      - Treat its decisions as settled input — flag only where a genuine technical constraint conflicts
+   - Required Reading from the epic: if this item belongs to an epic, find it in the epic's Backlog Items section and read the files listed under its `**Required Reading**:` field. Treat them as **background context** — check your design decisions against the upstream shaping intent, but don't re-derive requirements (spec already did that). If a listed file doesn't exist, note it and move on. If the item has no epic or no Required Reading, skip this.
    - Related research files in `.project/research/` (if they exist)
 
 2. **Create design file** at `.project/active/{feature-name}/design.md`:
@@ -82,7 +83,7 @@ CYCLE:
      ```
    - Add header (feature name, status: Draft, owner, dates, git info)
    - Add overview (1-2 sentence summary from spec)
-   - Add "Related Artifacts" section linking to spec, research, epic
+   - Add "Related Artifacts" section linking to spec, research, epic, and Required Reading files (if any)
    - Create empty sections: "Research Findings", "Core Concept", "Key Bets", "Key Decisions", "Architecture", "Required Invariants", "Component Overview", "Non-Goals", "Implementation Notes"
 
 3. **Identify investigation areas**:
@@ -403,4 +404,4 @@ Next Step: After approval → `/_my_implement` or `/_my_plan`
 - Before design: `/_my_research` or `/_my_spec`
 - After design: `/_my_implement` or `/_my_plan` for implementation
 
-**Last Updated**: 2026-04-13
+**Last Updated**: 2026-07-01

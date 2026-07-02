@@ -2,7 +2,7 @@
 
 **Purpose:** Critical review of design documents before implementation
 **Input:** Design document reference (`.project/active/{feature-name}/design.md`)
-**Output:** Structured review with issues aggregated by severity
+**Output:** `.project/active/{feature-name}/design-review.md` and a presentation to the user
 
 ## Overview
 
@@ -150,13 +150,10 @@ After completing the dimensional review, aggregate all findings (include any Sta
 3. [Additional suggestions]
 ```
 
-### Stage 3: Present Review
+### Stage 3: Persist and Present
 
-Provide the structured review to the user:
-
-1. **Dimensional assessments** (Pass/Concerns/Fail for each)
-2. **Issues by severity** (aggregated list)
-3. **Overall recommendation**: Approve / Revise / Rework
+1. Write the full review to `.project/active/{feature-name}/design-review.md` (sibling to the design, not a timestamped archive).
+2. Present to the user: lead with the Stage 0 assessment, then the dimensional assessments and aggregated issues. End with the verdict.
 
 ## Output Format
 
@@ -165,7 +162,14 @@ Provide the structured review to the user:
 
 **Design:** [path to design.md]
 **Spec:** [path to spec.md]
+**Review File:** [path to design-review.md]
 **Date:** [Current date]
+
+---
+
+## Fundamental Assessment
+
+[Sound / Concerns / Fail. Is the overall approach right? If Fail, recommend Rework and stop.]
 
 ---
 
@@ -244,4 +248,4 @@ Provide the structured review to the user:
 - Before review: `/_my_design` to create the design
 - After approval: `/_my_implement` or `/_my_plan` to proceed
 
-**Last Updated:** 2026-06-07
+**Last Updated**: 2026-07-01

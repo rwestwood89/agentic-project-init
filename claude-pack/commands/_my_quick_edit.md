@@ -97,6 +97,6 @@ Concisely describe changes made and impact]
 
 **Related Commands:**
 - For larger changes: `/_my_spec` → `/_my_design` → `/_my_implement`
-- After changes: `/_my_code_review` for review
+- After changes: `/_my_pre_pr` for quality checks
 
 **Last Updated**: 2025-12-31

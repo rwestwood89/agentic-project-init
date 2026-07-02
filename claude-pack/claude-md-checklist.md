@@ -21,8 +21,8 @@ Before starting any non-trivial task, read the relevant context files:
 
 | Section | Used By | What to Include |
 |---------|---------|-----------------|
-| Test commands | `/_my_implement`, `/_my_code_quality` | How to run tests (e.g., `pytest`, `npm test`, `cargo test`) |
-| Lint/format commands | `/_my_code_quality` | How to lint/format (e.g., `ruff check`, `eslint`, `prettier`) |
+| Test commands | `/_my_implement`, `/_my_pre_pr` | How to run tests (e.g., `pytest`, `npm test`, `cargo test`) |
+| Lint/format commands | `/_my_pre_pr` | How to lint/format (e.g., `ruff check`, `eslint`, `prettier`) |
 | Build commands | `/_my_implement` | How to build the project (if applicable) |
 
 ## Helpful for Commands
@@ -31,7 +31,7 @@ Before starting any non-trivial task, read the relevant context files:
 |---------|---------|-----------------|
 | Project structure | `/_my_design`, `/_my_research` | Key directories, where code lives |
 | Conventions/patterns | `/_my_design` | Coding patterns, architectural decisions |
-| Environment setup | `/_my_implement`, `/_my_code_quality` | How to set up dev environment |
+| Environment setup | `/_my_implement`, `/_my_pre_pr` | How to set up dev environment |
 
 ## Example Sections
 

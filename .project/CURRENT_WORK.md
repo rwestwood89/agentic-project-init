@@ -1,16 +1,21 @@
 # Current Work
 
-**Last Updated**: 2026-06-25
+**Last Updated**: 2026-07-01
 
 ---
 
 ## Active Work
 
-_Nothing in progress. Last session's work — the working-voice rule and the `/_my_handoff` command — is merged to `main`. See Recently Completed._
+*(none)*
 
 ---
 
 ## Recently Completed
+
+### 2026-07-01: Epic WORKFLOW-V2 — Workflow v2 Redesign (certified, archived)
+- Pipeline redesign: new bridge command (`epic_plan`), certification step (`audit`), archive command (`close`), consolidated pre-PR gate, Required Reading traceability from concepts through implementation.
+- 9 items: epic template foundation, epic_plan, pipeline Required Reading, audit certification, close, pre_pr, status, design_review rename, cross-reference cleanup + Codex rebuild.
+- All 6 epic success criteria verified. Retired 5 old commands, created 6 new ones, modified 3 pipeline commands.
 
 ### 2026-06-25: agent-working-voice rule (merged, PR #21)
 - Global working-voice rule + reader-comprehension checks in spec/design reviewers; 2 surgical prompt fixes.

@@ -231,7 +231,7 @@ If the answer trends toward yes, rip it out.
 
 **Related Commands:**
 - Before implement: ``my-design`` then ``my-plan``
-- After implement: Manual verification; quality checks; ``my-project-manage`` to complete
+- After implement: ``my-audit`` to certify; ``my-pre-pr`` before submitting
 
 **Last Updated**: 2025-12-31
 

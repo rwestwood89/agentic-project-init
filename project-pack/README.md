@@ -22,7 +22,7 @@ This folder contains project planning, tracking, and documentation.
 ### 2. Prioritization
 
 1. **User prioritizes** using their own methods
-2. **Update BACKLOG.md** via `/project-manage` command - reorganize, set priorities
+2. **Update BACKLOG.md** via `/_my_status` command - reorganize, set priorities
 3. **Epic decomposition** (before or after prioritization, e.g., to estimate effort):
    - Organize into **parts** if needed (logical groupings)
    - Break down into **items** with numbering (e.g., `4.2` = Part 4, Item 2)
@@ -114,14 +114,18 @@ Items within an epic use hierarchical numbering:
 
 | Command | Purpose |
 |---------|---------|
-| `/_my_code_review` | Audit implementation against spec/design |
-| `/_my_code_quality` | Run comprehensive quality checks |
+| `/_my_audit` | Certify work item or epic against plan/spec/design |
+| `/_my_pre_pr` | Run quality checks before submitting a PR |
+| `/_my_design_review` | Review a design document before implementation |
+| `/_my_spec_review` | Review a spec before design |
 
 ### Project Management
 
 | Command | Purpose |
 |---------|---------|
-| `/_my_project_manage` | Status review, gap analysis, backlog management |
+| `/_my_status` | Project orientation, gap analysis, next steps |
+| `/_my_close` | Archive completed work items or epics |
+| `/_my_epic_plan` | Decompose shaping output into a scoped epic |
 | `/_my_project_find` | Quick lookup of project context |
 | `/_my_git_manage` | Git workflow, worktrees, conflict resolution |
 
