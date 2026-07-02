@@ -6,7 +6,15 @@
 
 ## Active Work
 
-*(none)*
+### workflow-orchestrator — autonomous pipeline orchestrator command
+- A high-judgment agent (Fable) takes a concept/outcomes doc and drives the v2 pipeline end to end via opus subagents, fully autonomous. Claude-only.
+- **Spec, design, plan done. Plan Phase 1 (de-risking spike) complete — GO.** Proven: `_my_*` commands run headless; uniform preamble makes stages yield questions as prose when they need to (D7/D8); yield→resume→produce and implement-headless both work, no hangs. Findings: `spike-findings.md` ("Spike 2").
+- Next: Phase 2 (helper script `orchestrate-stage.sh` + uniform preamble) → Phase 3 (command prompt) → Phase 4 (dogfood).
+- Artifacts: `.project/active/workflow-orchestrator/{spec,design,plan,spike-findings}.md`
+
+### spike-and-learning-test-commands — hands-on de-risking commands
+- Spec in progress. Two new `_my_*` commands (spike, learning test) for writing throwaway/probe code when "how things work" is unclear, plus wiring suggestions into concept_design / spec / design and docs.
+- Spec: `.project/active/spike-and-learning-test-commands/spec.md`
 
 ---
 

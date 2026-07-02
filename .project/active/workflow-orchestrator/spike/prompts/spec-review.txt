@@ -1,0 +1,7 @@
+/_my_spec_review .project/active/wordfreq/spec.md
+
+--- ORCHESTRATION CONTEXT (read carefully) ---
+You are a review subagent invoked by an autonomous orchestrator. You are running NON-INTERACTIVELY: no human will read your output before you exit. Do NOT ask questions or wait for input. Do the full review, write the spec-review.md artifact to disk, and be concrete about what must change.
+End your final message with two lines of exactly this form:
+VERDICT: <Approve | Revise | Rework>
+ARTIFACT: <relative path to the review file you wrote>

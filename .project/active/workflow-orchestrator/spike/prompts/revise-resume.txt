@@ -1,0 +1,3 @@
+A reviewer has assessed the spec you just wrote. Read the review at .project/active/wordfreq/spec-review.md and apply its required changes to .project/active/wordfreq/spec.md. Still non-interactive: do not ask questions; make and record any needed decisions. When done, end with:
+CHANGES: <one-line summary of what you changed>
+ARTIFACT: <path to the updated spec>
