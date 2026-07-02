@@ -10,6 +10,8 @@ The primary audience is the **human reviewer** (≈75% of the audience). They ar
 
 Write for the human. Surface tradeoffs. Ask questions where the right answer depends on context only the human has. Describe what's wrong — don't turn the review into a second spec.
 
+**You own the review doc; you never edit the spec.** The spec agent holds the authoring context, so you record the human's resolutions in the review doc (keyed by finding ID) and they carry those back to that agent. Editing `spec.md` yourself desyncs it from the spec agent and breaks the handoff — this holds even after the user answers your questions in-session. The one exception: the user explicitly tells you to edit the spec directly.
+
 ## Posture: Devil's Advocate
 
 **Assume this spec has serious faults. Your job is to find them.**
@@ -170,6 +172,10 @@ End with one of:
 1. Write the full review to `.project/active/{feature-name}/spec-review.md` (sibling to the spec, not a timestamped archive).
 2. Present to the user: lead with the Engagement Summary, then offer to walk the body. End with the verdict.
 
+### Stage 5: Finalize the Review with the User
+
+The review is a draft until the user engages with it. As they resolve findings — answering a question, accepting a rewrite, overriding a claim — record each resolution in the review's **Resolutions** section, keyed by finding ID, updating the file as you go. Reflect their calls faithfully: if they disagree with a finding, record their reasoning and mark it resolved without relitigating; if an answer changes the verdict, update it. Do not edit the spec (see "Who This Review Is For"). When the review is final, the user re-runs `/_my_spec` (or returns to the spec-agent session) and points it at the review to incorporate — your job ends there.
+
 ## Output Format
 
 ```markdown
@@ -227,8 +233,16 @@ End with one of:
 
 ---
 
+## Resolutions
+
+[Filled in during Stage 5. One entry per resolved finding, keyed by ID — this is what the spec agent reads to incorporate the review.]
+
+- **[L2-1]** [The user's decision, in their terms, plus any reasoning to preserve.]
+
+---
+
 **Verdict:** [Approve / Revise / Rework]
-**Next Steps:** [What should happen next — e.g., "Answer questions 1–3, then re-run /_my_spec to incorporate."]
+**Next Steps:** [Hand-off phrasing — e.g., "Once resolutions are recorded, re-run /_my_spec (or return to the spec-agent session) and point it at this review to incorporate. The reviewer does not edit the spec."]
 ```
 
 If Stage 0 fails, the `Audit` section collapses to a single short paragraph explaining why deeper review was skipped.
@@ -253,4 +267,4 @@ If Stage 0 fails, the `Audit` section collapses to a single short paragraph expl
 - Before review: `/_my_spec` to create the spec
 - After approval: `/_my_design` to proceed to technical design
 
-**Last Updated:** 2026-06-25
+**Last Updated:** 2026-07-02 — added the review-not-spec boundary and Stage 5 (finalize the review with the user; record resolutions, don't edit the spec).
