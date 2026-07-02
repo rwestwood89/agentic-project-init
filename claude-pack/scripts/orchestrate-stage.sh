@@ -13,7 +13,7 @@
 #   --model <m>       stage model            (default: $ORCH_MODEL, else opus)
 #   --budget <usd>    per-call spend cap      (default: 10)
 #   --timeout <sec>   wall-clock timeout      (default: 600)
-#   --perm <mode>     permission mode         (default: acceptEdits; implement uses bypassPermissions)
+#   --perm <mode>     permission mode         (default: acceptEdits; implement/pre_pr auto-use bypassPermissions)
 #   --log-dir <dir>   raw JSON/stderr log dir (default: ./.orchestrate-logs)
 #   --preamble <file> preamble to inject      (default: orchestrate-preamble.md beside this script)
 #   --dry-run         print composed prompt + claude argv, do not call claude
@@ -33,6 +33,7 @@ MODEL="${ORCH_MODEL:-opus}"
 BUDGET=10
 TIMEOUT=600
 PERM="acceptEdits"
+PERM_SET=0
 LOGDIR="./.orchestrate-logs"
 PREAMBLE="$SCRIPT_DIR/orchestrate-preamble.md"
 DRYRUN=0
@@ -49,13 +50,18 @@ while [ $# -gt 0 ]; do
     --model)    MODEL="$2";    shift 2 ;;
     --budget)   BUDGET="$2";   shift 2 ;;
     --timeout)  TIMEOUT="$2";  shift 2 ;;
-    --perm)     PERM="$2";     shift 2 ;;
+    --perm)     PERM="$2"; PERM_SET=1; shift 2 ;;
     --log-dir)  LOGDIR="$2";   shift 2 ;;
     --preamble) PREAMBLE="$2"; shift 2 ;;
     --dry-run)  DRYRUN=1;      shift ;;
     *) die "unknown option '$1'" ;;
   esac
 done
+
+# Stages that run project commands (tests, lint, gh) need broader permissions by default.
+if [ "$MODE" = "run" ] && [ "$PERM_SET" = "0" ]; then
+  case "$STAGE" in implement|pre_pr) PERM="bypassPermissions" ;; esac
+fi
 
 # The prompt body (stage args, or the resume message) comes from stdin.
 BODY="$(cat)"

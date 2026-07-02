@@ -136,16 +136,22 @@ git -C $SANDBOX log --oneline    # expect a commit whose subject leads with the 
 ### Changes Required
 **See design for:** [Core Concept](design.md#core-concept), [Architecture](design.md#architecture) (the loop), [D3](design.md#key-decisions) (convergence), [D4](design.md#key-decisions) (commit trail), [Required Invariants](design.md#required-invariants).
 
-- [ ] `claude-pack/commands/_my_orchestrate.md` (NEW) — sections: purpose/input/output header; orient & route; the uniform stage loop (invoke → read `result` → answer questions & resume, or advance); reviewer convergence policy (bounded iteration, must-fix vs optional, record proceed-over decisions); epic branch (sequential items); commit discipline (subject leads with the decision); final summary. Reference the helper; do not restate mechanism.
-- [ ] Consider a `--only <stage>` / `--budget` invocation flag to make Phase-3 testing and cost control tractable.
+- [x] `claude-pack/commands/_my_orchestrate.md` (NEW) — role (judgment agent, not workflow engine); the mechanism (helper `run`/`resume`, read `result` as prose, models/perms/budget); orient & route (Stage 0); the uniform per-item loop (Stage P) with reviewer convergence; epic branch (Stage E); commit discipline; guidelines + anti-patterns; flags.
+- [x] Invocation flags added: `--budget`, `--only <stage>`, `--from <stage>` (speculative — no proven need, low cost), `--model`.
 
 ### Validation
 **Automated:**
-- [ ] Single-stage dry drive produces the expected artifact + a decision-led commit.
+- [→] Single-stage live drive (`--only spec`) — **moved to Phase 4.** The command references the
+  installed helper path `~/.claude/scripts/orchestrate-stage.sh` (correct for production — it runs in
+  arbitrary target projects), so any live drive needs `setup-global.sh` first, which is Phase 4's
+  first step. Coupling recorded below; recommend running the first live drive as the opening of Phase 4.
 **Manual:**
-- [ ] Read the prompt as a fresh implementer — is the loop unambiguous? Does it ever need per-command internals? (It must not — D7.)
+- [x] Self-review vs. design: uniform loop, D3 convergence, D4 commit trail, D7 (stage decides), D8
+  (`result` as prose), front-loading, autonomy, epic branch — all present. Command is discoverable
+  (harness lists it as a skill). Holds up.
 
-**What We Know Works After This Phase:** the orchestrator drives one stage, including a yield/answer/resume, and records its reasoning.
+**What We Know Works After This Phase:** the command prompt exists and is internally sound; the first
+*live* orchestrator drive is the opening move of Phase 4 (post-install).
 
 ---
 
@@ -247,6 +253,23 @@ reflecting back into design D-notes when convenient (minor).
 stdin) and `orchestrate-stage.sh resume <sid>` (message on stdin), then reads the returned JSON's
 `result` as prose to decide the next move. Default stage model is opus; implement/pre_pr need
 `--perm bypassPermissions`.
+
+### Phase 3 Completion (prompt written + self-reviewed; live drive deferred to Phase 4)
+**Completed:** 2026-07-02
+
+**Delivered:** `claude-pack/commands/_my_orchestrate.md` — the judgment prompt. Self-review confirms
+it encodes the uniform loop, D3/D4/D7/D8, front-loading, autonomy, and the epic branch, with no
+per-command-internals reasoning. Command is discoverable (harness lists it as a skill).
+
+**Sequencing finding (real):** the command references the **installed** helper path
+`~/.claude/scripts/orchestrate-stage.sh`. This is correct — the orchestrator runs in arbitrary target
+projects that don't contain `claude-pack/`, so it must use the global install, not a repo-relative
+path. Consequence: **no live orchestrator drive is possible until `setup-global.sh` runs** (Phase 4's
+first step). The plan's Phase 3 live `--only spec` test therefore moves to the opening of Phase 4.
+Not a defect — a phase-boundary correction.
+
+**Carry into Phase 4:** run `setup-global.sh` first; then the opening validation is a single
+`--only spec` live drive in a git-init'd sandbox/worktree before the full end-to-end dogfood.
 
 ---
 
