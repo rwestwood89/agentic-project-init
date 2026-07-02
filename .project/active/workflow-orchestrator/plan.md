@@ -103,16 +103,16 @@ claude-pack/scripts/orchestrate-stage.sh --resume "$sid" --model sonnet "say RES
 ### Changes Required
 **See design for:** [Component Overview](design.md#component-overview), [Implementation Notes](design.md#implementation-notes) (the sentinel/stdin/JSON gotchas), [D8](design.md#key-decisions).
 
-- [ ] `claude-pack/scripts/orchestrate-preamble.md` (NEW) — the single uniform non-interactive preamble (see design Architecture: yield-and-stop wording, end with `ARTIFACT: <path>`).
-- [ ] `claude-pack/scripts/orchestrate-stage.sh` (NEW) — generalize `spike/run.sh`: inject preamble, append `/_my_<stage>` + args, pipe on stdin, capture JSON to a per-run log dir, return `{session_id, result, cost}`; flags `--resume`, `--model`, `--budget`, timeout. Does **not** interpret `result`.
-- [ ] `spike/test-helper.sh` (NEW) — the smoke test above.
+- [x] `claude-pack/scripts/orchestrate-preamble.md` (NEW) — the single uniform non-interactive preamble.
+- [x] `claude-pack/scripts/orchestrate-stage.sh` (NEW) — generalizes `spike/run.sh`. Refinement: exposes **`run <stage>` / `resume <session_id>` subcommands** instead of a `--resume` flag (cleaner — preamble injection is `run`-only policy; `resume` re-enters an existing session with no preamble). Flags `--model` (default opus), `--budget`, `--timeout`, `--perm`, `--log-dir`, `--preamble`, `--dry-run`. Returns `{session_id, result, cost, is_error}`; does **not** interpret `result`.
+- [x] `spike/test-helper.sh` (NEW) — the smoke test.
 
 ### Validation
 **Automated:**
-- [ ] `spike/test-helper.sh` passes: fields present, resume works.
-- [ ] `shellcheck claude-pack/scripts/orchestrate-stage.sh` clean.
+- [x] `spike/test-helper.sh` passes: dry-run composition, real `run` (parseable fields), resume re-enters session. (Real calls on sonnet, ~$0.3.)
+- [~] `shellcheck` unavailable in this env; substituted `bash -n` (syntax clean) on both scripts. Run `shellcheck` before PR.
 
-**What We Know Works After This Phase:** a single, reliable command to run/resume any stage headless.
+**What We Know Works After This Phase:** a single, reliable command to run/resume any stage headless, returning clean JSON the orchestrator reads.
 
 ---
 
@@ -229,6 +229,24 @@ use `--budget` and git worktrees for isolation.
 yielding, so the orchestrator only injects concept intent when the stage judges a question
 high-leverage — the lever for more intent is richer stage args, not the preamble. No "when in doubt,
 yield" bias was needed.
+
+### Phase 2 Completion
+**Completed:** 2026-07-02 · smoke test passes (real sonnet calls, ~$0.3)
+
+**Delivered:** `claude-pack/scripts/orchestrate-stage.sh`, `claude-pack/scripts/orchestrate-preamble.md`,
+`spike/test-helper.sh`.
+
+**Refinement vs. design:** the helper exposes **`run` / `resume` subcommands** rather than a
+`--resume` flag. Cleaner abstraction — preamble injection is policy that only `run` needs, and
+`resume` re-enters an existing session (which already holds the preamble) with just a message. Worth
+reflecting back into design D-notes when convenient (minor).
+
+**Gaps:** `shellcheck` isn't installed here; used `bash -n` instead. Run `shellcheck` before the PR.
+
+**Carry into Phase 3:** the orchestrator calls `orchestrate-stage.sh run <stage>` (stage args on
+stdin) and `orchestrate-stage.sh resume <sid>` (message on stdin), then reads the returned JSON's
+`result` as prose to decide the next move. Default stage model is opus; implement/pre_pr need
+`--perm bypassPermissions`.
 
 ---
 
