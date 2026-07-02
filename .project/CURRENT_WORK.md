@@ -8,9 +8,13 @@
 
 ### workflow-orchestrator — autonomous pipeline orchestrator command
 - A high-judgment agent (Fable) takes a concept/outcomes doc and drives the v2 pipeline end to end via opus subagents, fully autonomous. Claude-only.
-- **Spec, design, plan done. Plan Phase 1 (de-risking spike) complete — GO.** Proven: `_my_*` commands run headless; uniform preamble makes stages yield questions as prose when they need to (D7/D8); yield→resume→produce and implement-headless both work, no hangs. Findings: `spike-findings.md` ("Spike 2").
-- Next: Phase 2 (helper script `orchestrate-stage.sh` + uniform preamble) → Phase 3 (command prompt) → Phase 4 (dogfood).
-- Artifacts: `.project/active/workflow-orchestrator/{spec,design,plan,spike-findings}.md`
+- **Phases 1–3 done. Phase 4 (dogfood) next.** Phase 1 spike proved the mechanism (GO). Phase 2 built the helper `orchestrate-stage.sh` + preamble (smoke test passes). Phase 3 wrote the command `_my_orchestrate.md` (self-reviewed).
+- **Open sequencing point:** the command references the installed helper path (`~/.claude/scripts/`), so the first *live* orchestrator drive needs `setup-global.sh` first — folded into Phase 4. No live drive has run yet.
+- Artifacts: `.project/active/workflow-orchestrator/{spec,design,plan,spike-findings}.md`; `claude-pack/commands/_my_orchestrate.md`; `claude-pack/scripts/orchestrate-stage.sh` + `orchestrate-preamble.md`.
+
+### pipeline-guide — canonical, shipped pipeline overview+guide
+- Spec in progress. Fixes a gap found while building the orchestrator: no current pipeline description ships to where agents run. Hybrid delivery — a short always-on rule + a richer on-demand skill in `claude-pack/`; rewire the stale `project-pack/README.md` flow to point at it.
+- Spec: `.project/active/pipeline-guide/spec.md`
 
 ### spike-and-learning-test-commands — hands-on de-risking commands
 - Spec in progress. Two new `_my_*` commands (spike, learning test) for writing throwaway/probe code when "how things work" is unclear, plus wiring suggestions into concept_design / spec / design and docs.
