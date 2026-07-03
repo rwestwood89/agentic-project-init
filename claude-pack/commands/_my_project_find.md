@@ -135,7 +135,7 @@ General orientation - show everything needed to get started.
 - Use `/_my_project_find current` at the start of each session
 - Use `/_my_project_find backlog` when deciding what to work on next
 - Use `/_my_project_find context` for full orientation
-- Combine with `/_my_project_manage` for deeper analysis
+- Combine with `/_my_status` for deeper analysis
 
 ---
 

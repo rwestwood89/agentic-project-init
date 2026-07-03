@@ -85,15 +85,19 @@ After each phase, it writes implementation notes directly into `plan.md`: what a
 
 **With `/_my_implement`:** Claude reads the spec, design, and plan before touching any code. It understands *why* things are structured the way they are. It checks off phases as it goes, writes completion notes, and documents deviations. If the session ends mid-feature, the next session picks up exactly where this one stopped.
 
-#### `/_my_audit_implementation` -- Verify Against the Plan
+#### `/_my_audit` -- Certify Against Plan, Spec, and Design
 
-The audit command checks completed plan phases against what was actually implemented. It looks for placeholder code, TODOs, partial implementations, unjustified deviations, test coverage gaps, and mocked-out functionality that needs production testing.
+The audit command evaluates completed work against the full upstream chain: plan phases, spec requirements, design decisions, and epic-level goals. It checks for placeholder code, TODOs, partial implementations, unjustified deviations, and test coverage gaps. Then it updates tracking artifacts — plan checkboxes, spec success criteria, and epic item status — to reflect what's actually done.
 
-**Vanilla approach:** You finish implementing and say "I think that's done." Claude agrees because it was the one writing the code -- it's not going to audit its own work critically. There's no systematic check for completeness. Placeholder code and skipped edge cases slip through because nobody went back to compare the implementation against the plan.
+Two scopes:
+- `/_my_audit {item}` — certify a single work item against its plan, spec, and design
+- `/_my_audit {epic}` — review all items in an epic, including against source documents
 
-**With `/_my_audit_implementation`:** An independent audit reads `plan.md` and inspects every completed phase. It flags TODOs, stubs, unjustified deviations, and gaps in test coverage with `file:line` references. Issues are aggregated by severity (Critical / Major / Minor). You get a clear picture of what's actually done vs. what was supposed to be done.
+**Vanilla approach:** You finish implementing and say "I think that's done." Claude agrees because it was the one writing the code — it's not going to audit its own work critically. There's no systematic check for completeness. Placeholder code and skipped edge cases slip through because nobody went back to compare the implementation against the plan.
 
-**When to use:** After implementation, before considering a feature complete. Quick, practical, and catches the things that slip through when the same agent builds and "reviews" its own work.
+**With `/_my_audit`:** An independent audit reads the spec, design, and plan, then inspects the implementation. It evaluates plan completion, spec conformance, design conformance, and code integrity. Findings get `file:line` references and a clear verdict. Tracking artifacts are updated to reflect actual status — no manual checkbox-checking.
+
+**When to use:** After implementation, before considering a feature complete. Catches the things that slip through when the same agent builds and "reviews" its own work.
 
 ### Session Continuity
 
@@ -131,17 +135,21 @@ The research command produces a standalone document from deep codebase explorati
 
 These commands replace external PM tools. Your backlog, epics, and active work tracking live in the repo.
 
-#### `/_my_project_manage` -- Status, Decomposition, Closure, Backlog
+#### `/_my_status` -- Project Orientation
 
-**Modes:**
-- `/_my_project_manage` or `status` -- Full status report with gap analysis and recommendations
-- `/_my_project_manage decompose <epic>` -- Break an epic into well-scoped backlog items (0.5-2 day chunks)
-- `/_my_project_manage close [item]` -- Archive completed work to `.project/completed/`, update tracking
-- `/_my_project_manage backlog` -- Interactive backlog management (add, reprioritize, review epics)
+`/_my_status` reads CURRENT_WORK.md, BACKLOG.md, and epic files. It produces a status report with gap analysis, backlog orientation (what's prioritized, what's stale), and recommended next steps. No mode flags.
 
-**Vanilla approach:** You track work in Jira, Linear, a spreadsheet, or your head. Claude has zero visibility into your project state. You context-switch to an external tool to check what's next, then context-switch back to explain it to Claude. Completed work isn't archived -- it just accumulates in random directories until someone cleans up.
+**Vanilla approach:** You track work in Jira, Linear, a spreadsheet, or your head. Claude has zero visibility into your project state. You context-switch to an external tool to check what's next, then context-switch back to explain it to Claude.
 
-**With `/_my_project_manage`:** Your backlog, epics, active work, and completion tracking live in `.project/` -- the same place Claude already reads from. Status reports identify gaps and recommend next steps. Closing an item archives it properly and updates all tracking files. No external tools, no context-switching.
+**With `/_my_status`:** Your backlog, epics, active work, and completion tracking live in `.project/` — the same place Claude already reads from. Status reports identify gaps and recommend next steps. No external tools, no context-switching.
+
+#### `/_my_close` -- Archive Completed Work
+
+`/_my_close {item}` archives a work item to `completed/` and updates CURRENT_WORK.md and CHANGELOG.md. `/_my_close {epic}` archives an epic and all its child items, updating BACKLOG.md as well. Prompts for confirmation before archiving.
+
+#### `/_my_epic_plan` -- Decompose Shaping into Scoped Epics
+
+`/_my_epic_plan` takes concept, concept-design, and research files as input and produces a scoped epic with Source Documents, Required Reading per item, and a BACKLOG.md entry. Bridges the gap between shaping (why/what) and scoping (how/when).
 
 #### `/_my_project_find` -- Quick Context Lookups
 
@@ -164,11 +172,11 @@ For changes too small to warrant spec/design/plan but not trivial enough to just
 
 **When to use:** Small features (1-3 files), clear requirements, some planning needed. Adding a flag to a CLI tool, modifying a validation rule, extending an existing pattern.
 
-#### `/_my_code_quality` -- Automated Quality Checks
+#### `/_my_pre_pr` -- Pre-PR Quality Gate
 
-Runs all quality checks (tests, linting, formatting, type checking) per your `CLAUDE.md` config, categorizes issues by risk level, fixes low-risk issues directly, and documents medium/high-risk issues for your approval before fixing.
+Runs all quality checks (tests, linting, formatting, type checking) per your `CLAUDE.md` config. Flags pattern violations and code slop. Not tied to a specific work item — runs against whatever is about to be committed.
 
-**When to use:** After implementation, before committing. After `/_my_audit_implementation` passes.
+**When to use:** Before submitting a pull request. After `/_my_audit` passes.
 
 ---
 
@@ -184,21 +192,13 @@ This repo was started when Claude models were weaker. Some commands solved probl
 
 **When it's actually designed for:** The Ralph Loop. `/_my_concept` produces the concept document that feeds into the autonomous `ralph-init.sh` pipeline. If you're using Ralph Loop for autonomous project scaffolding, this is the input format it expects. Outside of that workflow, `/_my_spec` covers the same ground.
 
-### `/_my_code_review`
+### `/_my_design_review`
 
-**What it does:** Heavyweight formal review that builds a full requirements traceability matrix (mapping every FR to its implementation with VERIFIED/PARTIAL/GAP/DEVIATION status), checks design conformance across six dimensions, hunts for bugs, and assesses test coverage. Produces a detailed report at `.project/active/{feature-name}/code_review-{timestamp}.md`.
+**What it does:** Critical review of design documents across multiple dimensions (spec compliance, pattern consistency, abstraction quality, reader comprehension, etc.). Writes a `design-review.md` artifact to the work item directory.
 
-**Why you can skip it:** This was designed for pre-PR formal reviews, but in practice `/_my_audit_implementation` covers what you actually need -- verifying the implementation matches the plan. The full traceability matrix and dimensional analysis add ceremony without proportional value for most features.
+**Why it's listed here:** You might think Opus 4.6 handles this conversationally, and it can — but the structured dimensional review has caught a surprising number of mistakes that conversational review misses. The forced checklist approach surfaces issues that "does this look right?" doesn't.
 
-**When it's still useful:** When you want a formal, documented review artifact for compliance or team hand-off. If someone needs to audit the feature later, the structured report with RFC 2119 traceability is thorough.
-
-### `/_my_review_design`
-
-**What it does:** Critical review of design documents across six dimensions (spec compliance, pattern consistency, abstraction quality, duplication avoidance, data structure clarity, route safety).
-
-**Why it's listed here:** You might think Opus 4.6 handles this conversationally, and it can -- but the structured dimensional review has caught a surprising number of mistakes that conversational review misses. The forced checklist approach (spec compliance, pattern consistency, abstraction quality, etc.) surfaces issues that "does this look right?" doesn't.
-
-**When to use:** After `/_my_design` produces a design document, before moving to implementation. It's a lightweight gate that's prevented costly rework. Consider it situational rather than redundant -- if the design is straightforward, skip it; if the design involves multiple components or integration points, run it.
+**When to use:** After `/_my_design` produces a design document, before moving to implementation. It's a lightweight gate that's prevented costly rework. Consider it situational rather than redundant — if the design is straightforward, skip it; if the design involves multiple components or integration points, run it.
 
 ### `/_my_capture` and `/_my_memorize`
 
@@ -250,7 +250,7 @@ After initialization and use, your project develops this structure:
 │       ├── spec.md          # Requirements (from /_my_spec)
 │       ├── design.md        # Technical design (from /_my_design)
 │       ├── plan.md          # Phased implementation (from /_my_plan)
-│       ├── code_review-*.md # Review reports (from /_my_code_review, if used)
+│       ├── audit.md         # Certification report (from /_my_audit)
 │       └── change.md        # Quick edit summary (from /_my_quick_edit)
 │
 ├── backlog/                 # Planned work
@@ -265,7 +265,7 @@ After initialization and use, your project develops this structure:
 │   └── {timestamp}_{topic}.md  # Research output (from /_my_research)
 │
 ├── reports/                 # Generated reports
-│   └── *-status-report.md   # Status reports (from /_my_project_manage)
+│   └── *-status-report.md   # Status reports (from /_my_status)
 │
 ├── concepts/                # Early-stage ideas (from /_my_concept)
 │
@@ -278,7 +278,7 @@ A feature flows through the directory structure:
 
 1. **Backlog:** Epic defined in `backlog/epic_*.md`, listed in `BACKLOG.md`
 2. **Active:** Feature directory created in `active/{feature-name}/` with spec, design, plan
-3. **Completed:** Archived via `/_my_project_manage close` to `completed/{date}_{name}/`
+3. **Completed:** Archived via `/_my_close` to `completed/{date}_{name}/`
 
 `CURRENT_WORK.md` tracks the live state across all of these. It's the file `/_my_wrap_up` updates and the file the next session reads first.
 
@@ -295,15 +295,15 @@ Just fix it. Read the code, fix the bug, run tests, done.
 `/_my_quick_edit` -- Understand, propose, execute, review.
 
 **New feature (clear requirements)?**
-`/_my_spec` -> `/_my_plan` -> `/_my_implement` -> `/_my_audit_implementation`
+`/_my_spec` -> `/_my_plan` -> `/_my_implement` -> `/_my_audit`
 
 Skip `/_my_design` if the implementation approach is obvious from the spec.
 
 **New feature (unclear approach, multiple valid architectures)?**
-`/_my_spec` -> `/_my_design` -> `/_my_plan` -> `/_my_implement` -> `/_my_audit_implementation`
+`/_my_spec` -> `/_my_design` -> `/_my_plan` -> `/_my_implement` -> `/_my_audit`
 
 **Complex feature in an unfamiliar codebase?**
-`/_my_research` -> `/_my_spec` -> `/_my_design` -> `/_my_plan` -> `/_my_implement` -> `/_my_audit_implementation`
+`/_my_research` -> `/_my_spec` -> `/_my_design` -> `/_my_plan` -> `/_my_implement` -> `/_my_audit`
 
 **Resuming work from a previous session?**
 Read `CURRENT_WORK.md` and the active feature's `plan.md`. Pick up where the checkboxes stop.
@@ -353,7 +353,7 @@ This repo ships a `workflow-accountability` rule in `claude-pack/rules/` that au
 
 - Flag when you're about to implement a non-trivial feature without written requirements
 - Check `plan.md` for progress before resuming multi-session work
-- Suggest `/_my_audit_implementation` after completing a plan
+- Suggest `/_my_audit` after completing a plan
 - Proactively suggest `/_my_wrap_up` when a session is winding down
 
 It nudges, not blocks -- Claude will suggest the right practice but won't refuse to proceed if you want to skip it. If you find it too aggressive or too passive, edit `claude-pack/rules/workflow-accountability.md` to match your preferences. The rule is symlinked globally, so changes apply to all projects immediately.
@@ -366,7 +366,7 @@ The spec is your contract. Without `spec.md`, code review devolves into "looks g
 > FR-2: System SHALL classify tool_use events -> `classifier.py:12-89`, VERIFIED
 > FR-3: System SHOULD support incremental indexing -> Not found, GAP
 
-That traceability is what `/_my_audit_implementation` checks against. It's only possible because the spec and plan exist as persistent artifacts.
+That traceability is what `/_my_audit` checks against. It's only possible because the spec and plan exist as persistent artifacts.
 
 ### Check Off Plan Phases As You Go
 
@@ -430,7 +430,7 @@ This system is designed primarily for solo developers working with Claude Code.
 
 **Ad hoc requirements docs are encouraged.** Not everything needs to go through `/_my_spec`. If you have a quick user story, a set of requirements for a small feature, or acceptance criteria you want to capture, just write them -- either in `.project/` alongside your other artifacts, or in the repo root where they're close to the code. The point is to write things down, not to follow a specific format. A `REQUIREMENTS.md` in the repo root that says "the CLI should support --verbose and --json flags" is better than nothing.
 
-**`/_my_project_manage` replaces Jira/Linear.** Your backlog, epics, active work, and completion tracking live in `.project/`. Status reports, decomposition, and closure are all handled by one command. No context-switching to a separate tool.
+**`/_my_status`, `/_my_close`, and `/_my_epic_plan` replace Jira/Linear.** Your backlog, epics, active work, and completion tracking live in `.project/`. Status reports, decomposition, and closure are each a standalone command. No context-switching to a separate tool.
 
 **Session continuity matters more for solo work.** There's no teammate to ask "where did we leave off?" The only record of yesterday's decisions is what you persisted. `/_my_wrap_up` is the difference between a productive morning and 20 minutes of archaeology.
 
@@ -448,10 +448,12 @@ This system is designed primarily for solo developers working with Claude Code.
 | `/_my_design` | Technical architecture and design decisions | `design.md` |
 | `/_my_plan` | Phased implementation with test-first approach | `plan.md` |
 | `/_my_implement` | Execute plan with progress tracking | Code + updated `plan.md` |
-| `/_my_audit_implementation` | Verify implementation against plan | Structured report |
+| `/_my_audit` | Certify work against plan/spec/design | `audit.md` |
 | `/_my_wrap_up` | End-of-session context persistence | Updated `CURRENT_WORK.md`, `MEMORY.md` |
 | `/_my_research` | Deep codebase exploration | `.project/research/*.md` |
-| `/_my_project_manage` | Status, decomposition, closure, backlog | `.project/reports/*.md` |
+| `/_my_status` | Project orientation, gap analysis, next steps | Console output |
+| `/_my_close` | Archive completed work items or epics | Updated tracking files |
+| `/_my_epic_plan` | Decompose shaping into scoped epic | `backlog/epic_*.md` |
 | `/_my_project_find` | Quick context lookups | Console output |
 
 ### Situational Commands
@@ -459,17 +461,23 @@ This system is designed primarily for solo developers working with Claude Code.
 | Command | Use When |
 |---------|----------|
 | `/_my_quick_edit` | Change is too small for full pipeline but needs some structure |
-| `/_my_code_quality` | Need automated quality checks (lint, test, format) |
+| `/_my_pre_pr` | Need quality checks before submitting a PR |
 | `/_my_concept` | Building a concept document for the Ralph Loop pipeline |
-| `/_my_review_design` | Design involves multiple components or integration points |
+| `/_my_design_review` | Design involves multiple components or integration points |
 | `/_my_recall` | Need to search many past conversation transcripts |
 | `/_my_git_manage` | Worktrees, or keeping `.project/` out of a shared repo |
 
-### Redundant Commands
+### Retired Commands
 
-| Command | Replaced By |
+These commands have been removed. For reference, here's what replaced them:
+
+| Retired | Replaced By |
 |---------|-------------|
-| `/_my_code_review` | `/_my_audit_implementation` (more practical) |
+| `/_my_code_review` | `/_my_audit` (conformance) + `/_my_pre_pr` (quality) |
+| `/_my_code_quality` | `/_my_pre_pr` |
+| `/_my_project_manage` | `/_my_status` + `/_my_close` + `/_my_epic_plan` |
+| `/_my_audit_implementation` | `/_my_audit` |
+| `/_my_review_design` | `/_my_design_review` |
 | `/_my_capture` | `/_my_wrap_up` (for most use cases) |
 | `/_my_memorize` | `/_my_wrap_up` (for most use cases) |
 | `/_my_review_compact` | `/_my_wrap_up` (proactive, not reactive) |

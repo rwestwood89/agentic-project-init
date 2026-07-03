@@ -554,7 +554,7 @@ After user confirms:
 - Ask for confirmation before irreversible operations
 
 ### Integration with Project Management
-- This command works alongside `/_my_project_manage`
+- This command works alongside `/_my_status`
 - Reference the same documentation structure
 - Update project files when significant git operations complete
 

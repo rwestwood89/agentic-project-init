@@ -32,9 +32,10 @@ When invoked:
 ### Stage 1: Understand and uncover
 
 1. **Read the request completely.** Note every detail; lose nothing. If the user references research (`.project/research/{file}`) or existing code, read it fully.
-2. **Read light context** if relevant: `.project/CURRENT_WORK.md`, the related epic in `.project/backlog/`, `CLAUDE.md` conventions.
-3. **Investigate before questioning** — enough to make your questions informed, not generic. For a trivial ask, this is a glance. For a real feature, use the `Task` tool with `subagent_type=Explore` to find existing patterns, integration points, and constraints. Don't over-research a one-line ticket.
-4. **Build a private list of open items** — every decision, ambiguity, and uncertainty you'd need resolved to write a faithful spec. You will rank and work this list in Stage 2. Do not put it in the artifact.
+2. **Read light context** if relevant: `.project/CURRENT_WORK.md`, `CLAUDE.md` conventions.
+3. **Read Required Reading from the epic** if this item belongs to one. Look for the item in the epic's Backlog Items section and read the files listed under its `**Required Reading**:` field. These are the shaping-tier files (concepts, concept-designs, research) that carry the original intent for this item. Treat them as **primary input** — they inform requirements and success criteria. If a listed file doesn't exist, note it as missing context rather than failing. If the item has no epic or no Required Reading listed, skip this step.
+4. **Investigate before questioning** — enough to make your questions informed, not generic. For a trivial ask, this is a glance. For a real feature, use the `Task` tool with `subagent_type=Explore` to find existing patterns, integration points, and constraints. Don't over-research a one-line ticket.
+5. **Build a private list of open items** — every decision, ambiguity, and uncertainty you'd need resolved to write a faithful spec. You will rank and work this list in Stage 2. Do not put it in the artifact.
 
 ### Stage 2: The questioning loop
 
@@ -60,8 +61,9 @@ A light "here's the problem as I understand it" reflection before or during the 
 
 1. **Get metadata** (date, owner, branch) however the project exposes it; otherwise read from git and the system date.
 2. **Create the feature directory:** `mkdir -p .project/active/{feature-name}`.
-3. **Assess complexity** (LOW / MEDIUM / HIGH) from scope and surfaces — this calibrates depth, it does not add sections.
-4. **Write `.project/active/{feature-name}/spec.md`** using the lean core below.
+3. **Update CURRENT_WORK.md.** Add the new item to the Active Work section so the project directory knows the item exists immediately, not only after wrap-up. A one-line entry is enough: the item name, its epic (if any), and "spec in progress."
+4. **Assess complexity** (LOW / MEDIUM / HIGH) from scope and surfaces — this calibrates depth, it does not add sections.
+5. **Write `.project/active/{feature-name}/spec.md`** using the lean core below. If the item belongs to an epic, add the epic reference and Required Reading files to the Related Artifacts section so the downstream pipeline can trace the provenance.
 
 **Depth tracks the input.** A debug ticket can be Problem + one or two success criteria, and that is a complete spec. A heavy, constrained feature grows the Known Requirements catalog. Do not pad a thin item to look like a big one. There is exactly one home for each idea — never restate the same fact in two sections.
 
@@ -117,9 +119,10 @@ one tag. Omit this section entirely if the ask has no hard requirements yet.]
 
 ## Related Artifacts
 
+- **Epic:** `.project/backlog/epic_{name}.md` (if this item belongs to an epic)
+- **Required Reading:** [List the files from the epic's Required Reading for this item, if any]
 - **Research:** `.project/research/{file}.md` (if any)
 - **Design:** `.project/active/{feature-name}/design.md` (to be created)
-- **Epic:** `.project/backlog/...` (if related)
 
 ---
 
@@ -153,5 +156,5 @@ Then present the spec, take feedback, and iterate.
 - After spec: ``my-design`` for technical design
 - Review: ``my-spec-review`` for an adversarial audit before design
 
-**Last Updated**: 2026-06-29
+**Last Updated**: 2026-07-01
 

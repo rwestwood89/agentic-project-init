@@ -36,7 +36,8 @@ When invoked:
    - Open Questions that are experience-relevant (interaction, presentation, workflow).
    - `[HARD]` items that constrain the design (existing interfaces, data formats, performance floors).
 2. **Establish the consumer.** State plainly who will interact with this surface and what they're trying to accomplish. If the spec doesn't make this clear, ask.
-3. **Light investigation.** Check the codebase for existing patterns, available data, and conventions the consumer already knows. Keep it proportional — enough to make your questions informed.
+3. **Read Required Reading from the epic** if this item belongs to one. Find the item in the epic's Backlog Items section and read the files listed under its `**Required Reading**:` field. Treat them as **background context** — check your experience decisions against the upstream shaping intent, but don't re-derive requirements (that's the spec's job). If a listed file doesn't exist, note it and move on. If the item has no epic or no Required Reading, skip this step.
+4. **Light investigation.** Check the codebase for existing patterns, available data, and conventions the consumer already knows. Keep it proportional — enough to make your questions informed.
 
 ### Stage 2: Questioning loop
 
@@ -108,6 +109,8 @@ as context.]
 
 ## Related Artifacts
 
+- **Epic:** `.project/backlog/epic_{name}.md` (if this item belongs to an epic)
+- **Required Reading:** [List the files from the epic's Required Reading for this item, if any]
 - **Spec:** `.project/active/{feature-name}/spec.md`
 - **Design:** `.project/active/{feature-name}/design.md` (to be created)
 
@@ -139,5 +142,5 @@ Present the artifact, take feedback, iterate.
 - Before product design: ``my-spec`` for requirements
 - After product design: ``my-design`` for technical design
 
-**Last Updated**: 2026-06-29
+**Last Updated**: 2026-07-01
 

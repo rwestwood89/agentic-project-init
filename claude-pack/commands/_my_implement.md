@@ -224,6 +224,6 @@ If the answer trends toward yes, rip it out.
 
 **Related Commands:**
 - Before implement: `/_my_design` then `/_my_plan`
-- After implement: Manual verification; quality checks; `/_my_project_manage` to complete
+- After implement: `/_my_audit` to certify; `/_my_pre_pr` before submitting
 
 **Last Updated**: 2025-12-31

@@ -24,7 +24,7 @@ If the work touches multiple files, has ambiguous requirements, or will span mor
 
 ## After Implementation
 
-1. **Suggest `/_my_audit_implementation`** after completing all phases of a plan
+1. **Suggest `/_my_audit`** after completing all phases of a plan
    - Don't self-certify — the audit catches placeholder code, TODOs, and gaps that the implementing agent misses
 
 2. **Suggest `/_my_wrap_up`** when the session is winding down

@@ -14,9 +14,8 @@ A practical guide for effective collaboration with Claude Code using the agentic
 | Small change | `/_my_quick_edit` | Too small for full workflow, needs some planning |
 | After correction | `/_my_capture` | User corrects you, important learning moment |
 | Before session | `/_my_recall` | Need context from past conversations |
-| Verify implementation | `/_my_audit_implementation` | Check completed phases against plan |
-| Review against spec | `/_my_code_review` | Verify requirements are met |
-| Run quality checks | `/_my_code_quality` | Lint, format, tests passing |
+| Verify implementation | `/_my_audit` | Certify work against plan/spec/design |
+| Quality checks | `/_my_pre_pr` | Lint, format, tests before PR |
 
 ---
 
@@ -165,17 +164,14 @@ Everything else (`.project/`, `docs/`, code) requires Claude to discover and rea
 
 Before marking work complete, verify:
 
-### `/_my_audit_implementation`
+### `/_my_audit`
 - Do completed phases match the plan?
+- Requirements traced to implementation?
+- Design decisions followed?
 - Any placeholder code or TODOs remaining?
 - Deviations documented and justified?
 
-### `/_my_code_review`
-- Requirements traced to implementation?
-- Edge cases from spec handled?
-- Tests cover acceptance criteria?
-
-### `/_my_code_quality`
+### `/_my_pre_pr`
 - Linting passes?
 - Tests pass?
 - Formatting correct?
@@ -241,7 +237,7 @@ Provide:
 /_my_design     →  HOW: Technical approach, alternatives, decisions
 /_my_plan       →  WHEN: Phased execution, validation strategy
 /_my_implement  →  DO: Execute with progress tracking
-/_my_code_review → CHECK: Audit against spec/design
+/_my_audit      → CHECK: Certify against plan/spec/design
 ```
 
 ### Abbreviated Flow (`/_my_quick_edit`)

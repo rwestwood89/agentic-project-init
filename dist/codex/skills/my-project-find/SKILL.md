@@ -139,7 +139,7 @@ General orientation - show everything needed to get started.
 - Use ``my-project-find` current` at the start of each session
 - Use ``my-project-find` backlog` when deciding what to work on next
 - Use ``my-project-find` context` for full orientation
-- Combine with ``my-project-manage`` for deeper analysis
+- Combine with ``my-status`` for deeper analysis
 
 ---
 

@@ -71,7 +71,8 @@ Restart Claude Code, then use commands with the `_my_` prefix:
 /_my_design      - Create a design document
 /_my_plan        - Create an implementation plan
 /_my_implement   - Execute an implementation plan
-/_my_code_review - Review code against spec/design
+/_my_audit       - Certify work against plan/spec/design
+/_my_pre_pr      - Quality checks before PR
 ...
 ```
 
@@ -94,10 +95,12 @@ See **[docs/working-with-claude.md](docs/working-with-claude.md)** for practical
 | `/_my_design` | Create a technical design |
 | `/_my_plan` | Create an implementation plan |
 | `/_my_implement` | Execute a plan with validation |
-| `/_my_code_review` | Review code against requirements |
-| `/_my_code_quality` | Run automated quality checks |
+| `/_my_audit` | Certify work against plan/spec/design |
+| `/_my_pre_pr` | Quality checks before submitting a PR |
 | `/_my_quick_edit` | Fast, focused code changes |
-| `/_my_project_manage` | Manage project workflow |
+| `/_my_status` | Project orientation and gap analysis |
+| `/_my_close` | Archive completed work items or epics |
+| `/_my_epic_plan` | Decompose shaping output into a scoped epic |
 | `/_my_project_find` | Find project artifacts |
 | `/_my_git_manage` | Git workflow management |
 | `/_my_capture` | Capture conversation for later |
@@ -326,8 +329,8 @@ Commands now use `_my_` prefix:
 | `/design` | `/_my_design` |
 | `/plan` | `/_my_plan` |
 | `/implement` | `/_my_implement` |
-| `/code-review` | `/_my_code_review` |
-| `/code-quality` | `/_my_code_quality` |
+| `/code-review` | `/_my_audit` (conformance) + `/_my_pre_pr` (quality) |
+| `/code-quality` | `/_my_pre_pr` |
 | etc. | etc. |
 
 ## Why the `_my_` Prefix?
