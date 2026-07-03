@@ -31,16 +31,11 @@ This folder contains project planning, tracking, and documentation.
 
 ### 3. Epic Execution
 
-Iterate through items in the epic:
+Iterate through items in the epic. Each item runs the standard pipeline of `/_my_*` stages.
 
-| Step | Action | Output |
-|------|--------|--------|
-| **1. Start** | Create item folder under `active/` | `active/{item_name}/` |
-| **2. Spec** | Define what needs to be done | `spec.md` |
-| **3. Design** | Research codebase, identify all code changes | `design.md` |
-| **4. Plan** | Plan implementation in Phases, include tests | `plan.md` |
-| **5. Implement** | Execute plan, one phase at a time | Code changes |
-| **6. Review** | Review work (can happen at any stage) | Feedback/approval |
+**For the canonical, current flow and when/how to use each stage, run `/_my_pipeline`** (installed
+with claude-pack). This README does not carry its own copy of the sequence — `/_my_pipeline` is the
+single source, so it can't go stale here.
 
 **As the epic progresses**: Add or insert new items as you learn more. Follow the same process for each.
 
