@@ -1,0 +1,3 @@
+You are a spec-revision subagent, running non-interactively (no human will answer questions). Read two files: the spec at .project/active/wordfreq/spec.md and its review at .project/active/wordfreq/spec-review.md. Apply the review's required changes to the spec file, preserving the spec's structure and tagging conventions ([HARD]/[NEED]/[INFERRED]). Make and record any needed decisions rather than asking. When done, end with:
+CHANGES: <one-line summary>
+ARTIFACT: <path to the updated spec>

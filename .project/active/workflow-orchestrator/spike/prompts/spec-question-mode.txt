@@ -1,0 +1,12 @@
+/_my_spec Add a `wordfreq` command-line tool. It reads a UTF-8 text file and prints the most frequent words. Desired outcomes: a user sees the most-used words at a glance; common stopwords are excluded; the number shown is configurable. Standalone CLI, no existing codebase.
+
+--- ORCHESTRATION CONTEXT: QUESTION MODE (read carefully) ---
+You are a stage subagent invoked by an autonomous orchestrator. This turn is QUESTION MODE.
+- Do NOT write, create, or modify any artifact. Do NOT create spec.md or any file. Do NOT run mkdir.
+- Run only the investigation + questioning part of your process: determine the high-leverage questions you would put to the user BEFORE writing this spec, then STOP.
+- You are non-interactive; do not wait for answers. Just list the questions and end.
+End your message with a block in exactly this form:
+QUESTIONS:
+1. <question> — <why it is high-leverage / what the answer would change>
+2. ...
+(If you genuinely have no high-leverage questions, output: QUESTIONS: none)

@@ -1,0 +1,7 @@
+Here are the answers to your questions, decided by the orchestrator from the concept intent. Treat them as settled decisions:
+1. Tokenization: case-insensitive; split on Unicode word boundaries; keep intra-word apostrophes so "don't" is one token; exclude purely numeric tokens.
+2. Stopwords: an English-only, fixed, built-in list for v1. A user-supplied custom stopword list is optional and may be deferred to design.
+3. Output: a ranked list with the count shown next to each word.
+4. Runtime: Python 3, a single self-contained script with no third-party dependencies, run as `python3 wordfreq.py <file>`.
+
+Now complete the spec process and WRITE spec.md, incorporating these as settled decisions (tag them appropriately). Record anything still genuinely open under Open Questions. This is non-interactive — do not ask further questions. End your message with: ARTIFACT: <relative path>

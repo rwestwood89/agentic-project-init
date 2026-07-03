@@ -1,0 +1,7 @@
+Answers from the orchestrator (decided from the concept intent; treat as settled decisions):
+1. Redemption-only. Codes are created/managed elsewhere; this feature validates a code at checkout and applies the discount. Code creation/admin is out of scope.
+2. Two forms of money off: a fixed amount off the order, and a percentage off. No shipping discounts this iteration.
+3. Limits that are real requirements this iteration: an expiration date; a cap on total redemptions; a one-per-customer limit (assume customers are logged in when redeeming — guest-checkout redemption is out of scope); a minimum order value to qualify. Restriction to specific products/categories is deferred to design — park it.
+4. One code per order. No stacking.
+
+Now complete the spec and WRITE spec.md, with concrete, testable success criteria in place of "make it work well," incorporating the above as settled decisions (tag appropriately). Park anything still genuinely open under Open Questions. Non-interactive — do not ask further questions. End your final message with: ARTIFACT: <relative path>

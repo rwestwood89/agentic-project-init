@@ -1,0 +1,8 @@
+/_my_spec Add a `wordfreq` command-line tool. It reads a UTF-8 text file and prints the most frequent words in it. Desired outcomes: a user can see the most-used words in a document at a glance; common stopwords (the, a, is, of, ...) are excluded so the output is meaningful; the number of words shown is configurable. Known: it is a standalone CLI with no dependency on any existing codebase.
+
+--- ORCHESTRATION CONTEXT (read carefully) ---
+You are a stage subagent invoked by an autonomous orchestrator. You are running NON-INTERACTIVELY: there is no human available to answer questions, and nothing you print will be read by a human before you exit. Therefore:
+- Do NOT ask the user questions and do NOT wait for input. Never end your turn expecting an answer.
+- Wherever the process would put a question to the user, instead make a reasonable decision yourself using engineering and product judgment, and record it: tag inferred requirements [INFERRED], and list the assumptions you made under "Open Questions / Deferred to design" with a one-line rationale each.
+- Do the full spec process and WRITE the spec.md artifact to disk.
+- End your final message with a line of the exact form: ARTIFACT: <relative path to the spec file you wrote>
