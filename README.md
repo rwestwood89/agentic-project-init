@@ -90,7 +90,9 @@ See **[docs/working-with-claude.md](docs/working-with-claude.md)** for practical
 | Command | Description |
 |---------|-------------|
 | `/_my_concept` | Develop a feature concept with success criteria |
-| `/_my_research` | Research a topic and save findings |
+| `/_my_research` | Research a topic and save findings (read-only) |
+| `/_my_spike` | De-risk a *known* assumption with a throwaway probe; keeps a findings doc |
+| `/_my_learning_test` | *Discover* how an unfamiliar surface behaves via real, kept tests |
 | `/_my_spec` | Create a feature specification |
 | `/_my_design` | Create a technical design |
 | `/_my_plan` | Create an implementation plan |

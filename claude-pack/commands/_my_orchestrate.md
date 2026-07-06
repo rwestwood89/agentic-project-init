@@ -62,8 +62,15 @@ finished (ends with `ARTIFACT: <path>`) or is asking you something. Keep the `se
   artifact or the code directly when you need the detail to make a call.
 - If you truly can't decide something, make the most defensible call, record it loudly, and keep
   going. Don't stop and wait.
+- **De-risk before building on a shaky bet.** When a stage surfaces an unverified assumption about
+  how something behaves — an unfamiliar library, an opaque data format, an ambitious mechanism —
+  and neither the concept nor your judgment can settle it, insert a de-risking stage rather than
+  planning on top of it. `orchestrate-stage.sh run spike` confirms a known assumption with
+  throwaway code; `run learning_test` maps an unfamiliar surface with kept tests. Feed the finding
+  into the stage that needed it, then continue. This is a judgment call, not a required step —
+  reach for it when the cost of a wrong assumption surfacing late is high.
 
 **Related:** pipeline reference `/_my_pipeline`. Input from `/_my_concept`, `/_my_concept_design`,
 `/_my_research`. Mechanism: `~/.claude/scripts/orchestrate-stage.sh`.
 
-**Last Updated:** 2026-07-02
+**Last Updated:** 2026-07-06

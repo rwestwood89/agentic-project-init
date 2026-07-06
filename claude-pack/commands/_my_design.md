@@ -167,7 +167,7 @@ Drift between the concept and the supporting sections is the signal that structu
 - **Proportionality**: "Does the complexity of this design match the complexity of the problem?"
 - **Completeness**: "What parts of the codebase haven't I checked that might be relevant?"
 - **Edge cases**: "What could go wrong? What failure modes exist?"
-- **Assumptions**: "What am I assuming? Do these need validation?"
+- **Assumptions**: "What am I assuming? Do these need validation? If a cheap-to-test bet rests on how something actually behaves, offer a `/_my_spike` (confirm a specific assumption with throwaway code) or `/_my_learning_test` (map an unfamiliar surface with kept tests) before locking the design on it."
 - **Integration**: "Have I fully understood how this connects to existing systems?"
 - **Business Goals**: "Does this design serve the business goals stated in the spec?"
 
@@ -404,4 +404,4 @@ Next Step: After approval → `/_my_implement` or `/_my_plan`
 - Before design: `/_my_research` or `/_my_spec`
 - After design: `/_my_implement` or `/_my_plan` for implementation
 
-**Last Updated**: 2026-07-01
+**Last Updated**: 2026-07-06
