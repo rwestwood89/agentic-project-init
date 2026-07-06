@@ -1,32 +1,27 @@
 # Current Work
 
-**Last Updated**: 2026-07-01
+**Last Updated**: 2026-07-06
 
 ---
 
 ## Active Work
 
-### spike-and-learning-test-commands — hands-on de-risking commands
-- **Certified (audit 2026-07-06, verdict: Certify — all 9 spec criteria verified).** See
-  `active/spike-and-learning-test-commands/audit.md`. Two pre_pr housekeeping notes: the work is
-  **uncommitted on `main`** (the feature branch exists but is empty — commit onto it first), and
-  the edited commands' `**Last Updated**` footers weren't bumped.
-- Two new `_my_*` commands: `/_my_spike` (de-risk a known assumption, throwaway probe + findings doc)
-  and `/_my_learning_test` (map an unfamiliar surface, findings doc + real kept tests). Write-code-to-learn
-  siblings of read-only `/_my_research`.
-- Soft de-risking suggestions wired into `concept_design`, `spec`, `design`, `epic_plan`, `research`.
-  Orchestration awareness added (user request): `_my_orchestrate` + `_my_pipeline`, and
-  `orchestrate-stage.sh` now gives spike/learning_test `bypassPermissions` so the orchestrator can run
-  them headlessly (they execute code, like implement/pre_pr). Helper already ran any `/_my_*`.
-- Codex-exposed (both keys added, built + installed to `~/.agents/skills/`); documented in README + CLAUDE.md.
-- Phase-1 live dry run confirmed the close-the-loop discipline and refined the real Codex YAML rule:
-  only a leading `*`/`**` breaks it; mid-value colons are safe. See the feature's `findings.md`.
-- Spec/design/plan + `findings.md`, `probe_yaml_description.py` in `.project/active/spike-and-learning-test-commands/`.
-- Next: `/_my_pre_pr` (commit onto the feature branch first).
+*(none — start the next item from Up Next or the backlog)*
 
 ---
 
 ## Recently Completed
+
+### 2026-07-06: spike-and-learning-test-commands — hands-on de-risking commands (certified, archived)
+- Two new commands: `/_my_spike` (confirm a known assumption, throwaway probe + findings doc) and
+  `/_my_learning_test` (map an unfamiliar surface, findings doc + real kept tests) — write-code-to-learn
+  siblings of read-only `/_my_research`, sharing one discipline (reproducible, living doc,
+  summary-on-top, close the loop).
+- Soft de-risking suggestions wired into `concept_design`/`spec`/`design`/`epic_plan`/`research`;
+  orchestration awareness in `_my_orchestrate`/`_my_pipeline`/`orchestrate-stage.sh`
+  (`bypassPermissions` for headless runs). Codex-exposed; documented in README + CLAUDE.md.
+- Audit verdict Certify (all 9 spec criteria). Archived to
+  `.project/completed/20260706_spike-and-learning-test-commands/`.
 
 ### 2026-07: workflow-orchestrator — autonomous pipeline orchestrator (merged, PR #25)
 - High-judgment agent (Fable) drives the v2 pipeline end to end via opus subagents, fully autonomous, Claude-only.
