@@ -6,6 +6,10 @@
 
 ## Active Work
 
+### codex-orchestrator-fork — Codex-native autonomous pipeline orchestration
+- Spec, design, spike, and implementation plan drafted. Spike complete: `codex exec` can load `$my-*` skills, capture JSONL/final messages, and resume via `thread.started.thread_id`; implementation should start with dry-run/helper contract tests before live execution.
+- Artifacts: `.project/active/codex-orchestrator-fork/{spec,design,spike-findings,plan}.md`
+
 ### workflow-orchestrator — autonomous pipeline orchestrator command
 - A high-judgment agent (Fable) takes a concept/outcomes doc and drives the v2 pipeline end to end via opus subagents, fully autonomous. Claude-only.
 - **Phases 1–3 done. Phase 4 (dogfood) next.** Phase 1 spike proved the mechanism (GO). Phase 2 built the helper `orchestrate-stage.sh` + preamble (smoke test passes). Phase 3 wrote the command `_my_orchestrate.md` (self-reviewed).
