@@ -1,9 +1,9 @@
 {
-  "generated_at": "2026-07-08T13:21:07Z",
-  "source_revision": "322b1f9",
+  "generated_at": "2026-07-08T13:53:20Z",
+  "source_revision": "52992e2",
   "source_root": "/home/reid/agentic-project-init",
   "included": {
-    "command_skills": ["my-audit", "my-close", "my-concept", "my-concept-design", "my-design", "my-design-review", "my-epic-plan", "my-example-command", "my-git-manage", "my-handoff", "my-implement", "my-orchestrate", "my-pipeline", "my-plan", "my-pre-pr", "my-product-design", "my-project-find", "my-quick-edit", "my-research", "my-spec", "my-spec-review", "my-status", "my-wrap-up"],
+    "command_skills": ["my-audit", "my-close", "my-concept", "my-concept-design", "my-design", "my-design-review", "my-epic-plan", "my-example-command", "my-git-manage", "my-handoff", "my-implement", "my-learning-test", "my-orchestrate", "my-pipeline", "my-plan", "my-pre-pr", "my-product-design", "my-project-find", "my-quick-edit", "my-research", "my-spec", "my-spec-review", "my-spike", "my-status", "my-wrap-up"],
     "skills": ["example-skill"],
     "agents": ["example-agent"],
     "hooks": [],

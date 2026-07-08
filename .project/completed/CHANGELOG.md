@@ -4,6 +4,27 @@ Historical record of completed work.
 
 ---
 
+## [2026-07-06] - spike-and-learning-test-commands
+
+**Type**: Item
+**Duration**: 4 days (2026-07-02 to 2026-07-06)
+
+### Summary
+Closed the pipeline's bottom-up learning gap: the top-down flow assumed the mechanism was known, and nothing let an agent stop planning and write code to find out how something actually behaves. Added two hands-on de-risking commands — `/_my_spike` (confirm a known assumption with a throwaway probe) and `/_my_learning_test` (map an unfamiliar surface with real, kept tests) — as the write-code-to-learn siblings of read-only `/_my_research`, sharing one discipline: reproducible steps, a living findings doc, summary-on-top written last, and a close-the-loop back-reference into the triggering upstream doc.
+
+### Deliverables
+- **New commands:** `_my_spike`, `_my_learning_test` (installed via `setup-global.sh`)
+- **Soft de-risking wiring:** `_my_concept_design`, `_my_spec`, `_my_design`, `_my_epic_plan`, `_my_research` (suggestions at existing anchors, never gates)
+- **Orchestration awareness (user-requested addition):** `_my_orchestrate`, `_my_pipeline`, and `orchestrate-stage.sh` (`bypassPermissions` default for spike/learning_test)
+- **Codex:** both skills built + installed (`my-spike`, `my-learning-test`); description keys in `codex-overrides/config.sh`
+- **Docs:** README command table rows, CLAUDE.md "De-risking" section
+- **Artifacts:** spec.md, spec-review.md, design.md, plan.md, audit.md (Certify), findings.md + `probe_yaml_description.py` (Phase-1 live spike: leading `*`/`**` breaks Codex SKILL.md YAML, mid-value colons are safe)
+
+### Lessons Learned
+- [TODO: Add lessons learned]
+
+---
+
 ## [2026-07-01] - Epic WORKFLOW-V2: Workflow v2 Redesign
 
 **Type**: Epic (9 items)

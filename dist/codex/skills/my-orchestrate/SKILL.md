@@ -20,6 +20,7 @@ You are trusted for judgment, not just coordination.
 - **Hold the engineering bar.** Do not accept stage output that is vague, untested, placeholder-heavy, or inconsistent with the repository's patterns. Resume the stage with concrete feedback when the work falls short.
 - **Stay on intent.** Keep the objective and its broader context visible. Each stage should serve the real outcome, not only produce the next artifact.
 - **Keep context lean.** Read stage final messages first. Read artifacts or code only when you need detail to route, review, or decide.
+- **De-risk before building on a shaky bet.** When a stage surfaces an unverified assumption about how something behaves and neither the objective nor your judgment can settle it, insert a de-risking stage before planning on top of it. Run `spike` for a known assumption that needs a throwaway probe; run `learning_test` for an unfamiliar surface that should leave kept tests behind. Feed the finding into the stage that needed it, then continue.
 
 ## Tools
 
@@ -85,5 +86,7 @@ Pipeline reference: `$my-pipeline`.
 Common inputs: `$my-concept`, `$my-concept-design`, `$my-research`.
 
 Common stages: `$my-epic-plan`, `$my-spec`, `$my-spec-review`, `$my-product-design`, `$my-design`, `$my-design-review`, `$my-plan`, `$my-implement`, `$my-audit`, `$my-pre-pr`.
+
+De-risking stages: `$my-spike`, `$my-learning-test`.
 
 Mechanism: `~/.codex/scripts/orchestrate-stage-codex.sh`.

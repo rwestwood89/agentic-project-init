@@ -83,6 +83,8 @@ pass "JSONL parser fixtures"
 
 contains "$ORCH" '~/.codex/scripts/orchestrate-stage-codex.sh'
 contains "$ORCH" '\$my-pipeline'
+contains "$ORCH" '\$my-spike'
+contains "$ORCH" '\$my-learning-test'
 does_not_contain "$ORCH" '~/.claude/scripts/orchestrate-stage.sh'
 does_not_contain "$ORCH" 'claude -p'
 does_not_contain "$ORCH" '/_my_'

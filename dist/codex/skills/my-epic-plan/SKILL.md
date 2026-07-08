@@ -56,6 +56,7 @@ Read every identified source file fully before proceeding.
    - **Dependencies** between items — what must complete before what?
    - **Required Reading** per item — which source documents carry intent relevant to each specific item? Different items may reference different subsets. Not every item needs Required Reading.
    - **Epic Strategy** — value delivery path, critical path, decomposition rationale.
+   - **De-risking** — does any item rest on an unverified bet about how something behaves? If so, consider surfacing a ``my-spike`` (confirm a known assumption with throwaway code) or ``my-learning-test`` (map an unfamiliar surface with kept tests) as an early item or first phase, so the bet is tested before dependents build on it.
 2. Write the full backlog items into the epic file, following the item template in `EPIC_GUIDE.md`. Fill in Epic Strategy, the dependency graph, risks, and timeline sections.
 3. Add an entry to `.project/backlog/BACKLOG.md` following the existing format (priority, status, estimate, brief description, items list with checkboxes).
 4. Present the completed epic to the user.
