@@ -186,6 +186,7 @@ echo ""
 
 ensure_dir "$TARGET_DIR"
 ensure_dir "$TARGET_DIR/agents"
+ensure_dir "$TARGET_DIR/scripts"
 ensure_dir "$USER_SKILLS_DIR"
 
 echo "Cleaning up legacy managed prompts..."
@@ -210,6 +211,15 @@ if [ -f "$DIST_DIR/AGENTS.md" ]; then
     echo ""
     echo "Global instructions..."
     install_path "$DIST_DIR/AGENTS.md" "$TARGET_DIR/AGENTS.md"
+fi
+
+if [ -d "$DIST_DIR/scripts" ] && find "$DIST_DIR/scripts" -maxdepth 1 -type f | grep -q .; then
+    echo ""
+    echo "Scripts..."
+    ensure_dir "$TARGET_DIR/scripts"
+    while IFS= read -r file; do
+        install_path "$file" "$TARGET_DIR/scripts/$(basename "$file")"
+    done < <(find "$DIST_DIR/scripts" -maxdepth 1 -type f | sort)
 fi
 
 if [ -d "$DIST_DIR/hooks" ] && find "$DIST_DIR/hooks" -maxdepth 1 -type f | grep -q .; then

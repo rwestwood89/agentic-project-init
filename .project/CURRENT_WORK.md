@@ -1,13 +1,13 @@
 # Current Work
 
-**Last Updated**: 2026-07-01
+**Last Updated**: 2026-07-08
 
 ---
 
 ## Active Work
 
 ### codex-orchestrator-fork — Codex-native autonomous pipeline orchestration
-- Spec, design, spike, and implementation plan drafted. Spike complete: `codex exec` can load `$my-*` skills, capture JSONL/final messages, and resume via `thread.started.thread_id`; implementation should start with dry-run/helper contract tests before live execution.
+- Spec, design, spike, and implementation plan drafted. Phases 1-5 are implemented and validated: Codex helper dry-run and real execution paths, generated script install lane, full `my-orchestrate` replacement, Codex `AGENTS.md` transforms, generated-product tests, installer dry-run, and project checks are in place. Optional live smoke was not run.
 - Artifacts: `.project/active/codex-orchestrator-fork/{spec,design,spike-findings,plan}.md`
 
 ### workflow-orchestrator — autonomous pipeline orchestrator command

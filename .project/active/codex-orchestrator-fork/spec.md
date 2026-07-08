@@ -1,6 +1,6 @@
 # Spec: Codex Orchestrator Fork
 
-**Status:** Draft
+**Status:** Complete
 **Owner:** Reid W
 **Created:** 2026-07-07T21:05:32-07:00
 **Complexity:** HIGH
@@ -18,13 +18,13 @@ The work is to create a Codex orchestration fork that can run the same project p
 
 ## Success Criteria
 
-- [ ] `my-orchestrate` in Codex gives usable Codex-native instructions and no longer tells Codex to call `~/.claude/scripts/orchestrate-stage.sh` or `/_my_*` commands for active execution.
-- [ ] A Codex-specific stage helper can start and resume one pipeline stage through `codex exec`, returning a stable machine-readable summary that includes the Codex session/thread id and the final stage message.
-- [ ] The Codex fork uses `$my-*` skills or equivalent Codex skill invocation language for stages, with underscore-to-hyphen conversion handled consistently.
-- [ ] The generated Codex install includes any helper scripts or script instructions needed by the Codex orchestrator.
-- [ ] The generated Codex `AGENTS.md` and pipeline guidance describe available commands/skills in Codex terms, or explicitly mark any Claude wording as source provenance rather than executable guidance.
-- [ ] The existing Claude orchestrator command, helper script, setup flow, and tests remain working and are not rewritten for this first Codex implementation.
-- [ ] Validation covers the generator, installer, stale-reference checks, and a dry-run or low-risk smoke test of the Codex stage helper.
+- [x] `my-orchestrate` in Codex gives usable Codex-native instructions and no longer tells Codex to call `~/.claude/scripts/orchestrate-stage.sh` or `/_my_*` commands for active execution.
+- [x] A Codex-specific stage helper can start and resume one pipeline stage through `codex exec`, returning a stable machine-readable summary that includes the Codex session/thread id and the final stage message.
+- [x] The Codex fork uses `$my-*` skills or equivalent Codex skill invocation language for stages, with underscore-to-hyphen conversion handled consistently.
+- [x] The generated Codex install includes any helper scripts or script instructions needed by the Codex orchestrator.
+- [x] The generated Codex `AGENTS.md` and pipeline guidance describe available commands/skills in Codex terms, or explicitly mark any Claude wording as source provenance rather than executable guidance.
+- [x] The existing Claude orchestrator command, helper script, setup flow, and tests remain working and are not rewritten for this first Codex implementation.
+- [x] Validation covers the generator, installer, stale-reference checks, and a dry-run or low-risk smoke test of the Codex stage helper.
 
 ## Known Requirements
 

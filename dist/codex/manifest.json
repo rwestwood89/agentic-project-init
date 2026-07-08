@@ -1,12 +1,14 @@
 {
-  "generated_at": "2026-07-02T19:10:32Z",
-  "source_revision": "ae8866e",
-  "source_root": "/home/rwestwood/agentic-project-init",
+  "generated_at": "2026-07-08T13:21:07Z",
+  "source_revision": "322b1f9",
+  "source_root": "/home/reid/agentic-project-init",
   "included": {
     "command_skills": ["my-audit", "my-close", "my-concept", "my-concept-design", "my-design", "my-design-review", "my-epic-plan", "my-example-command", "my-git-manage", "my-handoff", "my-implement", "my-orchestrate", "my-pipeline", "my-plan", "my-pre-pr", "my-product-design", "my-project-find", "my-quick-edit", "my-research", "my-spec", "my-spec-review", "my-status", "my-wrap-up"],
     "skills": ["example-skill"],
     "agents": ["example-agent"],
-    "hooks": []
+    "hooks": [],
+    "scripts": ["orchestrate-preamble-codex.md", "orchestrate-stage-codex.sh"],
+    "command_skill_replacements": ["my-orchestrate"]
   },
   "excluded": {
     "command_skills": ["my-capture", "my-memorize", "my-recall", "my-review-compact"],
