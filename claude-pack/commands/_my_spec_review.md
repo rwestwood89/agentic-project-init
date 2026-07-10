@@ -36,9 +36,10 @@ The spec's posture is "aggressive about the problem, conservative about the solu
 
 - Are requirements in the spec actually traceable to the user's ask, or were they invented?
 - Did the spec drop details the user explicitly said?
-- Are the tags honest? Each requirement should carry `[HARD]` (forced by an interface/physics/existing system), `[NEED]` (a stakeholder outcome), or `[INFERRED]` (implied, not stated). Is anything tagged `[HARD]` that is really just one option among several? Are `[INFERRED]` items genuinely inferable, or guesses masquerading as inference?
+- Are the tags honest? Each requirement should carry `[HARD]` (forced by an interface/physics/existing system), `[NEED]` (a stakeholder outcome the owner actually stated), `[INFERRED]` (implied, not stated), or `[INHERITED]` (absorbed from an upstream artifact, source cited). Is anything tagged `[HARD]` that is really just one option among several? Are `[INFERRED]` items genuinely inferable, or guesses masquerading as inference? Is a `[NEED]` really owner-stated, or an inference that should be `[INFERRED]`?
 - Were upstream artifacts (research, concept, epic, prior design) interpreted correctly, or cherry-picked / misread?
 - Are code-facing claims true? When the spec says "X currently works like Y" or "component Z does not support W," check the code. Not the comments — the code.
+- **Capture-fidelity structure** (see `claude-pack/rules/capture-fidelity.md`). These are structural checks, not judgment calls: every settled / do-not-relitigate item is owner-grade (`[HARD]` or `[NEED]`, or an `[OWNER*]` grade in an upstream shaping artifact); every `[INHERITED]` item cites its source; a quote claimed as verbatim actually appears; owner-given referents carried down from the concept survived, with their force (illustrative vs binding) stated. Flag the correction static signatures too — prohibition-mode phrasing ("WE MUST NOT …"), negation-shaped requirements, or content redundant with a Non-Goal — framed as questions, not verdicts.
 
 ### Lens 2: Problem & Approach
 
@@ -64,7 +65,7 @@ Spec defects that won't show up until design or implementation.
 - **Contradictions:** Do any requirements conflict with each other, with the scope, or with each other's tags?
 - **Process/merge/ops leakage:** Are any "requirements" actually process instructions, merge strategy, or operational guesses rather than contract obligations?
 - **Missing content:** Edge cases that must be handled, constraints that must be preserved, success criteria with no matching requirement, or `[HARD]` requirements that no success criterion would catch if violated.
-- **Deferral accuracy:** Are the items in "Open Questions / Deferred to design" genuinely design-stage, or are they spec-stage questions (the user could answer now) being punted? Conversely, is anything stated as settled that the user never actually decided?
+- **Deferral accuracy:** Are the items in "Open Questions / Deferred to design" genuinely design-stage, or are they spec-stage questions (the user could answer now) being punted? Conversely, is anything stated as settled that the user never actually decided? — check this structurally, against Lens 1's settled ⊆ owner-grade, not by intuition.
 
 ### Lens 4: Hygiene
 

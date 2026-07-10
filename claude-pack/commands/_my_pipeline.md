@@ -22,7 +22,8 @@ How to read it:
     each item then runs the pipeline from `spec` onward, in dependency order.
   - A single, clear item skips shaping and starts at `spec`.
 - **Reviews pair with the artifact they check:** `spec_review` after `spec`, `design_review` after
-  `design`. Feed the must-fix points back into the artifact; don't chase a reviewer indefinitely.
+  `design` — each in a **fresh session**, never the session that authored the artifact. Feed the
+  must-fix points back into the artifact; don't chase a reviewer indefinitely.
 - **`[product_design]` is optional** — run it between `spec` and `design` only when the item has a
   consumer-facing surface (UX, an API, an interface) whose experience should be settled first.
 - **`/_my_quick_edit` is the escape hatch** — a small, scoped, implementation-ready change skips the

@@ -76,7 +76,8 @@ CYCLE:
    - Check any project documentation referenced in CLAUDE.md
    - Feature spec: `.project/active/{feature-name}/spec.md` (read FULLY)
      - Pay special attention to **Success Criteria** - your design must serve these
-     - Note all requirements (tagged `[HARD]`, `[NEED]`, `[INFERRED]`) and open questions
+     - Note all requirements (tagged `[HARD]`, `[NEED]`, `[INFERRED]`, `[INHERITED]`) and open questions
+     - Upstream `[INFERRED]`/`[INHERITED]` items are challengeable, not settled — a design bet may overturn one with evidence. When a challengeable item conflicts with owner-grade intent, don't resolve it silently: invoke the surfacing duty (see `claude-pack/rules/capture-fidelity.md`).
    - Product design: `.project/active/{feature-name}/product-design.md` (if it exists, read FULLY)
      - This is an optional artifact from ``my-product-design`` that settles experience and interaction decisions
      - Treat its decisions as settled input — flag only where a genuine technical constraint conflicts
@@ -409,6 +410,7 @@ Next Step: After approval → ``my-implement`` or ``my-plan``
 
 **Related Commands:**
 - Before design: ``my-research`` or ``my-spec``
+- Review: ``my-design-review`` for a critical review — in a fresh session, not this one
 - After design: ``my-implement`` or ``my-plan`` for implementation
 
 **Last Updated**: 2026-07-06

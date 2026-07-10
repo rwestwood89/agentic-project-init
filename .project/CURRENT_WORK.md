@@ -6,6 +6,18 @@
 
 ## Active Work
 
+### capture-fidelity — provenance, compression, and correction laws for the pipeline
+- From forensics on the echo-workspace band-study failure: one always-loaded rule (provenance grading, compression protection, correction discipline, surfacing duty) + minimal touches to concept/spec/reviews/orchestrate/audit/handoff.
+- **All 5 phases implemented on branch `capture-fidelity`.** Rule `claude-pack/rules/capture-fidelity.md` (40 lines) + 8 command touches; installed globally + Codex rebuilt. Phase-2 gate passed 4/4 (through real `spec_review`, 0 FPs) after refitting plant P3.
+- **Audited: Certify (2026-07-10, `audit.md`); committed with refinements; merged origin/main. Next: PR.**
+- Key calls during implement: P3 fixture was mis-specified for a concept hop (first-hop compression is owner-checked, not reviewer-checked — `design.md:71`), refit to a "softened referent" plant; audit + handoff deliberately don't reference the rule (their behaviors aren't among the four laws); rule content ships to Codex via `AGENTS.md`, not a separate file.
+- Artifacts: `.project/active/capture-fidelity/{spec,spec-review,design,design-review,plan,audit}.md` + `fixture-{planted-concept,expected-findings}.md`
+
+### capture-fidelity-refinements — second-layer fixes from the first pipeline run under the new laws
+- Origination-vs-ratification provenance, fresh-session reviews, minted-provenance approval presentations, declared template adaptation, durable orchestrate briefs.
+- **Implemented directly on owner instruction (owner curated the diff); committed alongside the parent item.**
+- Spec: `.project/active/capture-fidelity-refinements/spec.md`
+
 ### codex-orchestrator-fork — Codex-native autonomous pipeline orchestration
 - Spec, design, spike, and implementation plan drafted. Phases 1-5 are implemented and validated: Codex helper dry-run and real execution paths, generated script install lane, full `my-orchestrate` replacement, Codex `AGENTS.md` transforms, generated-product tests, installer dry-run, and project checks are in place. Optional live smoke was not run.
 - Artifacts: `.project/active/codex-orchestrator-fork/{spec,design,spike-findings,plan}.md`

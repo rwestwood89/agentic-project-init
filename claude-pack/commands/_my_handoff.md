@@ -11,6 +11,9 @@ Write a handoff document so a fresh agent can pick up where this session left of
    - **Key Discoveries** — non-obvious learnings from this conversation (gotchas, dead ends, validated assumptions) that aren't already captured in those artifacts.
    - **Suggested Skills** — slash commands the next agent should likely invoke (e.g. `/_my_project_find`, `/_my_plan`), one line of reasoning each.
    - **Open Questions** — anything unresolved or awaiting user input.
+   - Mark each substantive claim by status — **verified this session** vs **carried** (from
+     prior docs or another agent, not re-checked here) — so the next agent knows what to
+     trust and what to re-verify.
 3. Redact secrets before writing: API keys, tokens, passwords, PII, customer data. Replace with `[REDACTED]`.
 4. Print the absolute path of the file you wrote so the user can share it.
 

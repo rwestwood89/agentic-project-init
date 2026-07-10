@@ -101,10 +101,14 @@ looks like" — there is no separate acceptance-criteria list.]
 one tag. Omit this section entirely if the ask has no hard requirements yet.]
 
 - **[HARD]** [Forced by an interface, physics, or an existing system. Non-negotiable.]
-- **[NEED]** [A stakeholder/UX/performance outcome. Stated as an outcome —
-  a reader must not be able to mistake it for an implementation choice.]
+- **[NEED]** [An outcome a stakeholder actually stated. Stated as an outcome —
+  a reader must not mistake it for an implementation choice. An outcome you
+  inferred rather than heard is **[INFERRED]**, not [NEED].]
 - **[INFERRED]** [Implied by the ask, not stated by the user. Tagged so the
   reviewer can scan for and confirm your inferences.]
+- **[INHERITED]** [Absorbed from an upstream artifact (concept, prior spec),
+  not independently validated here. Cite the source. Not [HARD] — its authority
+  is a document, not reality. See `claude-pack/rules/capture-fidelity.md`.]
 
 ## Non-Goals
 
@@ -134,6 +138,7 @@ one tag. Omit this section entirely if the ask has no hard requirements yet.]
 Before presenting, check:
 - Does each fact live in exactly one section? (No "why" repeated four times; no outcome repeated as a requirement.)
 - Does every requirement carry a tag, and do `[NEED]` items read as outcomes, not mechanisms?
+- Does every `[INHERITED]` item cite its upstream source, and is each `[NEED]` one the owner actually stated (not an inference that should be `[INFERRED]`)?
 - Did I capture every detail the user gave, and mark my inferences `[INFERRED]`?
 - Is the depth proportional to the ask — thin where the input was thin?
 - Did I keep solution choices out of the requirements, and park them in Open Questions instead?
@@ -154,7 +159,7 @@ Then present the spec, take feedback, and iterate.
 - Before spec: ``my-research`` for deeper exploration
 - After spec (optional): ``my-product-design`` for experience/interaction design on UX-heavy items
 - After spec: ``my-design`` for technical design
-- Review: ``my-spec-review`` for an adversarial audit before design
+- Review: ``my-spec-review`` for an adversarial audit before design — in a fresh session, not this one
 
 **Last Updated**: 2026-07-06
 

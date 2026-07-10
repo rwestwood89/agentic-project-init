@@ -129,6 +129,14 @@ Only enter this stage when the user tells you to.
 
    [1-3 paragraphs explaining what's wrong or missing today, grounded in real user pain or project need]
 
+   ## Owner's Words
+
+   [Optional but default when sourced from a live conversation. The owner's key
+   statements, verbatim. Later sections paraphrase; this is the record they trace to.
+   Mark owner-given examples/referents with their force — see the guidelines below.]
+
+   - **[OWNER-VERBATIM]** "[exact quote]"
+
    ## Success Criteria
 
    When this work is complete:
@@ -182,8 +190,12 @@ Only enter this stage when the user tells you to.
 
    ## Non-Goals / Out of Scope
 
-   - [Explicit exclusion and why]
-   - [Future enhancement deferred]
+   [Grade each: [OWNER] the owner excluded it, [AGENT] you inferred the boundary.
+   Record a rejected path as a decision (why), never as a prohibition — see correction
+   discipline in the guidelines.]
+
+   - **[OWNER]** [Explicit exclusion and why]
+   - **[AGENT]** [Future enhancement deferred]
 
    ---
 
@@ -200,8 +212,8 @@ Only enter this stage when the user tells you to.
 
    ## Next-Stage Handoff
 
-   **Settled here:**
-   - [Decision or scope boundary downstream stages should treat as fixed]
+   **Settled here:** (owner-grade only — see the settled rule in the guidelines)
+   - **[OWNER]** [Decision or scope boundary downstream stages should treat as fixed]
 
    **Needs spec next:**
    - [Requirement or ambiguity the spec must resolve]
@@ -228,6 +240,8 @@ Only enter this stage when the user tells you to.
 - Present alternatives as options ("One way... Alternatively..."), not as decisions
 - Stay in Stage 2 until the user explicitly says to write the concept
 - After a correction, go back and research more — demonstrate corrected understanding with specifics
+- Preserve the owner's payload — examples, referents, numbers, named standards — verbatim or by path, with its force marked (illustrative vs binding); unclear force → ask. See `claude-pack/rules/capture-fidelity.md`.
+- Record a rejected path as a one-line decision (why it's out), never as a prohibition aimed at future agents (correction discipline, same rule).
 - Keep success criteria specific and observable
 - Run a critical review before finalizing
 - Stay within the 300-line main-body limit
