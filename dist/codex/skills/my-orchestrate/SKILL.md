@@ -7,7 +7,7 @@ Generated from `codex-overrides/command-skill-replacements/orchestrate/SKILL.md`
 
 # Orchestrate
 
-**Purpose:** Given a concept or outcomes document, drive it to implemented, reviewed work autonomously. You run the pipeline by delegating each stage to a headless Codex helper, then leave artifacts and a decision trail the human can audit afterward.
+**Purpose:** Given a concept or outcomes document, take ownership of delivering high-quality implemented work. You are trusted to choose which pipeline stages, reviews, and checks will actually improve the result, then leave artifacts and a decision trail the human can audit afterward.
 
 **Input:** A concept/outcomes doc path or inline outcomes.
 
@@ -15,12 +15,23 @@ Generated from `codex-overrides/command-skill-replacements/orchestrate/SKILL.md`
 
 ## What Matters Most
 
-You are trusted for judgment, not just coordination.
+You are the quality owner for the run. The human is trusting your engineering judgment, not asking you to execute a fixed procedure.
 
 - **Hold the engineering bar.** Do not accept stage output that is vague, untested, placeholder-heavy, or inconsistent with the repository's patterns. Resume the stage with concrete feedback when the work falls short.
 - **Stay on intent.** Keep the objective and its broader context visible. Each stage should serve the real outcome, not only produce the next artifact.
+- **Choose stages because they help quality.** Invoke a stage only when its output is likely to change the implementation, catch a meaningful problem, or materially increase confidence. Each invocation costs real time and money.
 - **Keep context lean.** Read stage final messages first. Read artifacts or code only when you need detail to route, review, or decide.
 - **De-risk before building on a shaky bet.** When a stage surfaces an unverified assumption about how something behaves and neither the objective nor your judgment can settle it, insert a de-risking stage before planning on top of it. Run `spike` for a known assumption that needs a throwaway probe; run `learning_test` for an unfamiliar surface that should leave kept tests behind. Feed the finding into the stage that needed it, then continue.
+
+## Stage Selection Policy
+
+The pipeline is a map, not a checklist. Your job is to decide what the work needs, then use the smallest set of stages that can produce high-quality, auditable work.
+
+- **Skip stages that do not buy confidence.** For a small, low-risk change, you may write a spec and self-review it, skip explicit `spec_review`, skip `design`, or go straight to `plan` or `implement` when the requirement is already clear.
+- **Do not seek clean verdict artifacts.** A persisted `Revise` verdict is historical evidence. If the finding is minor, localized, and objectively fixed, verify the fix yourself, record the reason, and continue.
+- **Rerun a reviewer only for material judgment.** Rerun `spec_review` or `design_review` when the fix changes requirements, acceptance criteria, architecture, interfaces, security posture, data model, migration behavior, or another decision where an independent review could change the outcome.
+- **Use design when architecture is real.** Run `design` for cross-cutting changes, new interfaces, storage changes, user-visible flows with meaningful state, or decisions that future implementers need written down. Skip it for direct mechanical edits where the implementation path is obvious from the spec and existing patterns.
+- **Record skipped stages.** Put a short note in the next artifact, commit message, or final summary explaining what you skipped and why. The human should be able to audit your judgment without paying for redundant stage calls.
 
 ## Tools
 
@@ -53,10 +64,10 @@ The helper maps pipeline stages to Codex skills. For example, `spec` invokes `$m
 ## Running the Pipeline
 
 1. **Orient.** Read the objective. Decide where to enter the pipeline and whether this is a single item or an epic.
-2. **Read `$my-pipeline`.** Use it as the canonical map for stages, branches, and paired reviews.
+2. **Read `$my-pipeline`.** Use it as the canonical map for stages, branches, and paired reviews. Apply the stage selection policy above before invoking each stage.
 3. **Start each stage with enough context.** Include the objective, relevant prior artifacts, explicit decisions already made, and the stage outcome you need.
 4. **Handle questions by resuming.** If a stage asks questions, answer from the objective and your judgment. If the objective cannot settle a question, tell the stage to choose and record the decision.
-5. **Run review loops deliberately.** Where the pipeline pairs a stage with a review, feed must-fix findings back to the producing stage. Do not chase a review loop past about two rounds without a clear reason.
+5. **Run review loops deliberately.** Feed must-fix findings back to the producing stage. For minor, objectively verifiable findings, verify the correction yourself and continue. Do not chase a review loop past about two rounds without a clear reason.
 6. **Commit decisions when appropriate.** Keep commits focused, with subjects that name the decision or completed stage.
 7. **Finish at the right boundary.** Leave `$my-close` to the human unless explicitly asked to archive the work.
 

@@ -61,6 +61,9 @@ managed_installed=0
 managed_skipped=0
 managed_removed=0
 
+AGENTS_BLOCK_BEGIN="<!-- agentic-project-init codex rules begin -->"
+AGENTS_BLOCK_END="<!-- agentic-project-init codex rules end -->"
+
 ensure_dir() {
     local dir="$1"
     if [ "$DRY_RUN" = true ]; then
@@ -137,6 +140,62 @@ install_path() {
     managed_installed=$((managed_installed + 1))
 }
 
+install_global_agents() {
+    local source="$1"
+    local target="$2"
+
+    ensure_dir "$(dirname "$target")"
+
+    if [ ! -e "$target" ] || [ -L "$target" ] || is_managed_file "$target" || [ "$FORCE" = true ]; then
+        install_path "$source" "$target"
+        return 0
+    fi
+
+    if grep -q "$AGENTS_BLOCK_BEGIN" "$target"; then
+        if [ "$DRY_RUN" = true ]; then
+            echo "[DRY RUN] Would update managed Codex rules block in: $target"
+            managed_installed=$((managed_installed + 1))
+            return 0
+        fi
+
+        local tmp
+        tmp="$(mktemp)"
+        awk -v begin="$AGENTS_BLOCK_BEGIN" -v end="$AGENTS_BLOCK_END" -v source="$source" '
+            $0 == begin {
+                print begin
+                while ((getline line < source) > 0) print line
+                close(source)
+                print end
+                skipping = 1
+                next
+            }
+            $0 == end {
+                skipping = 0
+                next
+            }
+            !skipping { print }
+        ' "$target" > "$tmp"
+        mv "$tmp" "$target"
+        echo "  ~ Updated managed Codex rules block: $target"
+        managed_installed=$((managed_installed + 1))
+        return 0
+    fi
+
+    if [ "$DRY_RUN" = true ]; then
+        echo "[DRY RUN] Would append managed Codex rules block to user-authored file: $target"
+        managed_installed=$((managed_installed + 1))
+        return 0
+    fi
+
+    {
+        printf "\n%s\n" "$AGENTS_BLOCK_BEGIN"
+        cat "$source"
+        printf "%s\n" "$AGENTS_BLOCK_END"
+    } >> "$target"
+    echo "  + Appended managed Codex rules block: $target"
+    managed_installed=$((managed_installed + 1))
+}
+
 remove_path_if_managed() {
     local target="$1"
     local expected_prefix="$2"
@@ -210,7 +269,7 @@ done < <(find "$DIST_DIR/skills" -mindepth 2 -maxdepth 2 -type f -name 'SKILL.md
 if [ -f "$DIST_DIR/AGENTS.md" ]; then
     echo ""
     echo "Global instructions..."
-    install_path "$DIST_DIR/AGENTS.md" "$TARGET_DIR/AGENTS.md"
+    install_global_agents "$DIST_DIR/AGENTS.md" "$TARGET_DIR/AGENTS.md"
 fi
 
 if [ -d "$DIST_DIR/scripts" ] && find "$DIST_DIR/scripts" -maxdepth 1 -type f | grep -q .; then

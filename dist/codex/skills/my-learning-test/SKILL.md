@@ -143,3 +143,4 @@ If that script is absent, fall back to `git` for branch/hash and the system date
 - Read-only investigation of existing code → ``my-research``
 
 **Last Updated**: 2026-07-06
+

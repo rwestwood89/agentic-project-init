@@ -85,6 +85,11 @@ contains "$ORCH" '~/.codex/scripts/orchestrate-stage-codex.sh'
 contains "$ORCH" '\$my-pipeline'
 contains "$ORCH" '\$my-spike'
 contains "$ORCH" '\$my-learning-test'
+contains "$ORCH" 'take ownership of delivering high-quality implemented work'
+contains "$ORCH" 'You are the quality owner for the run'
+contains "$ORCH" 'Invoke a stage only when its output is likely to change the implementation'
+contains "$ORCH" 'A persisted `Revise` verdict is historical evidence'
+contains "$ORCH" 'Rerun `spec_review` or `design_review` when the fix changes requirements'
 does_not_contain "$ORCH" '~/.claude/scripts/orchestrate-stage.sh'
 does_not_contain "$ORCH" 'claude -p'
 does_not_contain "$ORCH" '/_my_'
@@ -92,6 +97,8 @@ pass "Codex orchestrator replacement"
 
 contains "$AGENTS" '\$my-pipeline'
 contains "$AGENTS" '$HOME/.agents/skills/my-pipeline/SKILL.md'
+contains "$AGENTS" 'Stages are quality tools, not mandatory ceremony'
+contains "$AGENTS" 'record the verification'
 does_not_contain "$AGENTS" '~/.claude/commands/_my_pipeline.md'
 does_not_contain "$AGENTS" '/_my_'
 does_not_contain "$AGENTS" 'auto-memory'
@@ -100,7 +107,22 @@ pass "Codex AGENTS guidance"
 setup_out="$(bash "$ROOT/scripts/setup-codex.sh" --dry-run)"
 echo "$setup_out" | grep -q '.codex/scripts' || fail "setup dry-run did not mention .codex/scripts"
 echo "$setup_out" | grep -q 'orchestrate-stage-codex.sh' || fail "setup dry-run did not include helper script"
-pass "installer dry-run includes scripts"
+echo "$setup_out" | grep -q 'Global instructions' || fail "setup dry-run did not mention global instructions"
+
+fresh_home="$tmpdir/home"
+mkdir -p "$fresh_home"
+setup_out="$(HOME="$fresh_home" bash "$ROOT/scripts/setup-codex.sh" --dry-run)"
+echo "$setup_out" | grep -q '.codex/AGENTS.md' || fail "fresh HOME dry-run did not install user-level AGENTS.md"
+echo "$setup_out" | grep -q '.agents/skills/my-orchestrate/SKILL.md' || fail "fresh HOME dry-run did not install user-level skills"
+
+custom_home="$tmpdir/custom-home"
+mkdir -p "$custom_home/.codex"
+printf '# Personal Codex instructions\n\nKeep this line.\n' > "$custom_home/.codex/AGENTS.md"
+HOME="$custom_home" bash "$ROOT/scripts/setup-codex.sh" --copy > "$tmpdir/setup-custom.log"
+grep -q 'Keep this line.' "$custom_home/.codex/AGENTS.md" || fail "installer did not preserve user-authored AGENTS.md content"
+grep -q 'agentic-project-init codex rules begin' "$custom_home/.codex/AGENTS.md" || fail "installer did not append managed AGENTS.md block"
+grep -q 'Stages are quality tools, not mandatory ceremony' "$custom_home/.codex/AGENTS.md" || fail "managed AGENTS.md block missing pipeline rule"
+pass "installer dry-run includes scripts and user-level rules"
 
 echo ""
 echo -e "${GREEN}Codex orchestrator pack checks passed.${NC}"
