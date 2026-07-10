@@ -1,12 +1,14 @@
 {
-  "generated_at": "2026-07-10T18:17:41Z",
-  "source_revision": "b79c40c",
+  "generated_at": "2026-07-10T20:01:08Z",
+  "source_revision": "164c899",
   "source_root": "/home/rwestwood/agentic-project-init",
   "included": {
-    "command_skills": ["my-audit", "my-close", "my-concept", "my-concept-design", "my-design", "my-design-review", "my-epic-plan", "my-example-command", "my-git-manage", "my-handoff", "my-implement", "my-orchestrate", "my-pipeline", "my-plan", "my-pre-pr", "my-product-design", "my-project-find", "my-quick-edit", "my-research", "my-spec", "my-spec-review", "my-status", "my-wrap-up"],
+    "command_skills": ["my-audit", "my-close", "my-concept", "my-concept-design", "my-design", "my-design-review", "my-epic-plan", "my-example-command", "my-git-manage", "my-handoff", "my-implement", "my-learning-test", "my-orchestrate", "my-pipeline", "my-plan", "my-pre-pr", "my-product-design", "my-project-find", "my-quick-edit", "my-research", "my-spec", "my-spec-review", "my-spike", "my-status", "my-wrap-up"],
     "skills": ["example-skill"],
     "agents": ["example-agent"],
-    "hooks": []
+    "hooks": [],
+    "scripts": ["orchestrate-preamble-codex.md", "orchestrate-stage-codex.sh"],
+    "command_skill_replacements": ["my-orchestrate"]
   },
   "excluded": {
     "command_skills": ["my-capture", "my-memorize", "my-recall", "my-review-compact"],

@@ -83,8 +83,15 @@ finished (ends with `ARTIFACT: <path>`) or is asking you something. Keep the `se
   - **Premise surprise** — genuine evidence against a premise the plan rests on. Invoke the
     surfacing duty (`claude-pack/rules/capture-fidelity.md`): surface it, park the dependent
     conclusions, and don't resolve it silently in either direction.
+- **De-risk before building on a shaky bet.** When a stage surfaces an unverified assumption about
+  how something behaves — an unfamiliar library, an opaque data format, an ambitious mechanism —
+  and neither the concept nor your judgment can settle it, insert a de-risking stage rather than
+  planning on top of it. `orchestrate-stage.sh run spike` confirms a known assumption with
+  throwaway code; `run learning_test` maps an unfamiliar surface with kept tests. Feed the finding
+  into the stage that needed it, then continue. This is a judgment call, not a required step —
+  reach for it when the cost of a wrong assumption surfacing late is high.
 
 **Related:** pipeline reference `/_my_pipeline`. Input from `/_my_concept`, `/_my_concept_design`,
 `/_my_research`. Mechanism: `~/.claude/scripts/orchestrate-stage.sh`.
 
-**Last Updated:** 2026-07-02
+**Last Updated:** 2026-07-06

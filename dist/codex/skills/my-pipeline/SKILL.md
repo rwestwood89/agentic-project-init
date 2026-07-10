@@ -29,11 +29,16 @@ How to read it:
     each item then runs the pipeline from `spec` onward, in dependency order.
   - A single, clear item skips shaping and starts at `spec`.
 - **Reviews pair with the artifact they check:** `spec_review` after `spec`, `design_review` after
-  `design`. Feed the must-fix points back into the artifact; don't chase a reviewer indefinitely.
+  `design` — each in a **fresh session**, never the session that authored the artifact. Feed the
+  must-fix points back into the artifact; don't chase a reviewer indefinitely.
 - **`[product_design]` is optional** — run it between `spec` and `design` only when the item has a
   consumer-facing surface (UX, an API, an interface) whose experience should be settled first.
 - **``my-quick-edit`` is the escape hatch** — a small, scoped, implementation-ready change skips the
   pipeline entirely.
+- **De-risking is available at any stage, not just shaping.** When a stage rests on an unverified
+  bet about how something behaves, ``my-spike`` and ``my-learning-test`` write code to find out.
+  They're optional tools, not pipeline stages — reach for them when uncertainty is high, then feed
+  the finding back into the stage that needed it.
 - The tail — `audit` → `pre_pr` → `close` — certifies the work, ships the PR, and archives the item.
 
 ## Guide — when and how to use each stage
@@ -46,6 +51,14 @@ Shaping (optional, for fuzzy ideas):
   to define an idea before specifying it. See `_my_concept.md`.
 - **``my-concept-design``** — a critiqueable architecture/responsibilities sketch. Use when a design
   area needs a conceptual pass before detailed design. See `_my_concept_design.md`.
+
+De-risking (optional, any stage — write code to learn):
+
+- **``my-spike``** — de-risk a *known* assumption with a throwaway probe; output is a findings doc,
+  the script is scratch. Use when you have a clear goal and one thing to confirm. See `_my_spike.md`.
+- **``my-learning-test``** — *discover* how an unfamiliar surface behaves by writing real, kept
+  tests; findings doc plus tests in the repo's own test suite. Use when the goal is fuzzy and
+  you're mapping a surface. See `_my_learning_test.md`.
 
 Scoping an epic:
 
@@ -78,5 +91,5 @@ The bare shape line above (marked `pipeline-shape`) is duplicated in `claude-pac
 for always-on awareness. `scripts/test_pipeline_sync.sh` asserts the two stay identical. Per-stage
 detail lives in each command's own doc, linked above — this guide never restates it.
 
-**Last Updated:** 2026-07-02
+**Last Updated:** 2026-07-06
 
