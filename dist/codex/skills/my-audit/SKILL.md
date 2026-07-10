@@ -109,11 +109,15 @@ Write `.project/active/{item}/audit.md`:
 ## Certification
 
 [List what was checked and what was marked. If partial, explain what's left open.]
+
+**Not checked:** [Required. What this pass did not cover — areas, layers, or claims left
+unverified. A certification with unstated limits reads as a blank check.]
 ```
 
 ### 4. Update tracking artifacts
 
-Only mark what you verified. Partial certification is valid.
+Only mark what you verified. Partial certification is valid. State scope honestly — the
+**Not checked:** line is required, naming what you did not verify, not only what passed.
 
 - **Plan:** mark `- [ ]` → `- [x]` for phases verified as complete.
 - **Spec:** mark success criteria `- [ ]` → `- [x]` for criteria verified as met.

@@ -66,6 +66,7 @@ Does the design meet the spec?
 - Are acceptance criteria addressable by the proposed design?
 - Are edge cases from the spec accounted for?
 - Does the design serve the business goals stated in the spec?
+- **Capture-fidelity structure** (see `claude-pack/rules/capture-fidelity.md`): did the design carry the spec's provenance faithfully? Flag a challengeable spec item (`[INFERRED]`/`[INHERITED]`) that the design silently treats as a fixed constraint, and an owner-given referent from the spec that the design dropped or hardened into a form the owner never asked for.
 
 #### Dimension 2: Pattern Consistency
 

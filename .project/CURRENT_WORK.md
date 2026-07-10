@@ -6,6 +6,18 @@
 
 ## Active Work
 
+### capture-fidelity — provenance, compression, and correction laws for the pipeline
+- From forensics on the echo-workspace band-study failure: one always-loaded rule (provenance grading, compression protection, correction discipline, surfacing duty) + minimal touches to concept/spec/reviews/orchestrate/audit/handoff.
+- **All 5 phases implemented on branch `capture-fidelity`.** Rule `claude-pack/rules/capture-fidelity.md` (40 lines) + 8 command touches; installed globally + Codex rebuilt. Phase-2 gate passed 4/4 (through real `spec_review`, 0 FPs) after refitting plant P3.
+- **Audited: Certify (2026-07-10, `audit.md`).** Two minors to fix at pre-PR: stale tag enumeration at `_my_spec_review.md:39`; nothing committed on the branch yet. **Next: `/_my_pre_pr` + PR.**
+- Key calls during implement: P3 fixture was mis-specified for a concept hop (first-hop compression is owner-checked, not reviewer-checked — `design.md:71`), refit to a "softened referent" plant; audit + handoff deliberately don't reference the rule (their behaviors aren't among the four laws); rule content ships to Codex via `AGENTS.md`, not a separate file.
+- Artifacts: `.project/active/capture-fidelity/{spec,spec-review,design,design-review,plan}.md` + `fixture-{planted-concept,expected-findings}.md`
+
+### capture-fidelity-refinements — second-layer fixes from the first pipeline run under the new laws
+- Origination-vs-ratification provenance, fresh-session reviews made explicit, incorporation mapping, minted-provenance approval presentations, declared template adaptation, durable orchestrate briefs.
+- Spec drafted (not yet reviewed). Sequenced after `capture-fidelity` merges.
+- Spec: `.project/active/capture-fidelity-refinements/spec.md`
+
 ### workflow-orchestrator — autonomous pipeline orchestrator command
 - A high-judgment agent (Fable) takes a concept/outcomes doc and drives the v2 pipeline end to end via opus subagents, fully autonomous. Claude-only.
 - **Phases 1–3 done. Phase 4 (dogfood) next.** Phase 1 spike proved the mechanism (GO). Phase 2 built the helper `orchestrate-stage.sh` + preamble (smoke test passes). Phase 3 wrote the command `_my_orchestrate.md` (self-reviewed).

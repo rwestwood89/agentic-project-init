@@ -13,7 +13,7 @@ subagent, and you leave a commit trail the human reads afterward.
 **Input:** A concept/outcomes doc (path) or inline outcomes.
 **Output:** Pipeline artifacts and code in `.project/`, plus a commit per decision.
 
-Run from a `fable` session. Claude-only. No user checkpoints — you're handed an objective and run to the end.
+Run from a `fable` session. Claude-only. One checkpoint at launch (Align, in step 1); after that, you run to the end.
 
 ## What matters most
 
@@ -47,13 +47,25 @@ finished (ends with `ARTIFACT: <path>`) or is asking you something. Keep the `se
 
 ## Running the pipeline
 
-1. **Orient.** Read the concept. Decide where to start, and whether it's one item or an epic.
+1. **Orient, then Align.** Read the concept and decide where to start and whether it's one
+   item or an epic. Then — the one checkpoint — send the owner a short Align message and wait
+   for the reply (they just invoked the run, so they are present). Cover:
+   - the meaning of the work as you read it ("do you literally want X, or are you solving for
+     Y?"), so you don't optimize the wrong thing;
+   - the **reserved gates** — the decisions the owner wants to make themselves, not have you
+     decide and record;
+   - any provenance gaps and cross-document conflicts you spotted while orienting;
+   - any `[HARD]` requirement that smells like an inherited assumption, not a real
+     constraint — challenge it.
+   Record the **reserved gates**; the tier rule in "How to work" consumes them.
 2. **Follow ``my-pipeline``** — the canonical pipeline: the stages, how they fit, where reviews sit,
    and the epic-vs-single-item branch. Run its stages through the helper. You're the orchestrator, so
    deviate when the work warrants.
 3. **For each stage, the orchestration overlay:**
    - Start it with rich context — the work item plus the relevant intent from the concept — so it
-     isn't guessing at what the concept already answers.
+     isn't guessing at what the concept already answers. Mark the provenance of any settled item
+     you pass down (owner-grade vs your own inference), so the stage doesn't read your
+     operationalization as owner intent (`claude-pack/rules/capture-fidelity.md`).
    - If it asks you something, answer from the concept and your judgment, then resume. What the
      concept can't settle, tell the stage to decide and record, so it lands in the artifact.
    - Where the pipeline pairs a stage with a review, run the review, feed the must-fix points back,
@@ -67,8 +79,14 @@ finished (ends with `ARTIFACT: <path>`) or is asking you something. Keep the `se
 
 - Keep your context light. Work through the subagents; their `result` is your main signal. Read an
   artifact or the code directly when you need the detail to make a call.
-- If you truly can't decide something, make the most defensible call, record it loudly, and keep
-  going. Don't stop and wait.
+- Mid-run, sort each decision into one of three tiers:
+  - **Execution detail** — decide it, record it loudly, keep going. Don't stop and wait.
+  - **Reserved gate** — a decision the owner reserved at Align. Don't decide it yourself: park
+    that branch, keep non-dependent work moving, and hard-halt only when everything remaining
+    depends on the answer.
+  - **Premise surprise** — genuine evidence against a premise the plan rests on. Invoke the
+    surfacing duty (`claude-pack/rules/capture-fidelity.md`): surface it, park the dependent
+    conclusions, and don't resolve it silently in either direction.
 
 **Related:** pipeline reference ``my-pipeline``. Input from ``my-concept``, ``my-concept-design``,
 ``my-research``. Mechanism: `~/.claude/scripts/orchestrate-stage.sh`.
