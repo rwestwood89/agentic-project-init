@@ -403,6 +403,7 @@ Next Step: After approval → `/_my_implement` or `/_my_plan`
 
 **Related Commands:**
 - Before design: `/_my_research` or `/_my_spec`
+- Review: `/_my_design_review` for a critical review — in a fresh session, not this one
 - After design: `/_my_implement` or `/_my_plan` for implementation
 
 **Last Updated**: 2026-07-01

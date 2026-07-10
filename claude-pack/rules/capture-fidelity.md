@@ -1,8 +1,7 @@
 # Capture Fidelity
 
-Four laws for the chat → artifact → artifact pipeline. Every hop is an agent writing
-something a later agent treats as ground truth; these laws keep the writing honest about
-where its authority came from.
+Four laws for the chat → artifact → artifact pipeline, where every hop is an agent writing
+something a later agent treats as ground truth — honest about where its authority came from.
 
 **Budget: this rule stays ≤ ~40 lines of substance.** A correction lands as a sharper
 existing law, never as a new one — the ratchet this rule exists to stop applies to it too.
@@ -24,9 +23,11 @@ item by who decided it, and preserve the grade across every hop.
 | payload (any artifact) | `[EXAMPLE]` / `[REFERENT]`, or force stated in words | force must be stated |
 | design (bets, decisions) | agent-grade by construction | n/a |
 
-**The settled rule.** Only owner-grade items may be marked settled / do-not-relitigate.
-Agent- and inherited-grade items are challengeable when evidence warrants; inherited items
-are never settled by default.
+**The settled rule.** Only owner-*originated* items — the owner said it, not merely
+approved it — may be marked settled / do-not-relitigate. An approved agent recommendation
+stays `[AGENT] (ratified by owner, date)`; challenge it by re-deriving against its recorded
+reasoning, where an `[OWNER]` item is challenged by asking the owner. Inherited items are
+never settled by default and, like agent-grade items, challengeable when evidence warrants.
 
 **Absorb mapping (concept → spec).** `[OWNER-VERBATIM]` → `[NEED]` carrying the quote or a
 path-cite to the concept; `[OWNER]` → `[NEED]`; `[AGENT]` → `[INFERRED]`; `[INHERITED: src]`

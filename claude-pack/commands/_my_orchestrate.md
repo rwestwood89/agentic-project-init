@@ -61,10 +61,13 @@ finished (ends with `ARTIFACT: <path>`) or is asking you something. Keep the `se
      operationalization as owner intent (`claude-pack/rules/capture-fidelity.md`).
    - If it asks you something, answer from the concept and your judgment, then resume. What the
      concept can't settle, tell the stage to decide and record, so it lands in the artifact.
-   - Where the pipeline pairs a stage with a review, run the review, feed the must-fix points back,
-     and don't chase a reviewer past ~2 rounds.
+   - Where the pipeline pairs a stage with a review, run the review as its own fresh stage session —
+     never inside the authoring stage's session — then feed the must-fix points back by resuming the
+     authoring session. Don't chase a reviewer past ~2 rounds.
    - Commit each stage and decision, subject leading with the decision — that trail is how the human
-     audits the run.
+     audits the run. Commit the brief you sent the stage too (e.g.
+     `.project/active/{item}/briefs/<stage>.md`): the trail must show not just what each stage
+     produced but what it was told.
 4. **Finish** where the pipeline ends for your scope (leave `close` to the human unless asked).
    Summarize what you built and the key calls you made.
 

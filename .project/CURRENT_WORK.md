@@ -15,7 +15,7 @@
 
 ### capture-fidelity-refinements — second-layer fixes from the first pipeline run under the new laws
 - Origination-vs-ratification provenance, fresh-session reviews made explicit, incorporation mapping, minted-provenance approval presentations, declared template adaptation, durable orchestrate briefs.
-- Spec drafted (not yet reviewed). Sequenced after `capture-fidelity` merges.
+- **Implemented directly on owner instruction (pipeline stages skipped) — pending owner diff review, then audit.** 7 files, +32/−10, on the `capture-fidelity` branch working tree alongside the parent item.
 - Spec: `.project/active/capture-fidelity-refinements/spec.md`
 
 ### workflow-orchestrator — autonomous pipeline orchestrator command
