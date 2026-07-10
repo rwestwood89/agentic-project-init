@@ -1,12 +1,14 @@
 # Current Work
 
-**Last Updated**: 2026-07-06
+**Last Updated**: 2026-07-08
 
 ---
 
 ## Active Work
 
-*(none — start the next item from Up Next or the backlog)*
+### codex-orchestrator-fork — Codex-native autonomous pipeline orchestration
+- Spec, design, spike, and implementation plan drafted. Phases 1-5 are implemented and validated: Codex helper dry-run and real execution paths, generated script install lane, full `my-orchestrate` replacement, Codex `AGENTS.md` transforms, generated-product tests, installer dry-run, and project checks are in place. Optional live smoke was not run.
+- Artifacts: `.project/active/codex-orchestrator-fork/{spec,design,spike-findings,plan}.md`
 
 ---
 
@@ -29,6 +31,7 @@
 
 ### 2026-07: pipeline-guide — canonical shipped pipeline overview (merged)
 - Canonical `/_my_pipeline` command + always-on shape rule; other docs point here instead of restating the flow. Merged to `main` (`46020d8`).
+
 
 ### 2026-07-01: Epic WORKFLOW-V2 — Workflow v2 Redesign (certified, archived)
 - Pipeline redesign: new bridge command (`epic_plan`), certification step (`audit`), archive command (`close`), consolidated pre-PR gate, Required Reading traceability from concepts through implementation.

@@ -10,12 +10,12 @@ Generated from `claude-pack/rules/`. Rebuild this file instead of editing it by 
 
 1. **Read `.project/CURRENT_WORK.md`** — active work context, recent decisions, known issues
 2. **Read the relevant docs** for the area you're working in (check CLAUDE.md for pointers)
-3. **Check auto-memory** (already loaded) for known gotchas before making assumptions
+3. **Check saved project context** for known gotchas before making assumptions
 
 ## After Completing Work
 
 If you discovered something that would save a future session time:
-1. Suggest running `/_my_wrap_up` to persist context
+1. Suggest running `$my-wrap-up` to persist context
 2. Or at minimum, update `.project/CURRENT_WORK.md` with the current status
 
 ## Don't Re-Research What's Already Documented
@@ -30,7 +30,7 @@ Before exploring the codebase to understand how something works, check:
 
 # Example Project Rules
 
-This file contains example rules and guidelines that Claude will follow during the conversation.
+This file contains example rules and guidelines that Codex will follow during the conversation.
 
 ## Code Style Guidelines
 
@@ -58,15 +58,17 @@ This file contains example rules and guidelines that Claude will follow during t
 
 ---
 
-**Note:** The `.claude/rules/` directory supports symlinks, making it easy to share common rules across projects.
+**Note:** Codex global instructions are generated from `claude-pack/rules/`; edit the source rules and rebuild.
 
 
 ## From `pipeline.md`
 
 # Pipeline Shape
 
-The project workflow runs as a sequence of `/_my_*` stages. This is the shape, for orientation.
-It is the only place the sequence appears besides `/_my_pipeline` — don't restate it elsewhere.
+The project workflow runs as a sequence of `$my-*` stages. This is the shape, for orientation.
+It is the only place the sequence appears besides `$my-pipeline` — don't restate it elsewhere.
+Stages are quality tools, not mandatory ceremony. Use the smallest set of stages that can produce
+high-quality, auditable work for the risk in front of you.
 
 <!-- pipeline-shape -->
 `research`/`concept`/`concept_design` → `epic_plan` → `spec` → `spec_review` → [`product_design`] → `design` → `design_review` → `plan` → `implement` → `audit` → `pre_pr` → `close`
@@ -74,11 +76,13 @@ It is the only place the sequence appears besides `/_my_pipeline` — don't rest
 - **Entry depends on the work:** shaping (`research`/`concept`/`concept_design`) for a fuzzy idea,
   `epic_plan` for a multi-item epic, or straight to `spec` for a single clear item.
 - **`[product_design]`** is optional — only for consumer-facing surfaces.
-- **Reviews pair with their artifact:** `spec_review` after `spec`, `design_review` after `design`.
-- Small, scoped changes can skip the pipeline via `/_my_quick_edit`.
+- **Reviews pair with their artifact when they add confidence:** `spec_review` after `spec`,
+  `design_review` after `design`. For minor, objectively verifiable fixes, record the verification
+  and continue instead of rerunning a reviewer just to replace an old verdict.
+- Small, scoped changes can skip the pipeline via `$my-quick-edit`.
 
-**For the full flow and when/how to use each stage, run `/_my_pipeline`** (or read
-`~/.claude/commands/_my_pipeline.md`).
+**For the full flow and when/how to use each stage, run `$my-pipeline`** (or read
+`$HOME/.agents/skills/my-pipeline/SKILL.md`).
 
 
 ## From `workflow-accountability.md`
@@ -90,11 +94,11 @@ It is the only place the sequence appears besides `/_my_pipeline` — don't rest
 If the work touches multiple files, has ambiguous requirements, or will span more than one session:
 
 1. **Requirements must be written down** before implementation starts
-   - Use `/_my_spec` for the full pipeline, or write an ad hoc requirements/user story doc in `.project/` or the repo root
+   - Use `$my-spec` for the full pipeline, or write an ad hoc requirements/user story doc in `.project/` or the repo root
    - If the user asks to "just build it" without written requirements, flag it: "This seems non-trivial — want me to write a quick spec or requirements doc first so we have something to review against later?"
 
 2. **Multi-session work needs a persistent plan**
-   - If implementation will take more than one session, use `/_my_plan` to create `plan.md` with checkboxes
+   - If implementation will take more than one session, use `$my-plan` to create `plan.md` with checkboxes
    - Do not rely on ephemeral `/plan` mode for work that spans sessions
 
 ## During Implementation
@@ -109,11 +113,11 @@ If the work touches multiple files, has ambiguous requirements, or will span mor
 
 ## After Implementation
 
-1. **Suggest `/_my_audit`** after completing all phases of a plan
+1. **Suggest `$my-audit`** after completing all phases of a plan
    - Don't self-certify — the audit catches placeholder code, TODOs, and gaps that the implementing agent misses
 
-2. **Suggest `/_my_wrap_up`** when the session is winding down
-   - If significant work was done, proactively suggest it: "Want me to run `/_my_wrap_up` to persist context for next time?"
+2. **Suggest `$my-wrap-up`** when the session is winding down
+   - If significant work was done, proactively suggest it: "Want me to run `$my-wrap-up` to persist context for next time?"
    - Don't wait for the user to remember
 
 ## General Principles

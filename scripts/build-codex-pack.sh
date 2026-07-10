@@ -20,6 +20,8 @@ included_agents=()
 excluded_agents=()
 included_hooks=()
 excluded_hooks=()
+included_scripts=()
+included_replacements=()
 
 contains() {
     local needle="$1"
@@ -141,6 +143,25 @@ sanitize_command_body_for_skill() {
     '
 }
 
+sanitize_rule_body_for_codex() {
+    local file="$1"
+    export COMMAND_SKILL_PREFIX
+
+    strip_frontmatter "$file" | perl -0pe '
+        s{~/.claude/commands/_my_pipeline\.md}{\$HOME/.agents/skills/my-pipeline/SKILL.md}g;
+        s{/_my_\*}{\$my-*}g;
+        s{/_my_([a-z_]+)}{
+            my $n = $1;
+            $n =~ tr/_/-/;
+            "\$" . ($ENV{COMMAND_SKILL_PREFIX} // "") . $n;
+        }ge;
+        s{\*\*Check auto-memory\*\* \(already loaded\) for known gotchas before making assumptions}{**Check saved project context** for known gotchas before making assumptions}g;
+        s{Check auto-memory \(already loaded\) for known gotchas before making assumptions}{Check saved project context for known gotchas before making assumptions}g;
+        s{This file contains example rules and guidelines that Claude will follow during the conversation\.}{This file contains example rules and guidelines that Codex will follow during the conversation.}g;
+        s{\*\*Note:\*\* The `\.claude/rules/` directory supports symlinks, making it easy to share common rules across projects\.}{**Note:** Codex global instructions are generated from `claude-pack/rules/`; edit the source rules and rebuild.}g;
+    '
+}
+
 description_for_command_skill() {
     local source_name="$1"
     local source_file="$2"
@@ -218,7 +239,7 @@ description_for_native_skill() {
 
 mkdir -p "$DIST_DIR"
 rm -rf "$DIST_DIR"
-mkdir -p "$DIST_DIR/agents" "$DIST_DIR/skills" "$DIST_DIR/hooks"
+mkdir -p "$DIST_DIR/agents" "$DIST_DIR/skills" "$DIST_DIR/hooks" "$DIST_DIR/scripts"
 
 timestamp="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 revision="$(git -C "$ROOT_DIR" rev-parse --short HEAD 2>/dev/null || echo unknown)"
@@ -239,24 +260,30 @@ while IFS= read -r file; do
     skill_dir="$DIST_DIR/skills/$skill_name"
     output_file="$skill_dir/SKILL.md"
     wrapper_file="$OVERRIDES_DIR/command-skill-prefixes/$semantic_name.md"
+    replacement_file="$OVERRIDES_DIR/command-skill-replacements/$semantic_name/SKILL.md"
     if [ ! -f "$wrapper_file" ]; then
         wrapper_file="$OVERRIDES_DIR/prompt-prefixes/$semantic_name.md"
     fi
 
     mkdir -p "$skill_dir"
-    {
-        printf -- "---\n"
-        printf "name: %s\n" "$skill_name"
-        printf "description: %s\n" "$description"
-        printf -- "---\n\n"
-        printf "Generated from \`claude-pack/commands/%s\`. This is a command-derived Codex skill. Rebuild it instead of editing it by hand.\n\n" "$base"
-        if [ -f "$wrapper_file" ]; then
-            cat "$wrapper_file"
+    if [ -f "$replacement_file" ]; then
+        cp "$replacement_file" "$output_file"
+        included_replacements+=("$skill_name")
+    else
+        {
+            printf -- "---\n"
+            printf "name: %s\n" "$skill_name"
+            printf "description: %s\n" "$description"
+            printf -- "---\n\n"
+            printf "Generated from \`claude-pack/commands/%s\`. This is a command-derived Codex skill. Rebuild it instead of editing it by hand.\n\n" "$base"
+            if [ -f "$wrapper_file" ]; then
+                cat "$wrapper_file"
+                printf "\n"
+            fi
+            sanitize_command_body_for_skill "$file"
             printf "\n"
-        fi
-        sanitize_command_body_for_skill "$file"
-        printf "\n"
-    } > "$output_file"
+        } > "$output_file"
+    fi
 
     included_command_skills+=("$skill_name")
 done < <(find "$CLAUDE_PACK/commands" -maxdepth 1 -type f -name '*.md' | sort)
@@ -325,10 +352,18 @@ done < <(find "$CLAUDE_PACK/skills" -maxdepth 1 -type f -name '*.md' | sort)
     printf "Generated from \`claude-pack/rules/\`. Rebuild this file instead of editing it by hand.\n\n"
     while IFS= read -r file; do
         printf "## From \`%s\`\n\n" "$(basename "$file")"
-        strip_frontmatter "$file"
+        sanitize_rule_body_for_codex "$file"
         printf "\n\n"
     done < <(find "$CLAUDE_PACK/rules" -maxdepth 1 -type f -name '*.md' | sort)
 } > "$DIST_DIR/AGENTS.md"
+
+if [ -d "$OVERRIDES_DIR/scripts" ]; then
+    while IFS= read -r file; do
+        base="$(basename "$file")"
+        cp -p "$file" "$DIST_DIR/scripts/$base"
+        included_scripts+=("$base")
+    done < <(find "$OVERRIDES_DIR/scripts" -maxdepth 1 -type f | sort)
+fi
 
 while IFS= read -r file; do
     base="$(basename "$file")"
@@ -385,6 +420,12 @@ fi
     printf ",\n"
     printf "    \"hooks\": "
     write_json_array included_hooks
+    printf ",\n"
+    printf "    \"scripts\": "
+    write_json_array included_scripts
+    printf ",\n"
+    printf "    \"command_skill_replacements\": "
+    write_json_array included_replacements
     printf "\n"
     printf "  },\n"
     printf "  \"excluded\": {\n"
@@ -409,3 +450,5 @@ echo "Command skills: ${#included_command_skills[@]} included, ${#excluded_comma
 echo "Native skills:  ${#included_native_skills[@]} included, ${#excluded_native_skills[@]} excluded"
 echo "Agents:         ${#included_agents[@]} included, ${#excluded_agents[@]} excluded"
 echo "Hooks:          ${#included_hooks[@]} included, ${#excluded_hooks[@]} excluded"
+echo "Scripts:        ${#included_scripts[@]} included"
+echo "Replacements:   ${#included_replacements[@]} included"
