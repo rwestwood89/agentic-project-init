@@ -1,9 +1,9 @@
 {
-  "generated_at": "2026-07-02T19:10:32Z",
-  "source_revision": "ae8866e",
+  "generated_at": "2026-07-06T19:26:11Z",
+  "source_revision": "b79c40c",
   "source_root": "/home/rwestwood/agentic-project-init",
   "included": {
-    "command_skills": ["my-audit", "my-close", "my-concept", "my-concept-design", "my-design", "my-design-review", "my-epic-plan", "my-example-command", "my-git-manage", "my-handoff", "my-implement", "my-orchestrate", "my-pipeline", "my-plan", "my-pre-pr", "my-product-design", "my-project-find", "my-quick-edit", "my-research", "my-spec", "my-spec-review", "my-status", "my-wrap-up"],
+    "command_skills": ["my-audit", "my-close", "my-concept", "my-concept-design", "my-design", "my-design-review", "my-epic-plan", "my-example-command", "my-git-manage", "my-handoff", "my-implement", "my-learning-test", "my-orchestrate", "my-pipeline", "my-plan", "my-pre-pr", "my-product-design", "my-project-find", "my-quick-edit", "my-research", "my-spec", "my-spec-review", "my-spike", "my-status", "my-wrap-up"],
     "skills": ["example-skill"],
     "agents": ["example-agent"],
     "hooks": []

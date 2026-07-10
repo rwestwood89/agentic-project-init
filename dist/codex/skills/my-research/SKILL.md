@@ -172,6 +172,7 @@ This research provides a complete answer to "{original question}".
 **Related Commands:**
 - After research → ``my-spec`` to define requirements
 - After research → ``my-design`` for technical design
+- Read-only vs write-to-learn: research analyzes *existing* code. To write code to learn how something behaves, use ``my-spike`` (confirm a known assumption with throwaway code) or ``my-learning-test`` (map an unfamiliar surface with kept tests).
 
-**Last Updated**: 2025-12-31
+**Last Updated**: 2026-07-06
 

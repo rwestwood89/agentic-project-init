@@ -1,28 +1,34 @@
 # Current Work
 
-**Last Updated**: 2026-07-01
+**Last Updated**: 2026-07-06
 
 ---
 
 ## Active Work
 
-### workflow-orchestrator — autonomous pipeline orchestrator command
-- A high-judgment agent (Fable) takes a concept/outcomes doc and drives the v2 pipeline end to end via opus subagents, fully autonomous. Claude-only.
-- **Phases 1–3 done. Phase 4 (dogfood) next.** Phase 1 spike proved the mechanism (GO). Phase 2 built the helper `orchestrate-stage.sh` + preamble (smoke test passes). Phase 3 wrote the command `_my_orchestrate.md` (self-reviewed).
-- **Open sequencing point:** the command references the installed helper path (`~/.claude/scripts/`), so the first *live* orchestrator drive needs `setup-global.sh` first — folded into Phase 4. No live drive has run yet.
-- Artifacts: `.project/active/workflow-orchestrator/{spec,design,plan,spike-findings}.md`; `claude-pack/commands/_my_orchestrate.md`; `claude-pack/scripts/orchestrate-stage.sh` + `orchestrate-preamble.md`.
-
-### pipeline-guide — canonical, shipped pipeline overview+guide
-- Spec in progress. Fixes a gap found while building the orchestrator: no current pipeline description ships to where agents run. Hybrid delivery — a short always-on rule + a richer on-demand skill in `claude-pack/`; rewire the stale `project-pack/README.md` flow to point at it.
-- Spec: `.project/active/pipeline-guide/spec.md`
-
-### spike-and-learning-test-commands — hands-on de-risking commands
-- Spec in progress. Two new `_my_*` commands (spike, learning test) for writing throwaway/probe code when "how things work" is unclear, plus wiring suggestions into concept_design / spec / design and docs.
-- Spec: `.project/active/spike-and-learning-test-commands/spec.md`
+*(none — start the next item from Up Next or the backlog)*
 
 ---
 
 ## Recently Completed
+
+### 2026-07-06: spike-and-learning-test-commands — hands-on de-risking commands (certified, archived)
+- Two new commands: `/_my_spike` (confirm a known assumption, throwaway probe + findings doc) and
+  `/_my_learning_test` (map an unfamiliar surface, findings doc + real kept tests) — write-code-to-learn
+  siblings of read-only `/_my_research`, sharing one discipline (reproducible, living doc,
+  summary-on-top, close the loop).
+- Soft de-risking suggestions wired into `concept_design`/`spec`/`design`/`epic_plan`/`research`;
+  orchestration awareness in `_my_orchestrate`/`_my_pipeline`/`orchestrate-stage.sh`
+  (`bypassPermissions` for headless runs). Codex-exposed; documented in README + CLAUDE.md.
+- Audit verdict Certify (all 9 spec criteria). Archived to
+  `.project/completed/20260706_spike-and-learning-test-commands/`.
+
+### 2026-07: workflow-orchestrator — autonomous pipeline orchestrator (merged, PR #25)
+- High-judgment agent (Fable) drives the v2 pipeline end to end via opus subagents, fully autonomous, Claude-only.
+- Helper `orchestrate-stage.sh` + uniform preamble; command `_my_orchestrate.md`. Merged to `main`.
+
+### 2026-07: pipeline-guide — canonical shipped pipeline overview (merged)
+- Canonical `/_my_pipeline` command + always-on shape rule; other docs point here instead of restating the flow. Merged to `main` (`46020d8`).
 
 ### 2026-07-01: Epic WORKFLOW-V2 — Workflow v2 Redesign (certified, archived)
 - Pipeline redesign: new bridge command (`epic_plan`), certification step (`audit`), archive command (`close`), consolidated pre-PR gate, Required Reading traceability from concepts through implementation.

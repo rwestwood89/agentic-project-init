@@ -58,9 +58,10 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-# Stages that run project commands (tests, lint, gh) need broader permissions by default.
+# Stages that run project commands (tests, lint, gh) or execute probe code need broader
+# permissions by default. spike/learning_test write and run throwaway or real test code.
 if [ "$MODE" = "run" ] && [ "$PERM_SET" = "0" ]; then
-  case "$STAGE" in implement|pre_pr) PERM="bypassPermissions" ;; esac
+  case "$STAGE" in implement|pre_pr|spike|learning_test) PERM="bypassPermissions" ;; esac
 fi
 
 # The prompt body (stage args, or the resume message) comes from stdin.

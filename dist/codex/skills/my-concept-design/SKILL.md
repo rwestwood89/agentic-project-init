@@ -331,7 +331,9 @@ Only enter when the user tells you to.
    - [What the next stage should refine without revisiting the core concept]
 
    **First risk to de-risk:**
-   - [What should be validated early in the next stage]
+   - [What should be validated early in the next stage. If it's a behavioral unknown, name the
+     technique: ``my-spike`` to confirm a specific assumption with throwaway code, or
+     ``my-learning-test`` to map an unfamiliar surface with kept tests.]
 
    ---
 
@@ -502,5 +504,5 @@ Use this checklist during self-review. Every item must pass before presenting to
 - For scope/outcomes: ``my-concept`` for problem statement and success criteria
 - After design concept: ``my-spec`` for detailed work item requirements
 
-**Last Updated**: 2026-04-18 — added two-registers discipline (conceptual upper half, code-level lower half) after Problem/Goals leaked identifiers.
+**Last Updated**: 2026-07-06 — added a soft de-risk suggestion (spike / learning test) at the "First risk to de-risk" handoff bullet.
 

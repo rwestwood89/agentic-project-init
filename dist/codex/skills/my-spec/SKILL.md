@@ -53,7 +53,7 @@ This replaces any fixed "questions" section. Questioning is a method, not a slot
 
 **Deferring files, it doesn't drop.** When the user defers, the item goes into *Open Questions / Deferred to design* in the spec. Deferral is lossless.
 
-**Offer research, don't guess.** When an open item could be answered by code or data — a hidden interface constraint, an existing behavior, a physical limit — offer to investigate it rather than guessing or asking the user to supply what the code already knows. Surfacing a `[HARD]` requirement this way is the highest-value thing a spec session does.
+**Offer research, don't guess.** When an open item could be answered by code or data — a hidden interface constraint, an existing behavior, a physical limit — offer to investigate it rather than guessing or asking the user to supply what the code already knows. Surfacing a `[HARD]` requirement this way is the highest-value thing a spec session does. When the unknown is *behavioral* — how a library, tool, or data format actually acts — reading code may not settle it; offer to write code to find out: a ``my-spike`` to confirm a specific assumption with throwaway code, or a ``my-learning-test`` to map an unfamiliar surface with kept tests. Still an offer, never a gate.
 
 A light "here's the problem as I understand it" reflection before or during the loop is good for confirming direction. Keep it short; it is an alignment check, not a template.
 
@@ -156,5 +156,5 @@ Then present the spec, take feedback, and iterate.
 - After spec: ``my-design`` for technical design
 - Review: ``my-spec-review`` for an adversarial audit before design
 
-**Last Updated**: 2026-07-01
+**Last Updated**: 2026-07-06
 
