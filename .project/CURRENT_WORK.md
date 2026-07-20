@@ -6,6 +6,9 @@
 
 ## Active Work
 
+### decision-records — `.project/adr/` append-only decision log + pipeline touch points
+- From the constraint-execution post-mortem (2026-07-19): durable, high-density record of load-bearing decisions; read at concept-design/design, written at design acceptance and close. Spec in progress.
+
 ### capture-fidelity — provenance, compression, and correction laws for the pipeline
 - From forensics on the echo-workspace band-study failure: one always-loaded rule (provenance grading, compression protection, correction discipline, surfacing duty) + minimal touches to concept/spec/reviews/orchestrate/audit/handoff.
 - **All 5 phases implemented on branch `capture-fidelity`.** Rule `claude-pack/rules/capture-fidelity.md` (40 lines) + 8 command touches; installed globally + Codex rebuilt. Phase-2 gate passed 4/4 (through real `spec_review`, 0 FPs) after refitting plant P3.
