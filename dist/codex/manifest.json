@@ -1,9 +1,9 @@
 {
-  "generated_at": "2026-07-10T20:01:08Z",
-  "source_revision": "164c899",
-  "source_root": "/home/rwestwood/agentic-project-init",
+  "generated_at": "2026-07-20T00:46:12Z",
+  "source_revision": "4189989",
+  "source_root": "/home/reid/agentic-project-init",
   "included": {
-    "command_skills": ["my-audit", "my-close", "my-concept", "my-concept-design", "my-design", "my-design-review", "my-epic-plan", "my-example-command", "my-git-manage", "my-handoff", "my-implement", "my-learning-test", "my-orchestrate", "my-pipeline", "my-plan", "my-pre-pr", "my-product-design", "my-project-find", "my-quick-edit", "my-research", "my-spec", "my-spec-review", "my-spike", "my-status", "my-wrap-up"],
+    "command_skills": ["my-audit", "my-close", "my-concept-design", "my-concept", "my-design", "my-design-review", "my-epic-plan", "my-example-command", "my-git-manage", "my-handoff", "my-implement", "my-learning-test", "my-orchestrate", "my-pipeline", "my-plan", "my-pre-pr", "my-product-design", "my-project-find", "my-quick-edit", "my-research", "my-spec", "my-spec-review", "my-spike", "my-status", "my-wrap-up"],
     "skills": ["example-skill"],
     "agents": ["example-agent"],
     "hooks": [],
