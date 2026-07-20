@@ -7,7 +7,8 @@
 ## Active Work
 
 ### decision-records — `.project/adr/` append-only decision log + pipeline touch points
-- From the constraint-execution post-mortem (2026-07-19): durable, high-density record of load-bearing decisions; read at concept-design/design, written at design acceptance and close. Spec in progress.
+- From the constraint-execution post-mortem (2026-07-19): durable, high-density record of load-bearing decisions; read at concept-design/design, written at design acceptance and close.
+- **Implemented on branch `decision-records`** (with the post-mortem's System Confidence / EPIC_GUIDE slicing changes): `adr.sh` + convention README in project-pack, installer seeding, touch points in `_my_concept_design`/`_my_design`/`_my_close`, `test_adr.sh` 25/25 green, dogfood entries 0001–0002 filed here. Next: audit, then PR.
 
 ### capture-fidelity — provenance, compression, and correction laws for the pipeline
 - From forensics on the echo-workspace band-study failure: one always-loaded rule (provenance grading, compression protection, correction discipline, surfacing duty) + minimal touches to concept/spec/reviews/orchestrate/audit/handoff.

@@ -120,7 +120,12 @@ A design concept that isn't grounded in the actual codebase is useless. You cann
    - What patterns exist today
    - What's broken or missing
    - How components interact
-   
+   - **Prior decisions**: sweep the repo's official documentation (wherever its norms put
+     it — docs/, ADRs, README; discover, don't assume) AND `.project/adr/INDEX.md`. Pull
+     the full text of decision entries relevant to the design area. An absent or empty
+     `.project/adr/` reads as "no prior decisions" — never an error. These feed the
+     Prior Art section of the output.
+
    **You MUST complete this exploration before moving to Stage 2.**
    **You MUST report your findings to the user before proceeding.**
    
@@ -269,6 +274,17 @@ Only enter when the user tells you to.
    If the design involves data flow, state transitions, or component interactions that are easier to see than read, include a simple ASCII or Mermaid diagram here.
 
    Keep it minimal — if it needs a legend longer than the diagram, use prose instead.
+
+   ---
+
+   ## Prior Art
+
+   [Which existing decision records this design builds on or proposes to supersede. Cite
+   entries by id from `.project/adr/INDEX.md`. If nothing is relevant, say so explicitly
+   and falsifiably: "None relevant — index checked (N entries)." A design that would
+   contradict an active entry must surface the conflict (see
+   `claude-pack/rules/capture-fidelity.md`) — supersede it openly at acceptance or change
+   the design, never resolve it silently.]
 
    ---
 
@@ -432,6 +448,14 @@ After writing or patching the document:
 
 - Share for approval
 - Iterate on feedback
+- **After approval — file decision records.** For each settled decision that passes the
+  density bar in `.project/adr/README.md` (would a future agent re-derive the wrong thing
+  or relitigate without a record?): run `.project/scripts/adr.sh new <slug>`, fill in the
+  body, and set the provenance grade from how the decision was actually made. Supersede
+  any entries the Prior Art section marked (`adr.sh supersede <old> <new>`). Zero entries
+  is the common case. File only decisions this document settled — downstream artifacts
+  cite entries, never re-file them. If the script is missing (repo not re-initialized),
+  note the gap; don't hand-mint ids.
 
 ## Guidelines
 
@@ -485,6 +509,7 @@ Use this checklist during self-review. Every item must pass before presenting to
 - [ ] **Invariants match reality.** Each invariant reflects how the code actually behaves, not how you wish it behaved.
 - [ ] **Scenarios are real code paths.** "How It Works" describes actual execution flows, not hypotheticals.
 - [ ] **No fantasy architectures.** The design extends or improves existing patterns, not replaces them with imagined ones.
+- [ ] **Prior art is consulted.** The Prior Art section cites the decision entries built on or superseded, or states "none relevant" with the index entry count — a falsifiable claim, not a shrug.
 
 ### Decision Clarity
 - [ ] **Key decisions are explicit.** A reader finishes knowing what bets we're making.
@@ -535,5 +560,5 @@ Use this checklist during self-review. Every item must pass before presenting to
 - For scope/outcomes: ``my-concept`` for problem statement and success criteria
 - After design concept: ``my-spec`` for detailed work item requirements
 
-**Last Updated**: 2026-07-19 — added System Confidence section, boundary-invariant guidance, and Proof obligations handoff (constraint-execution post-mortem).
+**Last Updated**: 2026-07-19 — added System Confidence section, boundary-invariant guidance, Proof obligations handoff, and decision-record touch points (prior-decision sweep, Prior Art section, acceptance write-back) from the constraint-execution post-mortem.
 

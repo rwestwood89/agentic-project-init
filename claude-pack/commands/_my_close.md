@@ -6,7 +6,7 @@
 
 ## Overview
 
-You are an archive utility. Your job is to move completed work out of `active/` and `backlog/`, update the project's tracking files, and record what shipped. You do not evaluate or certify — that is `/_my_audit`. You archive and update the books.
+You are an archive utility. Your job is to move completed work out of `active/` and `backlog/`, update the project's tracking files, record what shipped, and file the decisions that emerged during implementation before their context is archived. You do not evaluate or certify — that is `/_my_audit`. You archive and update the books.
 
 When invoked:
 - If `$ARGUMENTS` names an item or epic, resolve the scope and start.
@@ -26,6 +26,7 @@ Determine whether the argument is a work item or an epic:
 1. Read `spec.md`, `plan.md`, and `audit.md` from `active/{item}/` (skip any that don't exist).
 2. Check audit status: look for the `**Verdict:**` field in `audit.md`. Note whether it says "Certify," "Needs Work," or is absent.
 3. Find the parent epic: check the spec's Related Artifacts section for an epic reference. If not found, grep `.project/backlog/epic_*.md` for the item name. If no parent epic, note it as standalone.
+4. **Scan for emergent decisions**: read `plan.md` deviation/implementation notes and `audit.md` findings for decisions made *during* implementation — discovered constraints, deviations from the design, workarounds against another component or repo's behavior. Apply the density bar in `.project/adr/README.md` (would a future agent re-derive the wrong thing or relitigate without a record?). Most items yield none.
 
 **Epic scope:**
 1. Read the epic file. Extract child items from the Backlog Items section — use each item's `**Location**:` field to get the folder name.
@@ -38,6 +39,7 @@ Present a summary to the user. Include:
 
 - What will be archived (source → destination paths).
 - What tracking files will be updated.
+- **Decisions to record** — the candidate decision-record entries from the emergent-decision scan, or "none found." For a workaround against another repo's behavior, note the placement: the ruling entry files in the repo that must uphold it, plus a local pointer entry (see `.project/adr/README.md`); if that repo is unreachable, file the pointer and surface the gap.
 - **Certification warnings** — if any item has no audit or a "Needs Work" verdict, flag it visibly. Example: `⚠️ {item} has no audit certification.`
 - For epic scope: a list of child items showing which will be archived and which are already in `completed/`.
 
@@ -51,13 +53,20 @@ After confirmation, execute in this order:
 
 Before moving anything, read the data you need for the CHANGELOG entry from the item's artifacts (spec Problem section, spec Created date, list of artifacts present). Once `git mv` runs, the source paths are gone.
 
-### 4b. Archive
+### 4b. File decision records
+
+For each approved candidate from the confirm step: `.project/scripts/adr.sh new <slug>`,
+fill in the body, set provenance and seams. Do this **before** archiving, while the source
+artifacts still exist at their `active/` paths. If the script is missing (repo not
+re-initialized), note the gap; don't hand-mint ids.
+
+### 4c. Archive
 
 Use `git mv` for all moves:
 - **Item scope:** `git mv .project/active/{item} .project/completed/$(date +%Y%m%d)_{item}`
 - **Epic scope:** For each active child item, `git mv` to `completed/`. Then `git mv .project/backlog/epic_{name}.md .project/completed/$(date +%Y%m%d)_epic_{name}.md`.
 
-### 4c. Update tracking files
+### 4d. Update tracking files
 
 **CURRENT_WORK.md:**
 - Remove the item (or child items) from the Active Work section.
@@ -79,7 +88,7 @@ Use `git mv` for all moves:
 **BACKLOG.md** (epic scope only):
 - Update the epic's entry: strikethrough the heading, add ✅, change status to `Complete (YYYY-MM-DD)`, add `Archived to: .project/completed/{path}`.
 
-### 4d. Report
+### 4e. Report
 
 Show the user what was done: what was archived, what files were updated, and any next steps (e.g., suggesting epic close if all items are done).
 
@@ -92,6 +101,6 @@ Do not auto-commit. Leave all changes staged.
 - After close (epic items done): `/_my_close {epic}` to archive the epic
 - Session context: `/_my_wrap_up` to persist session state
 
-**Last Updated**: 2026-07-01
+**Last Updated**: 2026-07-19 — added the emergent-decision scan and decision-record filing (W2) before archive.
 
 $ARGUMENTS

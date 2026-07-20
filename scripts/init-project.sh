@@ -186,7 +186,7 @@ copy_project_pack() {
         done < <(find "$PROJECT_PACK" -type f -print0)
 
         # Ensure required subdirectories exist
-        for dir in research reports memories active completed backlog scripts; do
+        for dir in research reports memories active completed backlog scripts adr; do
             if [ ! -d ".project/$dir" ]; then
                 if [ "$DRY_RUN" = true ]; then
                     echo -e "${BLUE}[DRY RUN] Would create: .project/$dir/${NC}"
@@ -201,7 +201,7 @@ copy_project_pack() {
             echo -e "${BLUE}[DRY RUN] Would copy project-pack/ to .project/${NC}"
         else
             cp -r "$PROJECT_PACK" .project
-            mkdir -p .project/research .project/reports .project/memories .project/scripts
+            mkdir -p .project/research .project/reports .project/memories .project/scripts .project/adr
             echo -e "${GREEN}  ✓ Created .project/${NC}"
         fi
     fi

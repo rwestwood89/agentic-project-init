@@ -1,6 +1,6 @@
 # Design: Decision Records (`.project/adr/`)
 
-**Status:** Draft
+**Status:** Approved (2026-07-19)
 **Owner:** Reid W
 **Created:** 2026-07-19 18:11
 **Branch:** main
@@ -43,8 +43,8 @@ The record is a per-repo, append-only log of decisions — not descriptions. Eac
 dated `NNNN-slug.md` file whose YAML frontmatter carries the machine-readable metadata
 (number, date, status, provenance, seams) and whose body carries the judgment content
 (decision, why, invariants established, rejected alternatives). `INDEX.md` is a generated
-artifact rebuilt from frontmatter, so it can never disagree with the entries. A ~50-line
-bash script owns everything deterministic — number allocation, skeleton creation, status
+artifact rebuilt from frontmatter, so it can never disagree with the entries. A small
+dependency-free bash script owns everything deterministic — number allocation, skeleton creation, status
 flips, index regeneration, lazy bootstrap — leaving agents only the judgment.
 
 The touch points follow one principle: **a read is enforced by an output that depends on
