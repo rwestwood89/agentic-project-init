@@ -75,6 +75,7 @@ CYCLE:
      - This is an optional artifact from `/_my_product_design` that settles experience and interaction decisions
      - Treat its decisions as settled input — flag only where a genuine technical constraint conflicts
    - Required Reading from the epic: if this item belongs to an epic, find it in the epic's Backlog Items section and read the files listed under its `**Required Reading**:` field. Treat them as **background context** — check your design decisions against the upstream shaping intent, but don't re-derive requirements (spec already did that). If a listed file doesn't exist, note it and move on. If the item has no epic or no Required Reading, skip this.
+   - Decision records: read `.project/adr/INDEX.md` if present. Read in full any entry whose seams overlap this item's area, and cite them in Research Findings. If a design decision would contradict an active entry, that is a premise conflict — surface it (see `claude-pack/rules/capture-fidelity.md`): supersede the entry openly at acceptance or change the design, never resolve it silently. An absent or empty index means "no prior decisions," not an error.
    - Related research files in `.project/research/` (if they exist)
 
 2. **Create design file** at `.project/active/{feature-name}/design.md`:
@@ -272,6 +273,13 @@ Drift between the concept and the supporting sections is the signal that structu
    - Note what existing code is being reused
    - **WAIT for approval** before suggesting next steps
 
+4. **After approval — file decision records.** For each decision *this design itself
+   settled* that passes the density bar in `.project/adr/README.md`: run
+   `.project/scripts/adr.sh new <slug>`, fill in the body, set the provenance grade.
+   Supersede entries this design was approved to replace (`adr.sh supersede <old> <new>`).
+   Zero entries is the common case; decisions settled upstream (concept-design, spec) are
+   cited, never re-filed. If the script is missing, note the gap; don't hand-mint ids.
+
 **Expected final document structure**:
 ```
 # Design: [Feature Name]
@@ -406,4 +414,4 @@ Next Step: After approval → `/_my_implement` or `/_my_plan`
 - Review: `/_my_design_review` for a critical review — in a fresh session, not this one
 - After design: `/_my_implement` or `/_my_plan` for implementation
 
-**Last Updated**: 2026-07-06
+**Last Updated**: 2026-07-19 — added decision-record touch points (INDEX.md skim at setup, acceptance write-back for design-settled decisions).

@@ -4,6 +4,8 @@
 **Input:** Brief description of the design area (via `$ARGUMENTS`)
 **Output:** `.project/concepts/{design-name}.md` (main body ≤250 lines; optional appendices excluded)
 
+> **⛔ The input document is READ-ONLY — never edit, append to, or overwrite it.** Always `Write` a NEW file. Give `{design-name}` a name distinct from any input file (append `-design` if needed) so the output can never collide with it; after writing, the input must show zero changes in `git status`.
+
 ## Overview
 
 You are a design partner helping the user develop a design concept. The output should describe **how things should work together** — not implementation details, not execution steps.
@@ -111,7 +113,12 @@ A design concept that isn't grounded in the actual codebase is useless. You cann
    - What patterns exist today
    - What's broken or missing
    - How components interact
-   
+   - **Prior decisions**: sweep the repo's official documentation (wherever its norms put
+     it — docs/, ADRs, README; discover, don't assume) AND `.project/adr/INDEX.md`. Pull
+     the full text of decision entries relevant to the design area. An absent or empty
+     `.project/adr/` reads as "no prior decisions" — never an error. These feed the
+     Prior Art section of the output.
+
    **You MUST complete this exploration before moving to Stage 2.**
    **You MUST report your findings to the user before proceeding.**
    
@@ -263,9 +270,23 @@ Only enter when the user tells you to.
 
    ---
 
+   ## Prior Art
+
+   [Which existing decision records this design builds on or proposes to supersede. Cite
+   entries by id from `.project/adr/INDEX.md`. If nothing is relevant, say so explicitly
+   and falsifiably: "None relevant — index checked (N entries)." A design that would
+   contradict an active entry must surface the conflict (see
+   `claude-pack/rules/capture-fidelity.md`) — supersede it openly at acceptance or change
+   the design, never resolve it silently.]
+
+   ---
+
    ## Required Invariants
 
-   Testable assertions that must hold for the design to work.
+   Testable assertions that must hold for the design to work. For a staged or
+   multi-component design, include boundary invariants — what each stage may assume and
+   what it must guarantee — not only rules internal to one component. Invariants grouped
+   by topic but silent at the seams are where composed systems fail.
 
    ### [Category]
 
@@ -306,6 +327,22 @@ Only enter when the user tells you to.
 
    ---
 
+   ## System Confidence
+
+   [State what must be true for a reader to believe, beyond reasonable doubt, that this
+   design works AS A SYSTEM — not merely that each component meets its own description.
+   For a simple design this is a few sentences; skip the ceremony, not the question.
+
+   For a design with stages, flows, or multiple consumers, cover:
+   - **Boundary obligations.** What each stage may assume and must guarantee at the seams.
+   - **Route agreement.** Which paths to the same result (e.g. live vs. cached vs.
+     consumer-bridged) must be equivalent, and where that equivalence is checked.
+   - **Dangerous combinations.** Which combinations of conditions are risky and have
+     never been exercised together.
+   - **Unowned proofs.** Any confidence claim that no single component's tests can
+     establish. Name each one — it must become an epic item with its own deliverable,
+     not a hope that integration testing catches it.]
+
    ## Validation Strategy
 
    How would you know if this design works?
@@ -327,6 +364,10 @@ Only enter when the user tells you to.
    - [What should be validated early in the next stage. If it's a behavioral unknown, name the
      technique: `/_my_spike` to confirm a specific assumption with throwaway code, or
      `/_my_learning_test` to map an unfamiliar surface with kept tests.]
+
+   **Proof obligations:**
+   - [The unowned proofs from System Confidence, restated as work the epic must own as
+     items. Omit this block only if System Confidence names none.]
 
    ---
 
@@ -400,6 +441,14 @@ After writing or patching the document:
 
 - Share for approval
 - Iterate on feedback
+- **After approval — file decision records.** For each settled decision that passes the
+  density bar in `.project/adr/README.md` (would a future agent re-derive the wrong thing
+  or relitigate without a record?): run `.project/scripts/adr.sh new <slug>`, fill in the
+  body, and set the provenance grade from how the decision was actually made. Supersede
+  any entries the Prior Art section marked (`adr.sh supersede <old> <new>`). Zero entries
+  is the common case. File only decisions this document settled — downstream artifacts
+  cite entries, never re-file them. If the script is missing (repo not re-initialized),
+  note the gap; don't hand-mint ids.
 
 ## Guidelines
 
@@ -409,6 +458,7 @@ After writing or patching the document:
 - Keep the focus on architecture, patterns, and responsibilities
 - Make design principles specific and non-obvious
 - Define invariants that are testable
+- Answer the System Confidence question — for staged designs, state boundary obligations and name every proof no single component owns
 - Include edge cases and failure modes
 - Stay in Stage 2 until user says to write
 - Stay within the 250-line main-body limit
@@ -452,6 +502,7 @@ Use this checklist during self-review. Every item must pass before presenting to
 - [ ] **Invariants match reality.** Each invariant reflects how the code actually behaves, not how you wish it behaved.
 - [ ] **Scenarios are real code paths.** "How It Works" describes actual execution flows, not hypotheticals.
 - [ ] **No fantasy architectures.** The design extends or improves existing patterns, not replaces them with imagined ones.
+- [ ] **Prior art is consulted.** The Prior Art section cites the decision entries built on or superseded, or states "none relevant" with the index entry count — a falsifiable claim, not a shrug.
 
 ### Decision Clarity
 - [ ] **Key decisions are explicit.** A reader finishes knowing what bets we're making.
@@ -469,6 +520,11 @@ Use this checklist during self-review. Every item must pass before presenting to
 - [ ] **Principles are specific.** Violating a principle would be recognizable in code or design.
 - [ ] **No weasel words.** Avoid "appropriately," "as needed," "generally," "should try to."
 - [ ] **Failure modes are concrete.** Each describes a specific scenario, not a category.
+
+### System Confidence
+- [ ] **The confidence question is answered.** The document states what must be true to believe the design works as a system, not just that each component meets its own description.
+- [ ] **Seams have obligations.** For staged or multi-consumer designs, invariants exist at the boundaries (assume/guarantee), and routes to the same result carry an explicit equivalence claim.
+- [ ] **Unowned proofs are named.** Every confidence claim no single component's tests can establish is listed under Proof obligations in the handoff — none is left implicit.
 
 ### Completeness
 - [ ] **Standalone document.** Understanding requires no external conversation context.
@@ -497,4 +553,4 @@ Use this checklist during self-review. Every item must pass before presenting to
 - For scope/outcomes: `/_my_concept` for problem statement and success criteria
 - After design concept: `/_my_spec` for detailed work item requirements
 
-**Last Updated**: 2026-07-06 — added a soft de-risk suggestion (spike / learning test) at the "First risk to de-risk" handoff bullet.
+**Last Updated**: 2026-07-19 — added System Confidence section, boundary-invariant guidance, Proof obligations handoff, and decision-record touch points (prior-decision sweep, Prior Art section, acceptance write-back) from the constraint-execution post-mortem.
