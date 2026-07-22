@@ -30,23 +30,24 @@ of decisions, not a maintained description of the system.
 
 ## Success Criteria
 
-- [ ] A `project-pack/` convention doc defines `.project/adr/`: the written entry template
+- [x] A `project-pack/` convention doc defines `.project/adr/`: the written entry template
       (YAML frontmatter + body fields), the append-only + status-flip lifecycle, the
       density bar, provenance grading, and the cross-seam placement rule. New projects get
-      the directory (seeded `INDEX.md` + README) from `init-project.sh`; existing projects
-      bootstrap lazily via the helper script on first write.
-- [ ] The helper script ships in `project-pack/scripts/` and is the only way numbers are
+      the directory and README from `init-project.sh`; `INDEX.md` is bootstrapped lazily by
+      the helper script on first write (per design D5 — the index is a generated artifact
+      the script owns, so it is never seeded as a static placeholder).
+- [x] The helper script ships in `project-pack/scripts/` and is the only way numbers are
       allocated and statuses flipped; `INDEX.md` is regenerated, never hand-edited.
-- [ ] `/_my_concept_design` Stage 1 sweeps both places — the repo's official documentation
+- [x] `/_my_concept_design` Stage 1 sweeps both places — the repo's official documentation
       (wherever its norms put it) and `.project/adr/INDEX.md` — via research subagents, and
       the output document carries a Prior Art note naming the entries it builds on or
       proposes to supersede (explicitly empty when none exist).
-- [ ] `/_my_design` skims `INDEX.md` so items that enter the pipeline at spec/design — never
+- [x] `/_my_design` skims `INDEX.md` so items that enter the pipeline at spec/design — never
       passing through concept-design — still hit the record.
-- [ ] Accepting a design produces entries for its settled, load-bearing decisions; closing
+- [x] Accepting a design produces entries for its settled, load-bearing decisions; closing
       an item produces entries for decisions that emerged during implementation (deviations,
       discovered constraints, consumer workarounds), filed per the placement rule.
-- [ ] All touched commands degrade gracefully when `.project/adr/` is absent or empty, and
+- [x] All touched commands degrade gracefully when `.project/adr/` is absent or empty, and
       the Codex dist pack is rebuilt.
 
 ## Known Requirements
