@@ -134,6 +134,7 @@ sanitize_command_body_for_skill() {
     export COMMAND_SKILL_PREFIX
 
     strip_frontmatter "$file" | perl -0pe '
+        s{~/\.claude/scripts/product-lens\.md}{\$HOME/.codex/scripts/product-lens.md}g;
         s{\$ARGUMENTS}{User-provided arguments are supplied when this skill is invoked.}g;
         s{/_my_([a-z_]+)}{
             my $n = $1;
@@ -363,6 +364,14 @@ if [ -d "$OVERRIDES_DIR/scripts" ]; then
         cp -p "$file" "$DIST_DIR/scripts/$base"
         included_scripts+=("$base")
     done < <(find "$OVERRIDES_DIR/scripts" -maxdepth 1 -type f | sort)
+fi
+
+# Shared product-lens spec: referenced on demand by the pipeline skills at
+# $HOME/.codex/scripts/product-lens.md (see the path rewrite in sanitize_command_body_for_skill).
+# Copied from the single source in claude-pack/scripts so the Codex layer cannot drift from it.
+if [ -f "$CLAUDE_PACK/scripts/product-lens.md" ]; then
+    cp -p "$CLAUDE_PACK/scripts/product-lens.md" "$DIST_DIR/scripts/product-lens.md"
+    included_scripts+=("product-lens.md")
 fi
 
 while IFS= read -r file; do

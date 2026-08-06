@@ -46,15 +46,18 @@ Before examining any details, step back and evaluate the design's overall approa
 1. **Read the design document** fully
 2. **Read the corresponding spec** (`.project/active/{feature-name}/spec.md`)
 3. **Explore the codebase** to understand existing patterns using `Task` tool with `subagent_type=Explore`
+4. **Run the product-lens.** Spawn a `general-purpose` subagent whose entire instruction set is `$HOME/.codex/scripts/product-lens.md` (pack source: `claude-pack/scripts/product-lens.md`). SOURCES = the repo's durable product statements (`README`, `docs/`, `.project/adr/`) plus any owner-verbatim in the concept / Required Reading; WORK = the design (especially **The Point**) and the code it touches. Derive the point independently — do not inherit the design's framing. Append its verdict block (ledger format, product-lens spec §3) to `.project/active/{feature-name}/product-lens.md`, and carry the verdict into the judgment below.
+5. **Check the two design-level smells** (product-lens spec §4): a consumer compensating for a producer or platform guarantee, and a solution that changes who owns an invariant without saying so. Either firing is a tripwire that must escalate into the judgment — it cannot sit in the rubric.
 
-Then answer these questions honestly:
+Then lead with one holistic judgment, then answer the rest honestly:
 
+- **Is this the right piece of work?** This leads the review and does not reduce to a checkbox. Draw on the product-lens findings, any fired smell, and your own gut. A lens **DON'T**/**DO** finding graded owner/`[HARD]`, or any fired structural smell, controls this answer even if every rubric dimension below is green.
 - **Is this the right approach at all?** Could the spec be satisfied with a fundamentally simpler design? Is the design solving the actual problem or a more "interesting" adjacent problem?
 - **Are the core abstractions justified?** For each new class/module/interface introduced, what would happen if you just... didn't have it? Would inline/direct code be clearer?
 - **Does the complexity match the problem?** A simple feature should have a simple design. If the design has multiple new abstractions, layers, or patterns for a straightforward requirement, that's a red flag.
 - **Would a senior engineer look at this and say "why?"** Trust your gut. If the design feels heavy, convoluted, or clever — it probably is.
 
-**If the fundamental approach is wrong, STOP HERE.** Report the high-level issues and recommend **Rework**. Do not spend time nitpicking details of a design whose foundation is flawed.
+**If the fundamental approach is wrong — or the product-lens returns an unresolved owner/`[HARD]` contradiction, or any structural smell fired — STOP HERE.** Report the high-level issues, recommend **Rework**, and record the ledger gate as BLOCKED (owner/`[HARD]`) or the fired smell as escalated. Do not spend time nitpicking details of a design whose foundation is flawed. A lower-authority or can't-find lens finding does not force Rework, but it must get a visible disposition in the ledger.
 
 Present your Stage 0 assessment to the user before continuing. If the approach is fundamentally sound, proceed to the detailed review.
 
@@ -181,9 +184,15 @@ The review is a draft until the user engages with it. As they resolve issues —
 
 ---
 
+## The Point
+
+[The full problem this work serves, carried from the design's "The Point" and the spec — stated
+legibly here, not a pointer. A reader must find the original problem at this review hop (spec SC1).]
+
 ## Fundamental Assessment
 
-[Sound / Concerns / Fail. Is the overall approach right? If Fail, recommend Rework and stop.]
+[Sound / Concerns / Fail. Is this the *right piece of work* against The Point above and the
+product-lens findings, and is the overall approach right? If Fail, recommend Rework and stop.]
 
 ---
 

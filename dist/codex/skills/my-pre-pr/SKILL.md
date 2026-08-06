@@ -41,6 +41,8 @@ Also scan changed files for:
 - Files that look like secrets (.env, credentials, API keys)
 - Large binary files that shouldn't be committed
 
+**Product-lens gate (fail closed).** For each active work item in this PR's scope that reached spec or later, a `.project/active/{item}/product-lens.md` ledger is *expected*. A **missing** expected ledger is a control failure — a skipped lens or broken install must not read as clear — so treat it as a hard stop. **Scan every block in the ledger, not just the latest**: a `BLOCK` stays in force until a later block explicitly cites that finding and records an authorized disposition (a later unrelated `CLEAR`/`DISPOSED` does not clear it). If the item ledger records a parent epic (`Epic: <id>`), **always** read that epic's live **Product-Lens** gate — not only when a finding is referenced, since an epic can raise its first `BLOCK` after the item was created. An unresolved epic `BLOCK` blocks the same as an item one. Any unresolved `BLOCK`, or a missing expected ledger, is a hard stop: do not submit. This is not a spec/design re-check (that is ``my-audit``); you are honoring a durable block another stage already set, the way you honor a failing test. Surface it and require it cleared (an owner disposition or an owner-visible ADR amendment/supersession) before Step 4.
+
 ## Step 3: Fix and Resolve
 
 **Low-risk issues** — fix directly without asking:

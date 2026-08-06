@@ -3,8 +3,8 @@ id: 0002
 title: Decision-record touch points: read at concept-design and design, write at acceptance and close
 date: 2026-07-19
 owner: Reid W
-status: active
-amended_by: []
+status: amended
+amended_by: [0003, 0004, 0005]
 superseded_by: null
 provenance: "[AGENT] (ratified by owner, 2026-07-19)"
 seams: [claude-pack/commands]

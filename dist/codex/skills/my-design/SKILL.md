@@ -93,7 +93,7 @@ CYCLE:
    - Add header (feature name, status: Draft, owner, dates, git info)
    - Add overview (1-2 sentence summary from spec)
    - Add "Related Artifacts" section linking to spec, research, epic, and Required Reading files (if any)
-   - Create empty sections: "Research Findings", "Core Concept", "Key Bets", "Key Decisions", "Architecture", "Required Invariants", "Component Overview", "Non-Goals", "Implementation Notes"
+   - Create empty sections: "The Point", "Research Findings", "Core Concept", "Key Bets", "Key Decisions", "Architecture", "Required Invariants", "Component Overview", "Non-Goals", "Implementation Notes"
 
 3. **Identify investigation areas**:
    - What existing code might be relevant?
@@ -298,6 +298,13 @@ Drift between the concept and the supporting sections is the signal that structu
 ## Related Artifacts
 [Links to spec, research, epic]
 
+## The Point
+[The product obligation this work serves — the problem, and how it ladders up to the
+bigger goal — stated in full, not reduced to a pointer. Every later stage checks against
+this, so it must stay legible here rather than living only in the spec. Grade the governing
+obligation by its source authority (capture-fidelity). This is the obligation to serve,
+carried deliberately — not a prose recap of the spec.]
+
 ## Research Findings
 [Codebase analysis, reusable patterns found, technical research]
 
@@ -373,7 +380,7 @@ Next Step: After approval → ``my-implement`` or ``my-plan``
 - **More components than the problem needs**: Simpler is always better. Ask "would I want to maintain this?"
 - **"Technically works" is not good design**: A design that works but is awkward, unintuitive, or fragile is a bad design
 - **Solving the wrong problem**: If you're drawn to a more "interesting" adjacent problem, check yourself against the spec
-- **Restating the spec or research in prose**: If a section is mostly repeated context, link to the source artifact and keep the design focused on strategy
+- **Restating the spec or research in prose**: If a section is mostly repeated context, link to the source artifact and keep the design focused on strategy. Exception: **The Point** is carried deliberately — state the product obligation the design serves in full rather than linking away, because every later stage checks against it (see capture-fidelity, "carry the problem")
 - **Mechanism dressed as a bet**: If your "bet" reads like "we use X to do Y," it's a decision, not a bet. Bets are claims about reality ("Opus can produce better cross-concept judgment than a fixed pipeline"). Decisions are mechanism choices ("we orchestrate via Task subagents rather than a Python fan-out loop"). If you can't state a clean "if false → ..." failure mode for a bullet, it's a decision.
 
 ### Critical Requirements
