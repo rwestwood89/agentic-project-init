@@ -1,16 +1,12 @@
 # Quick Edit Command
 
-**Purpose:** Implement changes and features too small to warrant the full SPEC → DESIGN → PLAN → IMPLEMENT flow
+**Purpose:** Implement changes and features too small to warrant the full pipeline (see `/_my_pipeline`)
 **Input:** Direct engagement with user
 **Output:** Code changes, optional `.project/active/{feature-name}/change.md`
 
 ## Overview
 
-For good software development process, we usually prescribe a methodical way of developing code with AI agents:
-- SPEC: generate specification of feature
-- DESIGN: identify all points of modification; consider any architectural decisions
-- PLAN: break down implementation into stages; ensure we have ways of testing and verifying code as we progress
-- IMPLEMENT: execute the plan, marking off progress and capturing any surprises
+For good software development process, we usually prescribe a methodical pipeline of staged artifacts — specification, design, phased plan, then implementation with progress tracking (`/_my_pipeline` has the canonical map).
 
 When the user invokes this command, they wish to abbreviate this process. Your goal as the expert software engineer is to expediently meet the user's interests in executing the task. Follow the workflow below closely.
 
@@ -96,7 +92,7 @@ Concisely describe changes made and impact]
 ---
 
 **Related Commands:**
-- For larger changes: `/_my_spec` → `/_my_design` → `/_my_implement`
+- For larger changes: enter the full pipeline at `/_my_spec` (run `/_my_pipeline` for the map)
 - After changes: `/_my_pre_pr` for quality checks
 
-**Last Updated**: 2025-12-31
+**Last Updated**: 2026-08-08

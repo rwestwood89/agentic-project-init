@@ -10,6 +10,15 @@ You are a pre-PR quality gate. Your job is to scope the PR, run the project's qu
 
 You do not check spec/design conformance — that is `/_my_audit`. You run the project's own tooling and catch mechanical issues.
 
+**When to run: after `/_my_close`, once per PR — not per item, phase, or session.** This is a
+branch gate, not a pipeline stage. Run it when the branch actually has something to ship:
+
+- after closing an item that is shippable on its own, or
+- once at the end of an epic, when its items ship together as one branch.
+
+By this point the items shipping in the PR have been audited and closed. If they haven't — no
+audit, or still sitting unarchived in `active/` — surface that to the user before proceeding.
+
 ## Step 1: Scope the PR
 
 1. Review git state: `git log`, `git diff`, `git status`. Understand what commits and files will be in this PR, and what branch it targets.
@@ -34,7 +43,7 @@ Also scan changed files for:
 - Files that look like secrets (.env, credentials, API keys)
 - Large binary files that shouldn't be committed
 
-**Product-lens gate (fail closed).** For each active work item in this PR's scope that reached spec or later, a `.project/active/{item}/product-lens.md` ledger is *expected*. A **missing** expected ledger is a control failure — a skipped lens or broken install must not read as clear — so treat it as a hard stop. **Scan every block in the ledger, not just the latest**: a `BLOCK` stays in force until a later block explicitly cites that finding and records an authorized disposition (a later unrelated `CLEAR`/`DISPOSED` does not clear it). If the item ledger records a parent epic (`Epic: <id>`), **always** read that epic's live **Product-Lens** gate — not only when a finding is referenced, since an epic can raise its first `BLOCK` after the item was created. An unresolved epic `BLOCK` blocks the same as an item one. Any unresolved `BLOCK`, or a missing expected ledger, is a hard stop: do not submit. This is not a spec/design re-check (that is `/_my_audit`); you are honoring a durable block another stage already set, the way you honor a failing test. Surface it and require it cleared (an owner disposition or an owner-visible ADR amendment/supersession) before Step 4.
+**Product-lens gate (fail closed).** For each work item in this PR's scope that reached spec or later, a `product-lens.md` ledger is *expected* — in `.project/active/{item}/`, or in `.project/completed/{date}_{item}/` for items already archived by `/_my_close` (the normal case, since pre-PR runs after close). A **missing** expected ledger is a control failure — a skipped lens or broken install must not read as clear — so treat it as a hard stop. **Scan every block in the ledger, not just the latest**: a `BLOCK` stays in force until a later block explicitly cites that finding and records an authorized disposition (a later unrelated `CLEAR`/`DISPOSED` does not clear it). If the item ledger records a parent epic (`Epic: <id>`), **always** read that epic's live **Product-Lens** gate — not only when a finding is referenced, since an epic can raise its first `BLOCK` after the item was created. An unresolved epic `BLOCK` blocks the same as an item one. Any unresolved `BLOCK`, or a missing expected ledger, is a hard stop: do not submit. This is not a spec/design re-check (that is `/_my_audit`); you are honoring a durable block another stage already set, the way you honor a failing test. Surface it and require it cleared (an owner disposition or an owner-visible ADR amendment/supersession) before Step 4.
 
 ## Step 3: Fix and Resolve
 
@@ -69,7 +78,7 @@ If the user declines submission, that's fine — the checks are done and the bra
 ---
 
 **Related Commands:**
-- Before pre-PR: `/_my_audit` to certify work items against spec/design
-- After pre-PR: `/_my_close` to archive completed work items
+- Before pre-PR: `/_my_audit` to certify, then `/_my_close` to archive the items shipping in this PR
+- After pre-PR: the PR merges; `/_my_wrap_up` to persist session state
 
-**Last Updated**: 2026-07-01
+**Last Updated**: 2026-08-08 — pre-PR is the branch gate and runs after close: per item when the item ships on its own, once at epic end otherwise (owner decision).

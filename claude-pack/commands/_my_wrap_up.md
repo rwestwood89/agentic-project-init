@@ -94,7 +94,7 @@ Commit the wrap-up changes to git:
 - When the user says "wrap up", "update docs", "save context", or similar
 
 **Related Commands:**
-- `/_my_capture` — save conversation transcript for later analysis
-- `/_my_memorize` — create structured memory from a transcript
+- `/_my_handoff` — write a handoff doc so a fresh agent can continue mid-task
+- `/_my_close` — archive a completed work item or epic before wrapping up
 
 $ARGUMENTS

@@ -37,8 +37,8 @@ epic
   │
   │  each backlog item lists "Required Reading"
   ▼
-spec → product-design → design → plan → implement → audit
-       (all read Required Reading from the epic)
+the item pipeline, spec onward — run /_my_pipeline for the map
+       (every stage reads Required Reading from the epic)
 ```
 
 ### Source Documents
@@ -79,7 +79,7 @@ Items with no epic, or items with no Required Reading listed, skip this. The pip
 
 **Epics** are large bodies of work that deliver significant value. They can be composed of **one or more backlog items** depending on scope and complexity.
 
-**Backlog Items** are the unit of planning and execution. Each item gets its own folder in `.project/active/` and goes through the full workflow cycle: spec → design → plan → execute.
+**Backlog Items** are the unit of planning and execution. Each item gets its own folder in `.project/active/` and runs the item pipeline — run `/_my_pipeline` for the current stage map.
 
 ---
 
@@ -123,7 +123,7 @@ A backlog item is **a task or set of tasks that should be spec'd, designed, and 
 
 **Too Small** ❌
 - Missing interdependencies that should be planned together
-- Spec → design → plan → execute workflow is overkill
+- The full item pipeline is overkill
 - Would take <3 hours total
 - Trivial enough to just execute without planning
 
@@ -154,17 +154,16 @@ make one behavior demonstrably true.
 
 ---
 
-### The Workflow Cycle
+### Planning Overhead
 
-Each backlog item goes through this cycle:
+Each backlog item runs the item pipeline (see `/_my_pipeline`). The planning stages carry real overhead per item:
 
-```
-1. spec.md     → Define what needs to be done (1-2 hours)
-2. design.md   → Design how to do it (1-3 hours)
-3. plan.md     → Break into phases (1-2 hours)
-4. execute     → Implement by phases (3-8+ hours)
-5. deliverables → Outputs and validation
-```
+| Artifact | Typical effort |
+|----------|----------------|
+| `spec.md` — define what needs to be done | 1-2 hours |
+| `design.md` — design how to do it | 1-3 hours |
+| `plan.md` — break into phases | 1-2 hours |
+| execution — implement by phases | 3-8+ hours |
 
 **Total overhead**: ~4-6 hours of planning for each item
 
@@ -214,7 +213,7 @@ For each potential backlog item, ask:
 - [ ] Is it a single task type (or tightly coupled types)?
 - [ ] Does it have clear, measurable success criteria?
 - [ ] Is it 0.5-2 days including planning overhead?
-- [ ] Would spec → design → plan add value (not trivial)?
+- [ ] Would the planning stages (spec, design, plan) add value (not trivial)?
 
 **Independence Check**:
 - [ ] Can it be spec'd and designed independently?
@@ -416,7 +415,7 @@ Before finalizing backlog items, verify:
 
 **Workflow**:
 - [ ] Planning adds value (non-trivial complexity)
-- [ ] Spec → design → plan → execute makes sense
+- [ ] Running the full item pipeline makes sense
 - [ ] Each item has meaningful phases
 
 ---

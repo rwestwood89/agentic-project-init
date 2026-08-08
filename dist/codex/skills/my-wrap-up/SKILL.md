@@ -112,8 +112,8 @@ Commit the wrap-up changes to git:
 - When the user says "wrap up", "update docs", "save context", or similar
 
 **Related Commands:**
-- ``my-capture`` — save conversation transcript for later analysis
-- ``my-memorize`` — create structured memory from a transcript
+- ``my-handoff`` — write a handoff doc so a fresh agent can continue mid-task
+- ``my-close`` — archive a completed work item or epic before wrapping up
 
 User-provided arguments are supplied when this skill is invoked.
 

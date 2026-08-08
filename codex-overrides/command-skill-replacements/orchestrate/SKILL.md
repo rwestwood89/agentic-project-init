@@ -63,7 +63,7 @@ The helper maps pipeline stages to Codex skills. For example, `spec` invokes `$m
 
 ## Running the Pipeline
 
-1. **Orient.** Read the objective. Decide where to enter the pipeline and whether this is a single item or an epic.
+1. **Orient.** Read the objective. Use the entry questions in the pipeline skill (how well is the problem understood; is there a UX to settle; how big is the impact; does it split into shippable pieces) to decide where to enter and whether this is a single item or an epic.
 2. **Read `$my-pipeline`.** Use it as the canonical map for stages, branches, and paired reviews. Apply the stage selection policy above before invoking each stage.
 3. **Start each stage with enough context.** Include the objective, relevant prior artifacts, explicit decisions already made, and the stage outcome you need.
 4. **Handle questions by resuming.** If a stage asks questions, answer from the objective and your judgment. If the objective cannot settle a question, tell the stage to choose and record the decision.

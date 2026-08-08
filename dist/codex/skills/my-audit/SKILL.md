@@ -213,7 +213,7 @@ Flag gaps where the shaping intent was lost, narrowed, or deviated from without 
 
 **Related Commands:**
 - Before audit: ``my-implement`` to complete plan phases
-- After audit: ``my-pre-pr`` for automated quality checks, then ``my-close`` to archive
+- After audit: ``my-close`` to archive; then ``my-pre-pr`` when the item is shippable on its own (or once at the end of the epic)
 
 **Last Updated**: 2026-07-01
 

@@ -94,44 +94,10 @@ Items within an epic use hierarchical numbering:
 
 ## Commands
 
-### Development Workflow
+This README does not carry a command catalog — a copy here would drift. Two live sources:
 
-| Command | Purpose |
-|---------|---------|
-| `/_my_research` | Deep codebase exploration and feasibility analysis |
-| `/_my_spec` | Feature requirements definition with business goals |
-| `/_my_design` | Technical design for code implementation |
-| `/_my_plan` | Create phased implementation plan with tests |
-| `/_my_implement` | Execute approved plan with validation |
-| `/_my_quick_edit` | Fast changes that don't need full workflow |
-
-### Review & Quality
-
-| Command | Purpose |
-|---------|---------|
-| `/_my_audit` | Certify work item or epic against plan/spec/design |
-| `/_my_pre_pr` | Run quality checks before submitting a PR |
-| `/_my_design_review` | Review a design document before implementation |
-| `/_my_spec_review` | Review a spec before design |
-
-### Project Management
-
-| Command | Purpose |
-|---------|---------|
-| `/_my_status` | Project orientation, gap analysis, next steps |
-| `/_my_close` | Archive completed work items or epics |
-| `/_my_epic_plan` | Decompose shaping output into a scoped epic |
-| `/_my_project_find` | Quick lookup of project context |
-| `/_my_git_manage` | Git workflow, worktrees, conflict resolution |
-
-### Memory & Context
-
-| Command | Purpose |
-|---------|---------|
-| `/_my_capture` | Mark conversation for later memorization |
-| `/_my_memorize` | Create structured memory from capture |
-| `/_my_recall` | Search past conversations |
-| `/_my_review_compact` | Review before compaction |
+- **`/_my_pipeline`** — the canonical stage map and when to use each stage.
+- **The toolkit README's Command Reference** (in the agentic-project-init repo) — one line per command, including shortcuts, modes, and project-management helpers.
 
 ---
 

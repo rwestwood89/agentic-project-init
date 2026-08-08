@@ -6,11 +6,15 @@ Stages are quality tools, not mandatory ceremony. Use the smallest set of stages
 high-quality, auditable work for the risk in front of you.
 
 <!-- pipeline-shape -->
-`research`/`concept`/(`concept_design` → `concept_design_review`) → `epic_plan` → `spec` → `spec_review` → [`product_design`] → `design` → `design_review` → `plan` → `implement` → `audit` → `pre_pr` → `close`
+`research`/`concept`/(`concept_design` → `concept_design_review`) → `epic_plan` → `spec` → `spec_review` → [`product_design`] → `design` → `design_review` → `plan` → `implement` → `audit` → `close` → `pre_pr`
 
-- **Entry depends on the work:** shaping (`research`/`concept`/`concept_design`) for a fuzzy idea,
-  `epic_plan` for a multi-item epic, or straight to `spec` for a single clear item.
-- **`[product_design]`** is optional — only for consumer-facing surfaces.
+- **Entry follows the question "how well do you understand the problem?"** Not well: shape it
+  (`research`/`concept`/`concept_design`); many shippable pieces: `epic_plan`; a single clear
+  item: straight to `spec`.
+- **`[product_design]`** is optional — for consumer-facing surfaces; runs off a concept
+  (shaping tier) or a spec (single item), same function either way.
+- **`pre_pr` is the branch gate, run after `close`** — when the item is shippable on its own;
+  for items that ship together, run it once at the end of the epic. Never per-phase or mid-item.
 - **Reviews pair with their artifact when they add confidence:** `concept_design_review` after
   `concept_design`, `spec_review` after `spec`, and `design_review` after `design`. For minor,
   objectively verifiable fixes, record the verification and continue instead of rerunning a

@@ -106,7 +106,8 @@ Do not auto-commit. Leave all changes staged.
 ---
 
 **Related Commands:**
-- Before close: ``my-audit`` to certify, ``my-pre-pr`` for quality checks
+- Before close: ``my-audit`` to certify
+- After close: ``my-pre-pr`` when the item is shippable on its own — otherwise once at the end of the epic
 - After close (epic items done): ``my-close` {epic}` to archive the epic
 - Session context: ``my-wrap-up`` to persist session state
 

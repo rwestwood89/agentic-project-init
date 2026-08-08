@@ -7,17 +7,13 @@ Generated from `claude-pack/commands/_my_quick_edit.md`. This is a command-deriv
 
 # Quick Edit Command
 
-**Purpose:** Implement changes and features too small to warrant the full SPEC → DESIGN → PLAN → IMPLEMENT flow
+**Purpose:** Implement changes and features too small to warrant the full pipeline (see ``my-pipeline``)
 **Input:** Direct engagement with user
 **Output:** Code changes, optional `.project/active/{feature-name}/change.md`
 
 ## Overview
 
-For good software development process, we usually prescribe a methodical way of developing code with AI agents:
-- SPEC: generate specification of feature
-- DESIGN: identify all points of modification; consider any architectural decisions
-- PLAN: break down implementation into stages; ensure we have ways of testing and verifying code as we progress
-- IMPLEMENT: execute the plan, marking off progress and capturing any surprises
+For good software development process, we usually prescribe a methodical pipeline of staged artifacts — specification, design, phased plan, then implementation with progress tracking (``my-pipeline`` has the canonical map).
 
 When the user invokes this command, they wish to abbreviate this process. Your goal as the expert software engineer is to expediently meet the user's interests in executing the task. Follow the workflow below closely.
 
@@ -103,8 +99,8 @@ Concisely describe changes made and impact]
 ---
 
 **Related Commands:**
-- For larger changes: ``my-spec`` → ``my-design`` → ``my-implement``
+- For larger changes: enter the full pipeline at ``my-spec`` (run ``my-pipeline`` for the map)
 - After changes: ``my-pre-pr`` for quality checks
 
-**Last Updated**: 2025-12-31
+**Last Updated**: 2026-08-08
 

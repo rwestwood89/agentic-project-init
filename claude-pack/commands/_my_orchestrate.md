@@ -40,8 +40,10 @@ finished (ends with `ARTIFACT: <path>`) or is asking you something. Keep the `se
 
 ## Running the pipeline
 
-1. **Orient, then Align.** Read the concept and decide where to start and whether it's one
-   item or an epic. Then — the one checkpoint — send the owner a short Align message and wait
+1. **Orient, then Align.** Read the concept and decide where to enter — use the entry
+   questions in `/_my_pipeline` (how well is the problem understood; is there a UX to settle;
+   how big is the impact; does it split into shippable pieces) to pick the starting stage and
+   whether it's one item or an epic. Then — the one checkpoint — send the owner a short Align message and wait
    for the reply (they just invoked the run, so they are present). Cover:
    - the meaning of the work as you read it ("do you literally want X, or are you solving for
      Y?"), so you don't optimize the wrong thing;
@@ -68,7 +70,8 @@ finished (ends with `ARTIFACT: <path>`) or is asking you something. Keep the `se
      audits the run. Commit the brief you sent the stage too (e.g.
      `.project/active/{item}/briefs/<stage>.md`): the trail must show not just what each stage
      produced but what it was told.
-4. **Finish** where the pipeline ends for your scope (leave `close` to the human unless asked).
+4. **Finish** where the pipeline ends for your scope (leave `close` — and the post-close
+   `pre_pr` branch gate — to the human unless asked).
    Summarize what you built and the key calls you made.
 
 ## How to work

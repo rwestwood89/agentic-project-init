@@ -99,7 +99,8 @@ Do not auto-commit. Leave all changes staged.
 ---
 
 **Related Commands:**
-- Before close: `/_my_audit` to certify, `/_my_pre_pr` for quality checks
+- Before close: `/_my_audit` to certify
+- After close: `/_my_pre_pr` when the item is shippable on its own — otherwise once at the end of the epic
 - After close (epic items done): `/_my_close {epic}` to archive the epic
 - Session context: `/_my_wrap_up` to persist session state
 

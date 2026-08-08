@@ -37,8 +37,8 @@ epic
   │
   │  each backlog item lists "Required Reading"
   ▼
-spec → product-design → design → plan → implement → audit
-       (all read Required Reading from the epic)
+the item pipeline, spec onward — run /_my_pipeline for the map
+       (every stage reads Required Reading from the epic)
 ```
 
 ### Source Documents
@@ -79,7 +79,33 @@ Items with no epic, or items with no Required Reading listed, skip this. The pip
 
 **Epics** are large bodies of work that deliver significant value. They can be composed of **one or more backlog items** depending on scope and complexity.
 
-**Backlog Items** are the unit of planning and execution. Each item gets its own folder in `.project/active/` and goes through the full workflow cycle: spec → design → plan → execute.
+**Backlog Items** are the unit of planning and execution. Each item gets its own folder in `.project/active/` and runs the item pipeline — run `/_my_pipeline` for the current stage map.
+
+---
+
+### Slicing Principles
+
+The sizing rules below say how big an item should be. These principles say where the cut
+lines belong. When they conflict with task-type cohesion, these win.
+
+1. **Every item names its proof.** An item states what will be demonstrably true when it
+   is done, and by what test or demonstration — not just what it builds. An item whose
+   completion can only be verified by reading the code is under-specified.
+
+2. **Prefer functional slices over code slices.** An item that makes one behavior true
+   end-to-end beats an item that finishes one layer. Slice by layer, repo, or component
+   only when a seam forces it — and then the interaction across that seam must be a named
+   deliverable of some item, because interactions do not get proven for free.
+
+3. **Composition is a deliverable.** If items build parts of a whole, some item proves the
+   whole. Items dedicated to proving cross-item invariants and end-to-end behavior are
+   first-class backlog items, not audit afterthoughts. Per-item certification adds up to
+   system confidence only if an item owns the composition.
+
+4. **Sample the combination space deliberately.** When behavior varies along several
+   dimensions (input shape, route, consumer, prior state), name the dimensions and say
+   which combinations the tests will actually cover. Many tests sitting in one cell of
+   that matrix are one test. If the epic bounds coverage, it says what is excluded.
 
 ---
 
@@ -97,7 +123,7 @@ A backlog item is **a task or set of tasks that should be spec'd, designed, and 
 
 **Too Small** ❌
 - Missing interdependencies that should be planned together
-- Spec → design → plan → execute workflow is overkill
+- The full item pipeline is overkill
 - Would take <3 hours total
 - Trivial enough to just execute without planning
 
@@ -122,19 +148,22 @@ Backlog items should align with task type:
 **Good**: "Complete scraper for EPL lookup" (all scraping work together)
 **Bad**: "Build scraper and process CSV" (mixing scraping + processing types)
 
+Task-type cohesion is a tie-breaker, not the first cut. A slice that ends at a provable
+behavior (Slicing Principles) outranks keeping types pure — an item may span layers to
+make one behavior demonstrably true.
+
 ---
 
-### The Workflow Cycle
+### Planning Overhead
 
-Each backlog item goes through this cycle:
+Each backlog item runs the item pipeline (see `/_my_pipeline`). The planning stages carry real overhead per item:
 
-```
-1. spec.md     → Define what needs to be done (1-2 hours)
-2. design.md   → Design how to do it (1-3 hours)
-3. plan.md     → Break into phases (1-2 hours)
-4. execute     → Implement by phases (3-8+ hours)
-5. deliverables → Outputs and validation
-```
+| Artifact | Typical effort |
+|----------|----------------|
+| `spec.md` — define what needs to be done | 1-2 hours |
+| `design.md` — design how to do it | 1-3 hours |
+| `plan.md` — break into phases | 1-2 hours |
+| execution — implement by phases | 3-8+ hours |
 
 **Total overhead**: ~4-6 hours of planning for each item
 
@@ -167,10 +196,14 @@ Before enumerating backlog items, capture the top-level logic:
 #### Step 2: Identify Natural Boundaries
 
 Look for natural separations by:
-- **Task type**: Modeling, code, implementation, execution
+- **Provable behavior**: What can be demonstrated true, end-to-end, after each item? (first cut — see Slicing Principles)
 - **Dependencies**: What must be done before what?
 - **Deliverables**: What are the distinct outputs?
+- **Task type**: Modeling, code, implementation, execution
 - **Skillsets**: What different types of work are involved?
+
+If the boundaries fall on layer or repo seams, list the cross-seam interactions and assign
+each one to an item — an interaction owned by nobody is the gap audits cannot catch.
 
 #### Step 3: Check Each Potential Item
 
@@ -180,7 +213,7 @@ For each potential backlog item, ask:
 - [ ] Is it a single task type (or tightly coupled types)?
 - [ ] Does it have clear, measurable success criteria?
 - [ ] Is it 0.5-2 days including planning overhead?
-- [ ] Would spec → design → plan add value (not trivial)?
+- [ ] Would the planning stages (spec, design, plan) add value (not trivial)?
 
 **Independence Check**:
 - [ ] Can it be spec'd and designed independently?
@@ -199,6 +232,7 @@ For each potential backlog item, ask:
 For each item, write clear success criteria:
 - Use 2-4 short checkboxes describing the meaningful postcondition: after this item, what should work or be true?
 - Keep them outcome-shaped, not implementation-shaped
+- Name the proof: how will each criterion be demonstrated (test, fixture, comparison)? "Demonstrably true" beats "implemented"
 - Include quality gates only if they materially define "done"
 - Do NOT turn the item into a mini-spec
 
@@ -311,6 +345,11 @@ Use this template when adding backlog items to an epic document:
 **Why Bad**: Front-loads detail at the wrong stage and makes decomposition harder to skim
 **Fix**: Keep the item strategic: objective, boundary, done state, dependencies
 
+#### ❌ The "Layer-Cake" Epic
+**Problem**: Every item slices by layer, repo, or component; no item owns a behavior end-to-end
+**Why Bad**: The interactions between layers belong to nobody — each item certifies against its own written scope while the composed system fails in the seams, and audits cannot catch a requirement nobody recorded
+**Fix**: Re-slice around provable behaviors where possible; where layer seams are forced, add explicit items that prove the cross-layer invariants and the risky combinations
+
 #### ❌ The "Dependency Tangle" Item
 **Problem**: Item depends on 3+ other items
 **Why Bad**: Hard to schedule, probably mixing concerns
@@ -368,12 +407,15 @@ Before finalizing backlog items, verify:
 
 **Success**:
 - [ ] Each item has clear, measurable success criteria
+- [ ] Each item names its proof — how "done" will be demonstrated
+- [ ] If items build parts of a whole, an item proves the composed whole
+- [ ] Combination dimensions are named and coverage across them is deliberate
 - [ ] Deliverables are specified
 - [ ] "Done" is unambiguous
 
 **Workflow**:
 - [ ] Planning adds value (non-trivial complexity)
-- [ ] Spec → design → plan → execute makes sense
+- [ ] Running the full item pipeline makes sense
 - [ ] Each item has meaningful phases
 
 ---

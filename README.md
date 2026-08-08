@@ -63,57 +63,83 @@ This copies the `.project/` template for project-specific state.
 
 ### Step 4: Use Commands
 
-Restart Claude Code, then use commands with the `_my_` prefix:
-
-```
-/_my_research    - Research a topic
-/_my_concept_design - Shape system architecture and load-bearing decisions
-/_my_concept_design_review - Pressure-test a design concept in a fresh session
-/_my_spec        - Create a specification
-/_my_design      - Create a design document
-/_my_plan        - Create an implementation plan
-/_my_implement   - Execute an implementation plan
-/_my_audit       - Certify work against plan/spec/design
-/_my_pre_pr      - Quality checks before PR
-...
-```
+Restart Claude Code, then use commands with the `_my_` prefix. **Run `/_my_pipeline` first** — it's the canonical map of the workflow stages and when to use each one. The full catalog is in the Command Reference below.
 
 ## Working with Claude Code
 
-See **[docs/working-with-claude.md](docs/working-with-claude.md)** for practical guidance on:
-- When to use the full workflow vs skip to implementation
-- Agent strategy (what to offload vs keep in main context)
-- The learning loop (capture → memorize → recall)
-- Verification gates before marking work complete
-- Autonomous execution vs asking first
+See **[docs/guide.md](docs/guide.md)** for the full guide:
+- The questions that decide which commands to run ("how well do you understand the problem?")
+- The shaping path (concept, product design, concept design, epic planning) and the work-item flow
+- When to research, spike, or write learning tests; when decisions become ADRs
+- Using reviews to manage consistency and good design across complexity
+- Session continuity (the wrap-up/boot sequence)
 
 ## Command Reference
 
+One line per command; each command's own doc in `claude-pack/commands/` has the mechanics. For stage order and when to use each stage, run `/_my_pipeline`.
+
+### Pipeline map and orchestration
+
 | Command | Description |
 |---------|-------------|
+| `/_my_pipeline` | The canonical map of the workflow — stage order, entry points, when to use each stage |
+| `/_my_orchestrate` | Autonomously drive the pipeline end to end via staged subagents |
+
+### Shaping and de-risking
+
+| Command | Description |
+|---------|-------------|
+| `/_my_research` | Deep codebase exploration and feasibility analysis (read-only) |
 | `/_my_concept` | Develop a feature concept with success criteria |
-| `/_my_concept_design` | Shape system architecture and flag ADR candidates |
-| `/_my_concept_design_review` | Pressure-test architecture before epic decomposition |
-| `/_my_research` | Research a topic and save findings (read-only) |
-| `/_my_spike` | De-risk a *known* assumption with a throwaway probe; keeps a findings doc |
-| `/_my_learning_test` | *Discover* how an unfamiliar surface behaves via real, kept tests |
-| `/_my_spec` | Create a feature specification |
-| `/_my_design` | Create a technical design |
-| `/_my_plan` | Create an implementation plan |
-| `/_my_implement` | Execute a plan with validation |
+| `/_my_concept_design` | Shape system architecture and load-bearing decisions |
+| `/_my_concept_design_review` | Pressure-test a design concept in a fresh session |
+| `/_my_spike` | Confirm a known assumption with a throwaway probe; keeps a findings doc |
+| `/_my_learning_test` | Discover how an unfamiliar surface behaves via real, kept tests |
+
+### Per work item
+
+| Command | Description |
+|---------|-------------|
+| `/_my_epic_plan` | Decompose shaping output into a scoped epic with backlog items |
+| `/_my_spec` | Capture the problem, success criteria, and requirements |
+| `/_my_spec_review` | Adversarial spec review in a fresh session |
+| `/_my_product_design` | Experience design for consumer-facing surfaces (optional stage) |
+| `/_my_design` | Technical design: architecture, interfaces, decisions |
+| `/_my_design_review` | Critical design review in a fresh session |
+| `/_my_plan` | Phased implementation plan with test-first checkboxes |
+| `/_my_implement` | Execute the plan phase by phase with validation |
 | `/_my_audit` | Certify work against plan/spec/design |
-| `/_my_pre_pr` | Quality checks before submitting a PR |
-| `/_my_quick_edit` | Fast, focused code changes |
-| `/_my_status` | Project orientation and gap analysis |
 | `/_my_close` | Archive completed work items or epics |
-| `/_my_epic_plan` | Decompose shaping output into a scoped epic |
-| `/_my_project_find` | Find project artifacts |
-| `/_my_git_manage` | Git workflow management |
-| `/_my_capture` | Capture conversation for later |
-| `/_my_memorize` | Create memory from capture |
-| `/_my_recall` | Search past conversations |
+| `/_my_pre_pr` | Branch gate after close: quality checks and PR submission (per shippable item, or once at epic end) |
+
+### Shortcuts and modes
+
+| Command | Description |
+|---------|-------------|
+| `/_my_quick_edit` | Small, scoped changes that skip the pipeline |
+| `/_my_ponytail` | Lazy-senior-dev mode: force the simplest solution that works |
+| `/_my_slop` | Reset writing style for the rest of the session |
+
+### Project management and session continuity
+
+| Command | Description |
+|---------|-------------|
+| `/_my_status` | Project orientation, gap analysis, next steps |
+| `/_my_project_find` | Quick lookups of project context |
+| `/_my_git_manage` | Git workflow, worktrees, conflict resolution |
 | `/_my_wrap_up` | End-of-session context persistence |
-| `/_my_review_compact` | Review before compaction |
+| `/_my_handoff` | Write a handoff doc so a fresh agent can continue mid-task |
+
+### Legacy (superseded by `/_my_wrap_up` + auto-memory)
+
+Kept for edge cases (e.g. salvaging content after an unexpected compaction); excluded from the Codex distribution.
+
+| Command | Description |
+|---------|-------------|
+| `/_my_capture` | Mark the conversation for later memorization |
+| `/_my_memorize` | Create a structured memory from a transcript |
+| `/_my_recall` | Search past conversation transcripts |
+| `/_my_review_compact` | Review an autocompact capture |
 
 ## Ralph Loop
 
