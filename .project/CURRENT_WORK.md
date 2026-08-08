@@ -1,12 +1,13 @@
 # Current Work
 
-**Last Updated**: 2026-08-07
+**Last Updated**: 2026-08-08
 
 ---
 
 ## Active Work
 
 ### concept-design-quality-gate — architectural decisions + independent pressure test
+- **Committed on `anchor-on-the-point` (`338147d`, `9431d83`, `b3adc03`); still pending fresh audit.**
 - **Implemented directly from the reviewed spec; design skipped by owner instruction (2026-08-07), pending fresh audit.** `my-concept-design` now centers root ownership, deletion before compensation, load-bearing decisions, and visible ADR candidates. New `my-concept-design-review` is a separate architecture-quality gate with a mandatory ultra-intensity ponytail-role subagent whose written challenge must be dispositioned. Pipeline, orchestrators, docs, Claude/Codex distribution, and focused tests are wired; broader install/docs/ADR suites pass. Global Claude and Codex installs refreshed.
 - ADR 0006 extends the live touch-point map: review reads relevant ADRs but never files candidates; final concept acceptance remains the write point.
 - Artifacts: `.project/active/concept-design-quality-gate/{spec,spec-review,product-lens}.md`; command `claude-pack/commands/_my_concept_design_review.md`.
@@ -44,6 +45,14 @@
 ---
 
 ## Recently Completed
+
+### 2026-08-08: docs-overhaul — question-driven guide, single command catalog, pre_pr after close (committed `43bca3c`)
+- **Minimum doc set with one owner per fact:** `docs/guide.md` absorbed and replaced `docs/working-with-claude.md`; README owns the complete command catalog (31 commands, legacy marked); project-pack README/EPIC_GUIDE defer to `/_my_pipeline` instead of restating the flow; `.project/` template instances re-synced.
+- **Owner's mental model now canonical (owner-stated 2026-08-08):** not a strict pipeline — entry follows the questions "how well do you understand the problem?" → UX to understand (`product_design`), impact (`concept_design` + `research` first), size (`epic_plan`). Guide, `/_my_pipeline`, `rules/pipeline.md`, and both orchestrators reframed around it.
+- **`product_design` is dual-tier:** runs off a concept (shaping) or a spec (single item); same function. Command, pipeline, and guide updated.
+- **`pre_pr` is a branch gate after `close`** — per item when shippable alone, once at epic end otherwise (**ADR 0007**, `[OWNER]`). Audit of 12 timing references found 8 wrong (root cause: old shape line `audit → pre_pr → close` + no when-to-run guidance in the command); all fixed, incl. pre_pr's product-lens gate now reading ledgers from `completed/` post-close.
+- **New drift guards in `test_docs.sh`:** README catalog completeness, no retired command names, no stage-sequence restatements outside the canonical pair (guide's flow line exempted by owner decision, comment marks it). Suite 9/9 green; Codex dist rebuilt.
+- Next: guide is ready for the upstream PR (Up Next item 1).
 
 ### 2026-07-06: spike-and-learning-test-commands — hands-on de-risking commands (certified, archived)
 - Two new commands: `/_my_spike` (confirm a known assumption, throwaway probe + findings doc) and
