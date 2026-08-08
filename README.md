@@ -67,6 +67,8 @@ Restart Claude Code, then use commands with the `_my_` prefix:
 
 ```
 /_my_research    - Research a topic
+/_my_concept_design - Shape system architecture and load-bearing decisions
+/_my_concept_design_review - Pressure-test a design concept in a fresh session
 /_my_spec        - Create a specification
 /_my_design      - Create a design document
 /_my_plan        - Create an implementation plan
@@ -90,6 +92,8 @@ See **[docs/working-with-claude.md](docs/working-with-claude.md)** for practical
 | Command | Description |
 |---------|-------------|
 | `/_my_concept` | Develop a feature concept with success criteria |
+| `/_my_concept_design` | Shape system architecture and flag ADR candidates |
+| `/_my_concept_design_review` | Pressure-test architecture before epic decomposition |
 | `/_my_research` | Research a topic and save findings (read-only) |
 | `/_my_spike` | De-risk a *known* assumption with a throwaway probe; keeps a findings doc |
 | `/_my_learning_test` | *Discover* how an unfamiliar surface behaves via real, kept tests |

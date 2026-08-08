@@ -136,14 +136,15 @@ Stages are quality tools, not mandatory ceremony. Use the smallest set of stages
 high-quality, auditable work for the risk in front of you.
 
 <!-- pipeline-shape -->
-`research`/`concept`/`concept_design` → `epic_plan` → `spec` → `spec_review` → [`product_design`] → `design` → `design_review` → `plan` → `implement` → `audit` → `pre_pr` → `close`
+`research`/`concept`/(`concept_design` → `concept_design_review`) → `epic_plan` → `spec` → `spec_review` → [`product_design`] → `design` → `design_review` → `plan` → `implement` → `audit` → `pre_pr` → `close`
 
 - **Entry depends on the work:** shaping (`research`/`concept`/`concept_design`) for a fuzzy idea,
   `epic_plan` for a multi-item epic, or straight to `spec` for a single clear item.
 - **`[product_design]`** is optional — only for consumer-facing surfaces.
-- **Reviews pair with their artifact when they add confidence:** `spec_review` after `spec`,
-  `design_review` after `design`. For minor, objectively verifiable fixes, record the verification
-  and continue instead of rerunning a reviewer just to replace an old verdict.
+- **Reviews pair with their artifact when they add confidence:** `concept_design_review` after
+  `concept_design`, `spec_review` after `spec`, and `design_review` after `design`. For minor,
+  objectively verifiable fixes, record the verification and continue instead of rerunning a
+  reviewer just to replace an old verdict.
 - Small, scoped changes can skip the pipeline via `$my-quick-edit`.
 
 **For the full flow and when/how to use each stage, run `$my-pipeline`** (or read

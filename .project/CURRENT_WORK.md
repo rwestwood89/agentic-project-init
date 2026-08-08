@@ -1,10 +1,15 @@
 # Current Work
 
-**Last Updated**: 2026-08-05
+**Last Updated**: 2026-08-07
 
 ---
 
 ## Active Work
+
+### concept-design-quality-gate — architectural decisions + independent pressure test
+- **Implemented directly from the reviewed spec; design skipped by owner instruction (2026-08-07), pending fresh audit.** `my-concept-design` now centers root ownership, deletion before compensation, load-bearing decisions, and visible ADR candidates. New `my-concept-design-review` is a separate architecture-quality gate with a mandatory ultra-intensity ponytail-role subagent whose written challenge must be dispositioned. Pipeline, orchestrators, docs, Claude/Codex distribution, and focused tests are wired; broader install/docs/ADR suites pass. Global Claude and Codex installs refreshed.
+- ADR 0006 extends the live touch-point map: review reads relevant ADRs but never files candidates; final concept acceptance remains the write point.
+- Artifacts: `.project/active/concept-design-quality-gate/{spec,spec-review,product-lens}.md`; command `claude-pack/commands/_my_concept_design_review.md`.
 
 ### anchor-on-the-point — keep the pipeline anchored to product purpose
 - Replaces the earlier `product-truth-gates` direction by owner decision (2026-08-05).

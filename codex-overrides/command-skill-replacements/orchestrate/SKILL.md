@@ -29,7 +29,7 @@ The pipeline is a map, not a checklist. Your job is to decide what the work need
 
 - **Skip stages that do not buy confidence.** For a small, low-risk change, you may write a spec and self-review it, skip explicit `spec_review`, skip `design`, or go straight to `plan` or `implement` when the requirement is already clear.
 - **Do not seek clean verdict artifacts.** A persisted `Revise` verdict is historical evidence. If the finding is minor, localized, and objectively fixed, verify the fix yourself, record the reason, and continue.
-- **Rerun a reviewer only for material judgment.** Rerun `spec_review` or `design_review` when the fix changes requirements, acceptance criteria, architecture, interfaces, security posture, data model, migration behavior, or another decision where an independent review could change the outcome.
+- **Rerun a reviewer only for material judgment.** Rerun `concept_design_review`, `spec_review`, or `design_review` when the fix changes system shape, requirements, acceptance criteria, architecture, interfaces, security posture, data model, migration behavior, or another decision where an independent review could change the outcome.
 - **Use design when architecture is real.** Run `design` for cross-cutting changes, new interfaces, storage changes, user-visible flows with meaningful state, or decisions that future implementers need written down. Skip it for direct mechanical edits where the implementation path is obvious from the spec and existing patterns.
 - **Record skipped stages.** Put a short note in the next artifact, commit message, or final summary explaining what you skipped and why. The human should be able to audit your judgment without paying for redundant stage calls.
 
@@ -96,7 +96,7 @@ Pipeline reference: `$my-pipeline`.
 
 Common inputs: `$my-concept`, `$my-concept-design`, `$my-research`.
 
-Common stages: `$my-epic-plan`, `$my-spec`, `$my-spec-review`, `$my-product-design`, `$my-design`, `$my-design-review`, `$my-plan`, `$my-implement`, `$my-audit`, `$my-pre-pr`.
+Common stages: `$my-concept-design-review`, `$my-epic-plan`, `$my-spec`, `$my-spec-review`, `$my-product-design`, `$my-design`, `$my-design-review`, `$my-plan`, `$my-implement`, `$my-audit`, `$my-pre-pr`.
 
 De-risking stages: `$my-spike`, `$my-learning-test`.
 

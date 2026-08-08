@@ -3,8 +3,8 @@ id: 0005
 title: Product-lens ADR touch-point map and its liveness-vs-authority grading
 date: 2026-08-05
 owner: Reid W
-status: active
-amended_by: []
+status: amended
+amended_by: [0006]
 superseded_by: null
 provenance: "[AGENT] (ratified by owner, 2026-08-05)"
 seams: [claude-pack/commands, project-pack]

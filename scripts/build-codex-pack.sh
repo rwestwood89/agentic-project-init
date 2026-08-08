@@ -135,6 +135,7 @@ sanitize_command_body_for_skill() {
 
     strip_frontmatter "$file" | perl -0pe '
         s{~/\.claude/scripts/product-lens\.md}{\$HOME/.codex/scripts/product-lens.md}g;
+        s{~/\.claude/commands/_my_ponytail\.md}{\$HOME/.agents/skills/my-ponytail/SKILL.md}g;
         s{\$ARGUMENTS}{User-provided arguments are supplied when this skill is invoked.}g;
         s{/_my_([a-z_]+)}{
             my $n = $1;

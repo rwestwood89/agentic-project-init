@@ -39,7 +39,7 @@ stage_skill_name() {
 
 default_sandbox_for_stage() {
   case "$1" in
-    pipeline|status|project_find|project-find|spec_review|spec-review|design_review|design-review)
+    pipeline|status|project_find|project-find|concept_design_review|concept-design-review|spec_review|spec-review|design_review|design-review)
       printf 'read-only'
       ;;
     *)

@@ -151,6 +151,13 @@ These commands replace external PM tools. Your backlog, epics, and active work t
 
 `/_my_epic_plan` takes concept, concept-design, and research files as input and produces a scoped epic with Source Documents, Required Reading per item, and a BACKLOG.md entry. Bridges the gap between shaping (why/what) and scoping (how/when).
 
+#### `/_my_concept_design_review` -- Pressure-Test System Architecture
+
+`/_my_concept_design_review` runs in a fresh session after `/_my_concept_design`. It challenges
+the proposed abstractions, boundaries, invariant ownership, and ADR candidates before the concept
+becomes the shape of an epic. A mandatory ponytail-role subagent returns a written deletion-first
+challenge that the review must disposition.
+
 #### `/_my_project_find` -- Quick Context Lookups
 
 **Topics:**
@@ -463,6 +470,8 @@ This system is designed primarily for solo developers working with Claude Code.
 | `/_my_quick_edit` | Change is too small for full pipeline but needs some structure |
 | `/_my_pre_pr` | Need quality checks before submitting a PR |
 | `/_my_concept` | Building a concept document for the Ralph Loop pipeline |
+| `/_my_concept_design` | A system needs architectural shaping before item specs |
+| `/_my_concept_design_review` | A design concept must be pressure-tested before epic decomposition |
 | `/_my_design_review` | Design involves multiple components or integration points |
 | `/_my_recall` | Need to search many past conversation transcripts |
 | `/_my_git_manage` | Worktrees, or keeping `.project/` out of a shared repo |

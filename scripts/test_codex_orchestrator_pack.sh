@@ -48,6 +48,10 @@ out="$("$HELPER" run spec_review --dry-run <<< 'Review the thing')"
 echo "$out" | grep -q 'Use $my-spec-review' || fail "spec_review did not map to \$my-spec-review"
 echo "$out" | grep -q -- '--sandbox read-only' || fail "spec_review did not default to read-only"
 
+out="$("$HELPER" run concept_design_review --dry-run <<< 'Review the architecture')"
+echo "$out" | grep -q 'Use $my-concept-design-review' || fail "concept_design_review did not map to \$my-concept-design-review"
+echo "$out" | grep -q -- '--sandbox read-only' || fail "concept_design_review did not default to read-only"
+
 out="$("$HELPER" run pre_pr --dry-run <<< 'Check the thing')"
 echo "$out" | grep -q 'Use $my-pre-pr' || fail "pre_pr did not map to \$my-pre-pr"
 
@@ -89,7 +93,8 @@ contains "$ORCH" 'take ownership of delivering high-quality implemented work'
 contains "$ORCH" 'You are the quality owner for the run'
 contains "$ORCH" 'Invoke a stage only when its output is likely to change the implementation'
 contains "$ORCH" 'A persisted `Revise` verdict is historical evidence'
-contains "$ORCH" 'Rerun `spec_review` or `design_review` when the fix changes requirements'
+contains "$ORCH" 'Rerun `concept_design_review`, `spec_review`, or `design_review`'
+contains "$ORCH" '\$my-concept-design-review'
 does_not_contain "$ORCH" '~/.claude/scripts/orchestrate-stage.sh'
 does_not_contain "$ORCH" 'claude -p'
 does_not_contain "$ORCH" '/_my_'

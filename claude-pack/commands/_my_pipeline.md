@@ -12,7 +12,7 @@ line for it. For per-stage mechanics, point at that stage command's own doc — 
 ## Overview — the stage map
 
 <!-- pipeline-shape -->
-`research`/`concept`/`concept_design` → `epic_plan` → `spec` → `spec_review` → [`product_design`] → `design` → `design_review` → `plan` → `implement` → `audit` → `pre_pr` → `close`
+`research`/`concept`/(`concept_design` → `concept_design_review`) → `epic_plan` → `spec` → `spec_review` → [`product_design`] → `design` → `design_review` → `plan` → `implement` → `audit` → `pre_pr` → `close`
 
 How to read it:
 
@@ -21,9 +21,10 @@ How to read it:
   - A body of work that splits into many items starts at `epic_plan`, which produces a scoped epic;
     each item then runs the pipeline from `spec` onward, in dependency order.
   - A single, clear item skips shaping and starts at `spec`.
-- **Reviews pair with the artifact they check:** `spec_review` after `spec`, `design_review` after
-  `design` — each in a **fresh session**, never the session that authored the artifact. Feed the
-  must-fix points back into the artifact; don't chase a reviewer indefinitely.
+- **Reviews pair with the artifact they check:** `concept_design_review` after `concept_design`,
+  `spec_review` after `spec`, and `design_review` after `design` — each in a **fresh session**, never
+  the session that authored the artifact. Feed the must-fix points back into the artifact; don't
+  chase a reviewer indefinitely.
 - **`[product_design]` is optional** — run it between `spec` and `design` only when the item has a
   consumer-facing surface (UX, an API, an interface) whose experience should be settled first.
 - **`/_my_quick_edit` is the escape hatch** — a small, scoped, implementation-ready change skips the
@@ -44,6 +45,8 @@ Shaping (optional, for fuzzy ideas):
   to define an idea before specifying it. See `_my_concept.md`.
 - **`/_my_concept_design`** — a critiqueable architecture/responsibilities sketch. Use when a design
   area needs a conceptual pass before detailed design. See `_my_concept_design.md`.
+- **`/_my_concept_design_review`** — pressure-test the concept's system shape, invariant ownership,
+  and abstractions before epic decomposition. See `_my_concept_design_review.md`.
 
 De-risking (optional, any stage — write code to learn):
 
@@ -84,4 +87,4 @@ The bare shape line above (marked `pipeline-shape`) is duplicated in `claude-pac
 for always-on awareness. `scripts/test_pipeline_sync.sh` asserts the two stay identical. Per-stage
 detail lives in each command's own doc, linked above — this guide never restates it.
 
-**Last Updated:** 2026-07-06
+**Last Updated:** 2026-08-07
