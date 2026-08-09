@@ -13,7 +13,7 @@ Read these fully:
 
 ## Finding Input Files
 
-If `$ARGUMENTS` names a file path or concept name, use it. If ambiguous or missing, scan `.project/concepts/` and `.project/research/` and ask the user which files are the source material for this epic.
+If `$ARGUMENTS` names a file path or concept name, use it. If ambiguous or missing, scan `.project/concepts/` and `.project/research/` and ask the user which files are the source material for this epic. When a named concept has a shaping product-design sibling (`.project/concepts/{name}-product-design.md`), include it among the candidates; it is not mandatory source material.
 
 Read every identified source file fully before proceeding.
 
@@ -41,7 +41,8 @@ Read every identified source file fully before proceeding.
    ```
 
    Include a brief note on the critical path and which items can run in parallel.
-3. **Wait for approval.** Adjust item boundaries, ordering, or scope as directed. Do not proceed to writing items until the user approves the decomposition.
+3. **Offer a mental-model checkpoint.** After presenting the decomposition and before asking for approval, offer one question-led HTML explanation (via `/_my_mental_model`) that reconnects the product intent, the proposed slicing, and code reality so the user can judge the breakdown. Skip the offer when your invocation carries the NON-INTERACTIVE orchestration marker — do not stop for it and do not let an orchestrator accept it for the user. Declining changes nothing; the stage proceeds identically.
+4. **Wait for approval.** Adjust item boundaries, ordering, or scope as directed. Do not proceed to writing items until the user approves the decomposition.
 
 ## Stage 3: Write Items
 

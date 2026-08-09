@@ -48,6 +48,9 @@ When invoked:
 3. Read the concept in full as the proposal under review.
 4. Explore the affected code paths and official project documentation. Read the ADR index
    and the full text of every live decision relevant to the concept or its ADR candidates.
+   If a shaping product-design sibling exists (`.project/concepts/{design-name}-product-design.md`),
+   include it among the candidate inputs; it is not mandatory reading when irrelevant to the
+   concept under review.
 5. Separate three kinds of evidence:
    - **Intended semantics:** what the system is meant to represent or guarantee.
    - **Current behavior:** what the implementation and tests do now.
@@ -217,8 +220,16 @@ Write `.project/concepts/{design-name}-review.md`:
 ```
 
 Present the fundamental assessment, ponytail challenge and disposition, top issues, ADR
-candidate assessment, and verdict. The review remains draft until the owner engages with
-the findings. Record each owner resolution faithfully in the review; do not edit the
+candidate assessment, and verdict.
+
+After presenting and before the owner resolves findings, offer a mental-model checkpoint:
+one question-led HTML explanation (via ``my-mental-model``) that reconnects intent, the
+proposed architecture, and code reality so the owner can judge the findings. Skip the offer
+when your invocation carries the NON-INTERACTIVE orchestration marker — do not stop for it
+and do not let an orchestrator accept it for the owner. Declining changes nothing; the
+review proceeds identically.
+
+The review remains draft until the owner engages with the findings. Record each owner resolution faithfully in the review; do not edit the
 concept. The concept-design author then incorporates the review and returns the revised
 concept for final owner acceptance.
 

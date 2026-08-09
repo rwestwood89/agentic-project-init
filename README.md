@@ -125,6 +125,7 @@ One line per command; each command's own doc in `claude-pack/commands/` has the 
 | Command | Description |
 |---------|-------------|
 | `/_my_status` | Project orientation, gap analysis, next steps |
+| `/_my_mental_model` | On-demand HTML checkpoint that rebuilds your understanding of a system around one question |
 | `/_my_project_find` | Quick lookups of project context |
 | `/_my_git_manage` | Git workflow, worktrees, conflict resolution |
 | `/_my_wrap_up` | End-of-session context persistence |

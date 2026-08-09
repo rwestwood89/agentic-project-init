@@ -135,6 +135,7 @@ sanitize_command_body_for_skill() {
 
     strip_frontmatter "$file" | perl -0pe '
         s{~/\.claude/scripts/product-lens\.md}{\$HOME/.codex/scripts/product-lens.md}g;
+        s{~/\.claude/scripts/mental-model-builder\.md}{\$HOME/.codex/scripts/mental-model-builder.md}g;
         s{~/\.claude/commands/_my_ponytail\.md}{\$HOME/.agents/skills/my-ponytail/SKILL.md}g;
         s{\$ARGUMENTS}{User-provided arguments are supplied when this skill is invoked.}g;
         s{/_my_([a-z_]+)}{
@@ -367,13 +368,16 @@ if [ -d "$OVERRIDES_DIR/scripts" ]; then
     done < <(find "$OVERRIDES_DIR/scripts" -maxdepth 1 -type f | sort)
 fi
 
-# Shared product-lens spec: referenced on demand by the pipeline skills at
-# $HOME/.codex/scripts/product-lens.md (see the path rewrite in sanitize_command_body_for_skill).
-# Copied from the single source in claude-pack/scripts so the Codex layer cannot drift from it.
-if [ -f "$CLAUDE_PACK/scripts/product-lens.md" ]; then
-    cp -p "$CLAUDE_PACK/scripts/product-lens.md" "$DIST_DIR/scripts/product-lens.md"
-    included_scripts+=("product-lens.md")
-fi
+# Shared subagent specs (product-lens, mental-model builder): referenced on demand by the
+# skills at $HOME/.codex/scripts/<name>.md (see the path rewrites in
+# sanitize_command_body_for_skill). Copied from the single source in claude-pack/scripts so
+# the Codex layer cannot drift from it.
+for shared_spec in product-lens.md mental-model-builder.md; do
+    if [ -f "$CLAUDE_PACK/scripts/$shared_spec" ]; then
+        cp -p "$CLAUDE_PACK/scripts/$shared_spec" "$DIST_DIR/scripts/$shared_spec"
+        included_scripts+=("$shared_spec")
+    fi
+done
 
 while IFS= read -r file; do
     base="$(basename "$file")"

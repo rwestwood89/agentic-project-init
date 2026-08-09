@@ -6,6 +6,14 @@
 
 ## Active Work
 
+### mental-alignment-checkpoint — owner-facing HTML comprehension surface
+- **Implemented directly from the revised design by owner instruction (2026-08-09, "basic feature, straight to implementation"); uncommitted on `anchor-on-the-point`, no spec/plan/audit run.**
+- Design chain: `.project/concepts/mental-alignment-checkpoint{,-design,-design-review,-design-revised}.md`. Public name chosen at implementation: **`/_my_mental_model`** (distinct from orchestration's launch-time Align checkpoint, per design edge case).
+- Shape (product-lens pattern): command `claude-pack/commands/_my_mental_model.md` (generate / feedback / promote modes) delegates whole to builder contract `claude-pack/scripts/mental-model-builder.md`, which solely owns discovery, two-layer HTML, safety/redaction, and success-or-failure. Runs → `.project/mental-alignment/runs/{YYYYMMDD-HHMMSS}_{slug}.html`; feedback → `.project/mental-alignment/feedback.md`; promotion fail-closed to authored source only.
+- Stage offers wired: `_my_concept_design_review` (after presenting, before owner resolution) and `_my_epic_plan` (after decomposition, before approval); both suppressed under the NON-INTERACTIVE orchestration marker. Product-design-sibling discovery rider added at both stages' input discovery.
+- Codex: `build-codex-pack.sh` copies the builder + rewrites its path (generalized shared-spec loop); `config.sh` description added; dist rebuilt; global Claude + Codex installs refreshed. Suite green (docs, pipeline-sync, concept-design-gate, adr, global-setup, codex-orchestrator).
+- Next: commit; then the design's first de-risk — `/_my_spike` one real concept-design question through the builder to test orientation-without-artifact-chain-copying; proof obligations (secret-leak failure, headless suppression, Codex equivalence) remain epic-owned and unrun.
+
 ### concept-design-quality-gate — architectural decisions + independent pressure test
 - **Committed on `anchor-on-the-point` (`338147d`, `9431d83`, `b3adc03`); still pending fresh audit.**
 - **Implemented directly from the reviewed spec; design skipped by owner instruction (2026-08-07), pending fresh audit.** `my-concept-design` now centers root ownership, deletion before compensation, load-bearing decisions, and visible ADR candidates. New `my-concept-design-review` is a separate architecture-quality gate with a mandatory ultra-intensity ponytail-role subagent whose written challenge must be dispositioned. Pipeline, orchestrators, docs, Claude/Codex distribution, and focused tests are wired; broader install/docs/ADR suites pass. Global Claude and Codex installs refreshed.
