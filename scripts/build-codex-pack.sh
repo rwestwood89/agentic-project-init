@@ -462,3 +462,6 @@ echo "Agents:         ${#included_agents[@]} included, ${#excluded_agents[@]} ex
 echo "Hooks:          ${#included_hooks[@]} included, ${#excluded_hooks[@]} excluded"
 echo "Scripts:        ${#included_scripts[@]} included"
 echo "Replacements:   ${#included_replacements[@]} included"
+echo ""
+echo "NOTE: dist/ is built but not installed. Codex reads copies, not symlinks —"
+echo "run ./scripts/setup-codex.sh to refresh \$HOME/.codex and \$HOME/.agents."
