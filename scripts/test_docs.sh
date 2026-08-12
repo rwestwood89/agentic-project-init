@@ -68,6 +68,21 @@ else
     FAIL=1
 fi
 
+# Product-ledger touch points stay wired (ADR 0008): the read rule, the lens discovery
+# surface, and the close write beat are prose lines a doc overhaul could silently drop.
+check_wired() {
+    local pattern="$1" file="$2" description="$3"
+    if grep -q -- "$pattern" "$SOURCE_DIR/$file"; then
+        echo -e "${GREEN}PASS: $description${NC}"
+    else
+        echo -e "${RED}FAIL: $description${NC}"
+        FAIL=1
+    fi
+}
+check_wired "product/INDEX.md" "claude-pack/rules/context-loading.md" "session-start rule reads the promise index"
+check_wired ".project/product/" "claude-pack/scripts/product-lens.md" "lens SOURCES include the promise ledger"
+check_wired "product.sh" "claude-pack/commands/_my_close.md" "close files promise entries via product.sh"
+
 # No pipeline-shape restatements outside the canonical pair
 # (claude-pack/rules/pipeline.md + claude-pack/commands/_my_pipeline.md, guarded by
 # test_pipeline_sync.sh). Human-facing docs must defer to /_my_pipeline, not restate

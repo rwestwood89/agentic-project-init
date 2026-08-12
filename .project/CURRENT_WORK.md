@@ -1,10 +1,18 @@
 # Current Work
 
-**Last Updated**: 2026-08-08
+**Last Updated**: 2026-08-12
 
 ---
 
 ## Active Work
+
+### product-intent-ledger — ADR-like ledger of implemented product promises
+- **Audit remediated (2026-08-12) per owner dispositions, uncommitted on `anchor-on-the-point`; pending re-audit.** Owner calls: pointer-entry title restates the promise one-liner with a citation-only body (audit-F1 BLOCK → resolved, README cross-seam reworked); no withdrawal/retire status — supersession covers disappearance, D3 unchanged (audit-F2 INTENDED-CHANGE); audit-F3 disposed citing D2's recorded duplication acceptance. Ledger gate CLEAR pending re-audit confirmation.
+- Engine fixes in **both** scripts per D2 (`product.sh` + `adr.sh`, `.project/scripts/` copies diff-verified): atomic id allocation (mkdir lock), `set_field` fails on missing field, ambiguous-id rejection, self/re-supersede and self-amend rejected (no successor-link overwrite), `new` writes `checked: null` with the stamp moved to close's filing beat (`product.sh check <id>` in `_my_close` 4b). Tests: product 46 green (was 36), adr 32 green (was 25) — incl. 8-way concurrent allocation in both.
+- Evidence completed: E4 raw lens verdict preserved verbatim in `fixture-transcripts.md`; E3 rerun with script execution permitted (clean PASS — proper `product.sh supersede` offer, no hand-minted state); E5 rerun graded strictly (Codex named `docs/report-contract.md` by path, full transcript kept). Full suite 8/8; Codex dist rebuilt + both installs refreshed.
+- Implemented surface (first pass): `project-pack/{product/README.md,scripts/product.sh}` + `scripts/test_product.sh`; touch points per **ADR 0008** (context-loading INDEX skim, lens SOURCES ×6 discovery-not-authority, `_my_close` promise scan/confirm/file beats, status/project-find pointers); docs mentions + 3 `test_docs.sh` wired-guards; init-project seeds `product` both paths; this repo re-inited (README-only ledger, no backfill).
+- Artifacts: `.project/concepts/product-intent-ledger.md`; `.project/active/product-intent-ledger/{spec,design,plan,product-lens,audit}.md` + `fixture-{sandbox,expected-findings,transcripts}.md`.
+- Next: fresh-session re-audit; then `/_my_close`, `/_my_pre_pr` when the branch ships.
 
 ### mental-alignment-checkpoint — owner-facing HTML comprehension surface
 - **Implemented directly from the revised design by owner instruction (2026-08-09, "basic feature, straight to implementation"); uncommitted on `anchor-on-the-point`, no spec/plan/audit run.**

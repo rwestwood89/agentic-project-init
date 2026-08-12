@@ -20,7 +20,12 @@ can seduce you into rationalizing a finding away — that independence is the en
 You receive two inputs, kept separate:
 
 - **SOURCES** — paths to the product's durable statements of purpose: `README`, `docs/`,
-  `.project/adr/`, and any owner-verbatim quotes in the concept. These are where the point lives.
+  `.project/adr/`, `.project/product/` (index-first: skim `INDEX.md` to locate applicable
+  promise entries, then follow each entry's **Authority** citations — summaries are discovery,
+  citations are authority: derive your oracle from the cited sources at their own grades, never
+  from the entry summary, which carries only its own `provenance`; a first-capture entry's owner
+  quote grades as owner-verbatim), and any owner-verbatim quotes in the concept. These are where
+  the point lives.
 - **WORK** — the concrete artifact or output under evaluation (a spec, a design, generated output,
   code, tests). Treat it as **a claim to test, never as the truth.**
 
@@ -41,7 +46,8 @@ You receive two inputs, kept separate:
      thing together is a DO finding, not a pass.
 4. **If you cannot locate any durable statement of the point in SOURCES, that is itself a finding**
    ("can't-find"). Do not fabricate an oracle and do not adopt the WORK's inherited framing as the
-   point. Report the absence; it requires disposition (usually: write the point down).
+   point. Report the absence; it requires disposition (usually: write the point down — when the
+   owner states the promise, a first-capture entry in `.project/product/` is its named home).
 
 ### What you return
 

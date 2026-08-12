@@ -55,6 +55,8 @@ single source, so it can't go stale here.
 | File | Purpose |
 |------|---------|
 | `CURRENT_WORK.md` | What's active RIGHT NOW - single source of truth |
+| `product/INDEX.md` | Generated index of implemented product promises — what the product is for (convention: `product/README.md`) |
+| `adr/INDEX.md` | Generated index of load-bearing decisions (convention: `adr/README.md`) |
 | `backlog/BACKLOG.md` | Prioritized list of epics |
 | `backlog/epic_*.md` | Individual epic definitions |
 
@@ -76,7 +78,9 @@ single source, so it can't go stale here.
 ├── completed/
 │   ├── {date}_{item_name}/   # Archived items
 │   └── epic_*.md             # Archived epics
-├── scripts/                  # Utility scripts (get-metadata.sh)
+├── adr/                      # Decision records (append-only, script-managed)
+├── product/                  # Product promise ledger (append-only, script-managed)
+├── scripts/                  # Utility scripts (adr.sh, product.sh, get-metadata.sh)
 ├── research/                 # Deep investigations
 └── reports/                  # Status reports
 ```

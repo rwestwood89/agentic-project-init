@@ -45,7 +45,7 @@ Bracketed stages are judgment calls — include them when the item's risk or com
 - **`/_my_plan`** — phases in de-risking order, each starting with a test stencil and ending with "what we know works." Checkboxes make it resumable across sessions.
 - **`/_my_implement`** — execute phase by phase, reading spec and design first so it understands *why*, checking off progress and recording deviations in the plan as it goes.
 - **`/_my_audit`** — fresh-eyes certification against the whole chain: plan complete, spec satisfied (traced `file:line`), design followed, no slop or silent fallbacks. Never let the implementing session certify its own work.
-- **`/_my_close`** — archive to `completed/`, update the books, and file any decisions that emerged during implementation as ADRs before their context is archived.
+- **`/_my_close`** — archive to `completed/`, update the books, and file any decisions that emerged during implementation as ADRs — and any implemented product promises to the promise ledger — before their context is archived.
 - **`/_my_pre_pr`** — the branch gate, run **after close** and once per PR: project checks, lint, tests, then PR submission. Run it after closing an item that ships on its own; when items ship together, run it once at the end of the epic. It is not an item stage — never run it per-phase or mid-item.
 
 ---
@@ -77,6 +77,15 @@ Load-bearing decisions get durable records in `.project/adr/` so future agents d
 - accepted decisions are filed when the concept or design is accepted;
 - `close` files decisions that **emerged during implementation**, before their context is archived;
 - later designs cite or explicitly supersede entries — never silently contradict them.
+
+### Where agents learn what the product is for (the promise ledger)
+
+Agents reliably learn what work is *active*; the promise ledger tells them what the product
+*promises*. Major implemented promises — use cases, public surfaces, cross-cutting contracts a
+cold agent could miss or undo — get sparse entries in `.project/product/` (convention and
+density bar: its README). Every session skims the generated `INDEX.md` at start and opens only
+relevant entries; `close` scans for new promises and files them via `product.sh`; entries are
+orientation with cited authority, not proof — and nothing gates on the ledger.
 
 ### When to make sure the agent is keeping you in the loop
 

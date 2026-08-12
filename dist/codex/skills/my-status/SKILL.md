@@ -21,6 +21,7 @@ No mode flags. No fixed template. Adapt your output to what you find.
 
 Read these files:
 - `.project/CURRENT_WORK.md` — active items, recent completions, blockers
+- `.project/product/INDEX.md` — the product's implemented promises (skip if absent)
 - `.project/backlog/BACKLOG.md` — epic priorities and status
 - `.project/backlog/epic_*.md` — item-level status within each active epic
 - `.project/active/*/spec.md` and `active/*/plan.md` — progress on active items (which phase, how far along)

@@ -149,7 +149,8 @@ Before presenting, check:
 independent check re-derives the point here. Spawn a `general-purpose` subagent whose entire
 instruction set is `$HOME/.codex/scripts/product-lens.md` (pack source:
 `claude-pack/scripts/product-lens.md`). SOURCES = the repo's durable product statements
-(`README`, `docs/`, `.project/adr/`) plus any owner-verbatim in the concept / Required Reading;
+(`README`, `docs/`, `.project/adr/`, `.project/product/` index-first) plus any owner-verbatim
+in the concept / Required Reading;
 WORK = the drafted spec, especially Problem and Success Criteria. It checks both directions —
 does the spec contradict or narrow the point, and does it omit an obligation the point requires?
 Append its verdict block (ledger format, product-lens spec §3) to

@@ -82,6 +82,21 @@ check "active entries listed before superseded" awk '/^- 0002/{a=NR} /^- 0001/{s
 check "unknown id fails" bash -c "! '$ADR_SH' supersede 9999 0002"
 check "no-args prints usage and fails" bash -c "! '$ADR_SH'"
 
+# --- lifecycle guards: invalid transitions are rejected, not warned past ---
+check "self-supersession rejected" bash -c "! '$ADR_SH' supersede 0004 0004"
+check "self-amendment rejected" bash -c "! '$ADR_SH' amend 0004 0004"
+check "re-supersession rejected (would overwrite successor link)" bash -c "! '$ADR_SH' supersede 0001 0004"
+check "re-supersession left history intact" grep -q "^superseded_by: 0002$" .project/adr/0001-first-entry.md
+
+# --- concurrency: parallel new calls never reuse an id ---
+for i in 1 2 3 4 5 6 7 8; do "$ADR_SH" new "conc-$i" >/dev/null 2>&1 & done
+wait
+CONC_FILES="$(ls .project/adr/[0-9][0-9][0-9][0-9]-conc-*.md 2>/dev/null | wc -l)"
+DUP_IDS="$(ls .project/adr/[0-9][0-9][0-9][0-9]-*.md | sed 's/.*\/\([0-9]\{4\}\)-.*/\1/' | sort | uniq -d | wc -l)"
+check "all 8 concurrent new calls filed" test "$CONC_FILES" -eq 8
+check "concurrent allocation produced no duplicate ids" test "$DUP_IDS" -eq 0
+check "allocation lock released" bash -c "! test -d .project/adr/.lock"
+
 echo ""
 echo "Results: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]

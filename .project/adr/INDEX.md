@@ -4,7 +4,8 @@
 
 - 0001 · Load-bearing decisions are recorded append-only in .project/adr · seams: project-pack, claude-pack/commands
 - 0006 · Concept-design review reads ADRs but does not file them · seams: claude-pack/commands, project-pack
-- 0007 · pre_pr is a branch gate run after close
+- 0007 · pre_pr is a branch gate run after close · seams: claude-pack/commands, claude-pack/rules, docs, codex-overrides
+- 0008 · Product-ledger touch-point map: reads at session start + lens SOURCES, write at close · seams: claude-pack, project-pack, product-lens
 
 - 0002 · Decision-record touch points: read at concept-design and design, write at acceptance and close · seams: claude-pack/commands · amended
 - 0003 · Product-lens adds product-truth touch points and can file decision records · seams: claude-pack/commands, project-pack · superseded → 0004

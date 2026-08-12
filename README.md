@@ -23,6 +23,8 @@ Copied to `.project/` in target projects:
 - **backlog/** - Planned features and tasks
 - **active/** - In-progress specs, designs, and plans
 - **completed/** - Finished work
+- **adr/** - Append-only decision records with a generated index
+- **product/** - Append-only ledger of implemented product promises, with a generated index
 - **memories/** - Conversation summaries and learnings
 - **research/** - Research notes and findings
 - **reports/** - Generated reports
@@ -281,9 +283,11 @@ your-project/
 ├── .project/                    (copied, project-specific)
 │   ├── CURRENT_WORK.md
 │   ├── active/
+│   ├── adr/
 │   ├── backlog/
 │   ├── completed/
 │   ├── memories/
+│   ├── product/
 │   ├── research/
 │   └── reports/
 └── [your project files]

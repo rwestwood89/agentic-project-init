@@ -74,8 +74,10 @@ resolve it silently, in either direction.
 ## Before Starting Non-Trivial Work
 
 1. **Read `.project/CURRENT_WORK.md`** — active work context, recent decisions, known issues
-2. **Read the relevant docs** for the area you're working in (check CLAUDE.md for pointers)
-3. **Check saved project context** for known gotchas before making assumptions
+2. **Skim `.project/product/INDEX.md` if present** — the product's implemented promises; open
+   only the entries relevant to your task. An absent or empty ledger just means none recorded.
+3. **Read the relevant docs** for the area you're working in (check CLAUDE.md for pointers)
+4. **Check saved project context** for known gotchas before making assumptions
 
 ## After Completing Work
 
