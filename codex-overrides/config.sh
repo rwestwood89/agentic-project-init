@@ -57,4 +57,5 @@ declare -A AGENT_DESCRIPTIONS=(
 
 NATIVE_SKILL_ALLOWLIST=(
   "example-skill"
+  "show-me"
 )

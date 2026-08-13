@@ -109,6 +109,9 @@ if [ "$HAS_VENDORED" = true ]; then
         for f in example-skill.md; do
             [ -f ".claude/skills/$f" ] && rm ".claude/skills/$f" && echo -e "${GREEN}  ✓ Removed: skills/$f${NC}"
         done
+        for d in show-me; do
+            [ -d ".claude/skills/$d" ] && rm -rf ".claude/skills/$d" && echo -e "${GREEN}  ✓ Removed: skills/$d${NC}"
+        done
     fi
 
     # Remove known rule files

@@ -350,6 +350,36 @@ while IFS= read -r file; do
     included_native_skills+=("$skill_name")
 done < <(find "$CLAUDE_PACK/skills" -maxdepth 1 -type f -name '*.md' | sort)
 
+# Directory skills (skills/<name>/SKILL.md) — the native Claude Code form.
+while IFS= read -r file; do
+    base="$(basename "$(dirname "$file")")"
+    if [ "${#NATIVE_SKILL_ALLOWLIST[@]}" -gt 0 ] && ! contains "$base" "${NATIVE_SKILL_ALLOWLIST[@]}"; then
+        excluded_native_skills+=("$base")
+        continue
+    fi
+
+    skill_name="$(extract_frontmatter_value "$file" "name" || true)"
+    if [ -z "$skill_name" ]; then
+        skill_name="$base"
+    fi
+    description="$(description_for_native_skill "$skill_name" "$file")"
+    skill_dir="$DIST_DIR/skills/$skill_name"
+    output_file="$skill_dir/SKILL.md"
+
+    mkdir -p "$skill_dir"
+    {
+        printf -- "---\n"
+        printf "name: %s\n" "$skill_name"
+        printf "description: %s\n" "$description"
+        printf -- "---\n\n"
+        printf "Generated from \`claude-pack/skills/%s/SKILL.md\`. Rebuild this file instead of editing it by hand.\n\n" "$base"
+        strip_frontmatter "$file"
+        printf "\n"
+    } > "$output_file"
+
+    included_native_skills+=("$skill_name")
+done < <(find "$CLAUDE_PACK/skills" -mindepth 2 -maxdepth 2 -type f -name 'SKILL.md' | sort)
+
 {
     printf "# AGENTS.md\n\n"
     printf "Generated from \`claude-pack/rules/\`. Rebuild this file instead of editing it by hand.\n\n"

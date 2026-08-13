@@ -250,7 +250,7 @@ if [ "$INCLUDE_CLAUDE" = true ]; then
                     if [ "$DRY_RUN" = true ]; then
                         echo -e "${GREEN}[DRY RUN] Would copy: $subdir/$filename${NC}"
                     else
-                        cp -p "$file" "$target"
+                        cp -Rp "$file" "$target"
                         echo -e "${GREEN}  ✓ $subdir/$filename${NC}"
                     fi
                 fi
