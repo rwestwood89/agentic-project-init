@@ -121,6 +121,7 @@ One line per command; each command's own doc in `claude-pack/commands/` has the 
 | `/_my_quick_edit` | Small, scoped changes that skip the pipeline |
 | `/_my_ponytail` | Lazy-senior-dev mode: force the simplest solution that works |
 | `/_my_slop` | Reset writing style for the rest of the session |
+| `/_my_ask_me` | Ask questions the right way: one at a time, with context, options, and a recommendation |
 
 ### Project management and session continuity
 

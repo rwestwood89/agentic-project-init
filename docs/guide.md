@@ -94,6 +94,10 @@ You cannot steer what you can't parse. Two mode commands govern the agent for th
 - **`/_my_slop`** — the agent's writing has become dense, jargon-heavy, or hard to follow: reset it. Plain language, one idea per sentence, lead with the point.
 - **`/_my_ponytail`** — the agent's *code* is drifting toward over-engineering: force lazy-senior-dev mode, where the best code is the code never written.
 
+A third command governs how the agent asks *you* things. Agents ask badly by default — five questions at once, no context, no options, no opinion:
+
+- **`/_my_ask_me`** — ask questions the right way. One at a time, numbered, each with context, what the answer changes, options with real pros and cons, and a recommendation.
+
 ### Using reviews to manage consistency across complexity
 
 The review commands share one design: a **fresh session** that assumes the artifact is wrong, attacks it, and records findings in a review doc — never editing the artifact. You resolve the findings; the authoring session incorporates them. The fresh session is the point: it defeats the author agreeing with itself.
