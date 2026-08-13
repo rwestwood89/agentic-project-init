@@ -1,0 +1,9 @@
+{"type":"thread.started","thread_id":"019-spike-event-failure"}
+{"type":"turn.started"}
+{"type":"item.completed","item":{"type":"agent_message","text":"fake progress 1/6"}}
+{"type":"item.completed","item":{"type":"agent_message","text":"fake progress 2/6"}}
+{"type":"item.completed","item":{"type":"agent_message","text":"fake progress 3/6"}}
+{"type":"item.completed","item":{"type":"agent_message","text":"fake progress 4/6"}}
+{"type":"item.completed","item":{"type":"agent_message","text":"fake progress 5/6"}}
+{"type":"item.completed","item":{"type":"agent_message","text":"fake progress 6/6"}}
+{"type":"turn.failed","message":"fake reported failure"}

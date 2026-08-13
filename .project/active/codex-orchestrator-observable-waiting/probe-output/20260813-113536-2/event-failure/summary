@@ -1,0 +1,1 @@
+case=event-failure rc=3 expected_rc=3 elapsed_seconds=6

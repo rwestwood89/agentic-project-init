@@ -35,21 +35,67 @@ The pipeline is a map, not a checklist. Your job is to decide what the work need
 
 ## Tools
 
-Delegate each stage through the Codex helper:
+Delegate each stage through the Codex helper, but keep the whole wait inside one host execution
+cell. For every `run` or `resume` call:
 
-```bash
-~/.codex/scripts/orchestrate-stage-codex.sh run <stage> <<'ARGS'
-...
-ARGS
+1. Send one concise launch update that names the stage. Send no commentary about unchanged state.
+2. Choose the helper timeout `T` in seconds and pass it with `--timeout T`. Set the enclosing
+   `functions.exec` yield to `T + 30` seconds. The first-line execution pragma requires the
+   calculated literal milliseconds; for the default `T = 600`, use
+   `// @exec: {"yield_time_ms": 630000}`.
+3. Inside that single `functions.exec` cell, call `tools.exec_command` with the normal helper
+   command and a quoted heredoc containing the stage input. If it returns a terminal session id,
+   drain that same session with `tools.write_stdin` inside the cell. Internal drains may repeat
+   because they do not return control to the parent model. Cap each internal drain at 300 seconds
+   and at the remaining outer deadline. Return the terminal output with `text(result.output)`.
+
+The cell body follows this shape:
+
+```javascript
+const helperTimeoutSeconds = 600; // Use the same literal passed to --timeout.
+const startedAt = Date.now();
+const outerDeadlineMs = (helperTimeoutSeconds + 30) * 1000;
+let result = await tools.exec_command({
+  cmd: "<helper run/resume command with --timeout T and a quoted heredoc>",
+  yield_time_ms: Math.min(outerDeadlineMs, 30000),
+  max_output_tokens: 10000,
+});
+
+while (result.session_id !== undefined) {
+  const remainingMs = outerDeadlineMs - (Date.now() - startedAt);
+  if (remainingMs <= 0) {
+    throw new Error("Codex stage exceeded its helper timeout and cleanup allowance");
+  }
+  result = await tools.write_stdin({
+    session_id: result.session_id,
+    chars: "",
+    yield_time_ms: Math.min(remainingMs, 300000),
+    max_output_tokens: 10000,
+  });
+}
+text(result.output);
 ```
 
-Resume a stage with answers, review feedback, or continuation context:
+Use these helper command shapes inside the cell:
 
 ```bash
-~/.codex/scripts/orchestrate-stage-codex.sh resume <session_id> <<'MSG'
+~/.codex/scripts/orchestrate-stage-codex.sh run <stage> --timeout T <<'ARGS'
+...
+ARGS
+
+~/.codex/scripts/orchestrate-stage-codex.sh resume <session_id> --timeout T <<'MSG'
 ...
 MSG
 ```
+
+Normally `functions.exec` returns only when the helper is terminal. If the outer cell yields early,
+call `functions.wait` only once on that cell for the remaining deadline. Do not poll or emit a
+no-news update. If that one fallback yields again, stop the cell with `functions.wait` using
+`terminate: true`, report a host compatibility failure, and do not route the incomplete stage
+forward.
+
+Do not schedule notifications, timers, control yields, or model-visible status checks. Keep JSONL
+and stderr in their retained files; do not forward their events into the main conversation.
 
 Each call returns compact JSON:
 
@@ -69,7 +115,7 @@ The helper maps pipeline stages to Codex skills. For example, `spec` invokes `$m
 4. **Handle questions by resuming.** If a stage asks questions, answer from the objective and your judgment. If the objective cannot settle a question, tell the stage to choose and record the decision.
 5. **Run review loops deliberately.** Feed must-fix findings back to the producing stage. For minor, objectively verifiable findings, verify the correction yourself and continue. Do not chase a review loop past about two rounds without a clear reason.
 6. **Commit decisions when appropriate.** Keep commits focused, with subjects that name the decision or completed stage.
-7. **Finish at the right boundary.** Leave `$my-close` to the human unless explicitly asked to archive the work.
+7. **Finish at the right boundary.** Leave `$my-close` and the post-close `$my-pre-pr` branch gate to the human unless explicitly asked.
 
 ## Stage Result Protocol
 

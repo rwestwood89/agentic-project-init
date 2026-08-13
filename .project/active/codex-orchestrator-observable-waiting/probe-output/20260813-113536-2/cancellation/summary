@@ -1,0 +1,2 @@
+case=cancellation rc=124 expected_rc=124 elapsed_seconds=2
+fake_pid=114 alive_after_wait=yes signal_recorded=no

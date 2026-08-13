@@ -1,0 +1,83 @@
+#!/usr/bin/env bash
+# Fake `codex` executable for the observable-waiting spike.
+set -uo pipefail
+
+mode="${FAKE_CODEX_MODE:-success}"
+duration="${FAKE_CODEX_DURATION:-1}"
+pid_file="${FAKE_CODEX_PID_FILE:-}"
+signal_file="${FAKE_CODEX_SIGNAL_FILE:-}"
+session_id="${FAKE_CODEX_SESSION_ID:-019-spike-fresh}"
+last_message=""
+is_resume=0
+
+on_signal() {
+  if [ -n "$signal_file" ]; then
+    printf 'terminated pid=%s\n' "$$" > "$signal_file"
+  fi
+  exit 143
+}
+trap on_signal TERM INT HUP
+
+if [ -n "$pid_file" ]; then
+  printf '%s\n' "$$" > "$pid_file"
+fi
+
+args=("$@")
+for ((index = 0; index < ${#args[@]}; index += 1)); do
+  token="${args[$index]}"
+  case "$token" in
+    resume)
+      is_resume=1
+      ;;
+    --output-last-message|-o)
+      index=$((index + 1))
+      last_message="${args[$index]}"
+      ;;
+    019-*)
+      if [ "$is_resume" -eq 1 ]; then
+        session_id="$token"
+      fi
+      ;;
+  esac
+done
+
+# Consume the stage prompt so the fake follows the real CLI's stdin shape.
+while IFS= read -r _line; do :; done
+
+printf '{"type":"thread.started","thread_id":"%s"}\n' "$session_id"
+printf '{"type":"turn.started"}\n'
+
+if [ "$mode" = "hang" ]; then
+  while :; do
+    printf '{"type":"item.completed","item":{"type":"agent_message","text":"fake stage alive"}}\n'
+    printf 'fake-codex: alive\n' >&2
+    sleep 1
+  done
+fi
+
+steps=6
+interval=$((duration / steps))
+if [ "$interval" -lt 1 ]; then
+  interval=1
+fi
+
+for ((step = 1; step <= steps; step += 1)); do
+  sleep "$interval"
+  printf '{"type":"item.completed","item":{"type":"agent_message","text":"fake progress %s/%s"}}\n' "$step" "$steps"
+  printf 'fake-codex: progress %s/%s\n' "$step" "$steps" >&2
+done
+
+if [ "$mode" = "exit_failure" ]; then
+  printf '{"type":"turn.failed","message":"fake process failure"}\n'
+  exit 9
+fi
+
+if [ -n "$last_message" ]; then
+  printf 'Fake stage complete.\n\nARTIFACT: .project/active/fake-stage/result.md\n' > "$last_message"
+fi
+
+if [ "$mode" = "event_failure" ]; then
+  printf '{"type":"turn.failed","message":"fake reported failure"}\n'
+else
+  printf '{"type":"turn.completed","usage":{"input_tokens":12,"cached_input_tokens":8,"output_tokens":3,"reasoning_output_tokens":0}}\n'
+fi

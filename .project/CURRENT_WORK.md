@@ -1,6 +1,6 @@
 # Current Work
 
-**Last Updated**: 2026-08-12
+**Last Updated**: 2026-08-13
 
 ---
 
@@ -57,6 +57,10 @@
 ### codex-orchestrator-fork — Codex-native autonomous pipeline orchestration
 - Spec, design, spike, and implementation plan drafted. Phases 1-5 are implemented and validated: Codex helper dry-run and real execution paths, generated script install lane, full `my-orchestrate` replacement, Codex `AGENTS.md` transforms, generated-product tests, installer dry-run, and project checks are in place. Optional live smoke was not run.
 - Artifacts: `.project/active/codex-orchestrator-fork/{spec,design,spike-findings,plan}.md`
+
+### codex-orchestrator-observable-waiting — readable, token-efficient long-stage waiting
+- **Audit remediation applied 2026-08-13; pending fresh certification.** The authored and generated Codex orchestrator now leave both `$my-close` and the post-close `$my-pre-pr` branch gate to the human unless asked, with an exact generated-product regression assertion. The assertion failed before the fix and passes after it; the pack was rebuilt, reinstalled, and byte-matched. An independent product-lens rerun returned CLEAR and resolved `audit-F1` by citation, so SC8 is re-checked. The auditor's six-command validation set passes. Evidence wording is now precise: direct helper cancellation is proven, host-cell interrupt delivery is not; the live resume preserved its thread but used the single bounded fallback wait after the outer cell yielded early. The audit artifact still says Needs Work until a fresh audit certifies the remediation; close and pre-PR remain gated. Non-blocking hardening remains deferred; see `audit.md` and `plan.md`.
+- Separate issue observed during the live fixture: the resumed `my-spec` stage entered a collaboration wait with zero product-lens recipients and reached the helper timeout. A corrective same-thread resume spawned the lens and finished. This item records but does not change that stage-agent routing behavior.
 
 ---
 
