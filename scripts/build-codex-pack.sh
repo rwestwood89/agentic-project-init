@@ -137,6 +137,20 @@ sanitize_command_body_for_skill() {
         s{~/\.claude/scripts/product-lens\.md}{\$HOME/.codex/scripts/product-lens.md}g;
         s{~/\.claude/scripts/mental-model-builder\.md}{\$HOME/.codex/scripts/mental-model-builder.md}g;
         s{~/\.claude/commands/_my_ponytail\.md}{\$HOME/.agents/skills/my-ponytail/SKILL.md}g;
+        s{Use `Task` tool with `subagent_type=general-purpose`}{Use a fresh-context `default` subagent}g;
+        s{Use `Task` tool with `subagent_type=Explore`}{Use a fresh-context `explorer` subagent}g;
+        s{Use `Agent` tool with `subagent_type=Explore`}{Use a fresh-context `explorer` subagent}g;
+        s{use the `Task` tool with `subagent_type=Explore`}{use a fresh-context `explorer` subagent}g;
+        s{using `Task` tool with `subagent_type=Explore`}{using a fresh-context `explorer` subagent}g;
+        s{Spawn a `general-purpose` subagent}{Spawn a fresh-context `default` subagent}g;
+        s{spawn a `general-purpose` subagent}{spawn a fresh-context `default` subagent}g;
+        s{\*\*general-purpose agent\*\*}{**fresh-context `default` subagent**}g;
+        s{\*\*general-purpose agents:\*\*}{**fresh-context `default` subagents:**}g;
+        s{\*\*Explore agent\*\*}{**fresh-context `explorer` subagent**}g;
+        s{\*\*Explore agents:\*\*}{**fresh-context `explorer` subagents:**}g;
+        s{Use Explore subagent}{Use a fresh-context `explorer` subagent}g;
+        s{Task subagents}{Codex subagents}g;
+        s{using the Task tool}{using the collaboration tools}g;
         s{\$ARGUMENTS}{User-provided arguments are supplied when this skill is invoked.}g;
         s{/_my_([a-z_]+)}{
             my $n = $1;
@@ -382,12 +396,19 @@ done < <(find "$CLAUDE_PACK/skills" -mindepth 2 -maxdepth 2 -type f -name 'SKILL
 
 {
     printf "# AGENTS.md\n\n"
-    printf "Generated from \`claude-pack/rules/\`. Rebuild this file instead of editing it by hand.\n\n"
+    printf "Generated from \`claude-pack/rules/\` and \`codex-overrides/rules/\`. Rebuild this file instead of editing it by hand.\n\n"
     while IFS= read -r file; do
         printf "## From \`%s\`\n\n" "$(basename "$file")"
         sanitize_rule_body_for_codex "$file"
         printf "\n\n"
     done < <(find "$CLAUDE_PACK/rules" -maxdepth 1 -type f -name '*.md' | sort)
+    if [ -d "$OVERRIDES_DIR/rules" ]; then
+        while IFS= read -r file; do
+            printf "## From \`codex-overrides/rules/%s\`\n\n" "$(basename "$file")"
+            strip_frontmatter "$file"
+            printf "\n\n"
+        done < <(find "$OVERRIDES_DIR/rules" -maxdepth 1 -type f -name '*.md' | sort)
+    fi
 } > "$DIST_DIR/AGENTS.md"
 
 if [ -d "$OVERRIDES_DIR/scripts" ]; then

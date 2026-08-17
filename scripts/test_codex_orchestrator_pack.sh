@@ -326,9 +326,20 @@ contains "$AGENTS" '\$my-pipeline'
 contains "$AGENTS" '$HOME/.agents/skills/my-pipeline/SKILL.md'
 contains "$AGENTS" 'Stages are quality tools, not mandatory ceremony'
 contains "$AGENTS" 'record the verification'
+contains "$AGENTS" 'fork_turns: "all"'
+contains "$AGENTS" 'Do not combine'
+contains "$AGENTS" 'fork_turns.*defaults to.*"all"'
 does_not_contain "$AGENTS" '~/.claude/commands/_my_pipeline.md'
 does_not_contain "$AGENTS" '/_my_'
 does_not_contain "$AGENTS" 'auto-memory'
+
+if rg -n 'subagent_type=|`Task` tool|`Agent` tool|general-purpose (subagent|agent)|Task subagents|Explore subagent|Explore agent' \
+  "$ROOT/dist/codex/skills" -g 'SKILL.md'; then
+  fail "generated Codex skills retained Claude-specific delegation terminology"
+fi
+contains "$ROOT/dist/codex/skills/my-design/SKILL.md" 'fresh-context `explorer` subagent'
+contains "$ROOT/dist/codex/skills/my-spec/SKILL.md" 'fresh-context `default` subagent'
+contains "$ROOT/dist/codex/skills/my-design-review/SKILL.md" 'fresh-context `default` subagent'
 pass "Codex AGENTS guidance"
 
 setup_out="$(bash "$ROOT/scripts/setup-codex.sh" --dry-run)"
@@ -349,6 +360,7 @@ HOME="$custom_home" bash "$ROOT/scripts/setup-codex.sh" --copy > "$tmpdir/setup-
 grep -q 'Keep this line.' "$custom_home/.codex/AGENTS.md" || fail "installer did not preserve user-authored AGENTS.md content"
 grep -q 'agentic-project-init codex rules begin' "$custom_home/.codex/AGENTS.md" || fail "installer did not append managed AGENTS.md block"
 grep -q 'Stages are quality tools, not mandatory ceremony' "$custom_home/.codex/AGENTS.md" || fail "managed AGENTS.md block missing pipeline rule"
+grep -q 'fork_turns: "all"' "$custom_home/.codex/AGENTS.md" || fail "managed AGENTS.md block missing collaboration rule"
 pass "installer dry-run includes scripts and user-level rules"
 
 echo ""

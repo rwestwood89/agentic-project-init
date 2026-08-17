@@ -39,10 +39,10 @@ Adapt to what exists. Spec is required — refuse to audit without one. Plan and
 
 ### 2. Evaluate
 
-Use `Task` tool with `subagent_type=Explore` for broad code searches.
+Use a fresh-context `explorer` subagent for broad code searches.
 
 **First, run the product-lens and lead with a holistic judgment.** Audit owns the
-implementation-level product check. Spawn a `general-purpose` subagent whose entire instruction
+implementation-level product check. Spawn a fresh-context `default` subagent whose entire instruction
 set is `$HOME/.codex/scripts/product-lens.md` (pack source: `claude-pack/scripts/product-lens.md`).
 SOURCES = the repo's durable product statements (`README`, `docs/`, `.project/adr/`,
 `.project/product/` index-first) plus any owner-verbatim in the concept / Required Reading;
@@ -193,7 +193,7 @@ Read the Source Documents and answer: does the delivered work fulfill the origin
 
 Flag gaps where the shaping intent was lost, narrowed, or deviated from without justification.
 
-**Run the product-lens over the assembled epic** as an independent aggregate check: spawn a `general-purpose` subagent on `$HOME/.codex/scripts/product-lens.md` (pack: `claude-pack/scripts/product-lens.md`); SOURCES = the repo's durable product statements (`README`, `docs/`, `.project/adr/`, `.project/product/` index-first) plus the epic's Source Documents; WORK = the delivered items together. It catches a whole-epic contradiction or omission that no single item audit owned (a composition gap). Append its verdict to the epic's **Product-Lens** block; an unresolved owner/`[HARD]` `BLOCK` or a fired-and-unresolved smell forbids epic certification.
+**Run the product-lens over the assembled epic** as an independent aggregate check: spawn a fresh-context `default` subagent on `$HOME/.codex/scripts/product-lens.md` (pack: `claude-pack/scripts/product-lens.md`); SOURCES = the repo's durable product statements (`README`, `docs/`, `.project/adr/`, `.project/product/` index-first) plus the epic's Source Documents; WORK = the delivered items together. It catches a whole-epic contradiction or omission that no single item audit owned (a composition gap). Append its verdict to the epic's **Product-Lens** block; an unresolved owner/`[HARD]` `BLOCK` or a fired-and-unresolved smell forbids epic certification.
 
 ### 4. Certify the epic
 

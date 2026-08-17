@@ -29,7 +29,7 @@ this same flow). Headless orchestration never generates a checkpoint on the owne
 1. **Get the question.** If `User-provided arguments are supplied when this skill is invoked.` carries it, use it. Otherwise ask the owner what they
    want to understand. Note any starting context you already have (the artifact under
    discussion, paths the owner mentions) — it is a hint for the builder, never a required list.
-2. **Delegate whole.** Spawn a `general-purpose` subagent whose entire instruction set is
+2. **Delegate whole.** Spawn a fresh-context `default` subagent whose entire instruction set is
    `$HOME/.codex/scripts/mental-model-builder.md` (pack source:
    `claude-pack/scripts/mental-model-builder.md`). Hand it exactly two inputs: **QUESTION**
    (verbatim) and **CONTEXT** (the optional starting paths). The builder solely owns discovery,

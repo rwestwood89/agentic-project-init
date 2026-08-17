@@ -39,7 +39,7 @@ When invoked:
    - Note every detail the user provides
 
 2. **Explore the Codebase**
-   - Use `Task` tool with `subagent_type=Explore` to understand current state
+   - Use a fresh-context `explorer` subagent to understand current state
    - Identify relevant components, existing patterns, and integration points
    - Understand what exists today so the concept is grounded in reality
 
@@ -106,7 +106,7 @@ Only enter this stage when the user tells you to.
    - Verify all success criteria are specific and measurable
    - Verify user stories describe real user workflows
    - Verify scope boundaries are clear
-   - Use `Task` tool with `subagent_type=general-purpose` to critically evaluate: vague criteria, missing edge cases, scope creep, solution-prescribing, unclear user stories
+   - Use a fresh-context `default` subagent to critically evaluate: vague criteria, missing edge cases, scope creep, solution-prescribing, unclear user stories
    - Incorporate review feedback
 
 3. **Present to User**

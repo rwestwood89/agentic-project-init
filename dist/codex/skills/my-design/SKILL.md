@@ -115,7 +115,7 @@ CYCLE:
 **Gather information to inform design**:
 
 - **Analyze existing codebase**:
-  - **For complex tasks or broad searches**: Use `Task` tool with `subagent_type=Explore` to find related code
+  - **For complex tasks or broad searches**: Use a fresh-context `explorer` subagent to find related code
   - **For targeted investigation**: Use Grep/Read to examine specific files
   - Extract: Reusable utilities, patterns, conventions, error handling approaches
   - Identify: Integration points with specific file:line references
@@ -381,11 +381,11 @@ Next Step: After approval → ``my-implement`` or ``my-plan``
 - **"Technically works" is not good design**: A design that works but is awkward, unintuitive, or fragile is a bad design
 - **Solving the wrong problem**: If you're drawn to a more "interesting" adjacent problem, check yourself against the spec
 - **Restating the spec or research in prose**: If a section is mostly repeated context, link to the source artifact and keep the design focused on strategy. Exception: **The Point** is carried deliberately — state the product obligation the design serves in full rather than linking away, because every later stage checks against it (see capture-fidelity, "carry the problem")
-- **Mechanism dressed as a bet**: If your "bet" reads like "we use X to do Y," it's a decision, not a bet. Bets are claims about reality ("Opus can produce better cross-concept judgment than a fixed pipeline"). Decisions are mechanism choices ("we orchestrate via Task subagents rather than a Python fan-out loop"). If you can't state a clean "if false → ..." failure mode for a bullet, it's a decision.
+- **Mechanism dressed as a bet**: If your "bet" reads like "we use X to do Y," it's a decision, not a bet. Bets are claims about reality ("Opus can produce better cross-concept judgment than a fixed pipeline"). Decisions are mechanism choices ("we orchestrate via Codex subagents rather than a Python fan-out loop"). If you can't state a clean "if false → ..." failure mode for a bullet, it's a decision.
 
 ### Critical Requirements
 - Read spec FULLY before starting, especially business goals
-- Use `Task` tool with `subagent_type=Explore` for complex codebase searches
+- Use a fresh-context `explorer` subagent for complex codebase searches
 - Present alternatives when approach is uncertain
 - Get user approval on major decisions
 - Include specific file:line references
@@ -408,7 +408,7 @@ Next Step: After approval → ``my-implement`` or ``my-plan``
 ### Error Handling
 - If spec doesn't exist: STOP and ask user to create it (suggest ``my-spec``)
 - If approach uncertain: Present options to user
-- If codebase integration unclear: Use Explore subagent
+- If codebase integration unclear: Use a fresh-context `explorer` subagent
 
 ### Success Criteria
 - Core concept is clear and justified — not just "works"

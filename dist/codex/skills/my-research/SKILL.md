@@ -37,9 +37,9 @@ When invoked:
 
 Spawn appropriate agents:
 
-- **Explore agent** (thoroughness: "medium"): Find all files related to topic
-- **general-purpose agent**: Analyze implementation details
-- **Explore agent** (thoroughness: "quick"): Find similar patterns
+- **fresh-context `explorer` subagent** (thoroughness: "medium"): Find all files related to topic
+- **fresh-context `default` subagent**: Analyze implementation details
+- **fresh-context `explorer` subagent** (thoroughness: "quick"): Find similar patterns
 
 **Wait for all agents to complete** before proceeding.
 
@@ -136,12 +136,12 @@ This research provides a complete answer to "{original question}".
 
 ### Sub-Agent Usage
 
-**Explore agents:**
+**fresh-context `explorer` subagents:**
 - Use parallel agents to maximize efficiency
 - Specify thoroughness level ("quick", "medium", "very thorough")
 - Find files, patterns, and related components
 
-**general-purpose agents:**
+**fresh-context `default` subagents:**
 - Complex analysis tasks
 - Implementation detail examination
 - Cross-component integration analysis

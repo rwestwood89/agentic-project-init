@@ -34,7 +34,7 @@ When invoked:
 1. **Read the request completely.** Note every detail; lose nothing. If the user references research (`.project/research/{file}`) or existing code, read it fully.
 2. **Read light context** if relevant: `.project/CURRENT_WORK.md`, `CLAUDE.md` conventions.
 3. **Read Required Reading from the epic** if this item belongs to one. Look for the item in the epic's Backlog Items section and read the files listed under its `**Required Reading**:` field. These are the shaping-tier files (concepts, concept-designs, research) that carry the original intent for this item. Treat them as **primary input** — they inform requirements and success criteria. If a listed file doesn't exist, note it as missing context rather than failing. If the item has no epic or no Required Reading listed, skip this step.
-4. **Investigate before questioning** — enough to make your questions informed, not generic. For a trivial ask, this is a glance. For a real feature, use the `Task` tool with `subagent_type=Explore` to find existing patterns, integration points, and constraints. Don't over-research a one-line ticket.
+4. **Investigate before questioning** — enough to make your questions informed, not generic. For a trivial ask, this is a glance. For a real feature, use a fresh-context `explorer` subagent to find existing patterns, integration points, and constraints. Don't over-research a one-line ticket.
 5. **Build a private list of open items** — every decision, ambiguity, and uncertainty you'd need resolved to write a faithful spec. You will rank and work this list in Stage 2. Do not put it in the artifact.
 
 ### Stage 2: The questioning loop
@@ -146,7 +146,7 @@ Before presenting, check:
 - Did I keep solution choices out of the requirements, and park them in Open Questions instead?
 
 **Run the product-lens on the drafted spec.** The spec is a place scope narrows, so an
-independent check re-derives the point here. Spawn a `general-purpose` subagent whose entire
+independent check re-derives the point here. Spawn a fresh-context `default` subagent whose entire
 instruction set is `$HOME/.codex/scripts/product-lens.md` (pack source:
 `claude-pack/scripts/product-lens.md`). SOURCES = the repo's durable product statements
 (`README`, `docs/`, `.project/adr/`, `.project/product/` index-first) plus any owner-verbatim

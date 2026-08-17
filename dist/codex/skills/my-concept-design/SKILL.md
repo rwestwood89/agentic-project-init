@@ -125,7 +125,7 @@ A design concept that isn't grounded in the actual codebase is useless. You cann
 
 2. **Explore the Codebase (REQUIRED — DO NOT SKIP)**
 
-   Use `Agent` tool with `subagent_type=Explore` to understand:
+   Use a fresh-context `explorer` subagent to understand:
    - How the relevant area currently works
    - What patterns exist today
    - What's broken or missing
@@ -436,7 +436,7 @@ After writing or patching the document:
 
 2. **Verify against the codebase (REQUIRED EVERY ITERATION)**
 
-   Use `Agent` tool with `subagent_type=Explore` to verify:
+   Use a fresh-context `explorer` subagent to verify:
    - Does each component/abstraction in "Core Model" map to current code or an explicitly
      proposed replacement with a clear responsibility and transition?
    - Does each "Required Invariant" say whether it is true today or is an intended change?
