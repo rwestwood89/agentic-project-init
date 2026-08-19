@@ -138,6 +138,262 @@ Pipeline redesign: new bridge command (epic_plan), certification step (audit), a
 
 ---
 
+## P0 - Anchor on the Point
+
+These five tickets address one root failure: agents lose the purpose of the work and produce
+artifacts anchored on mechanics instead of outcomes. They are discrete strategies but need to be
+considered together and prioritized as a group.
+
+**Root cause (observed):** The agent reads for actions, not intent. Every "understand the point"
+instruction in the pipeline can be satisfied by extraction or skipped silently. The concept doc —
+the source of truth — already mixes outcomes with solution architecture, so even faithful
+extraction propagates design vocabulary into problem space. The pipeline has 26 point-anchoring
+mechanisms; zero produce a checkable artifact whose wrongness is visible without human review.
+
+**Reference:** `.project/research/20260818-151200_anchor-on-the-point-inventory.md`
+
+---
+
+### [AOP-001] Keep the concept stage outcome-pure
+
+**Priority:** P0
+**Status:** Backlog
+**Estimate:** M
+**Category:** Command Improvement
+**Affected File:** `claude-pack/commands/_my_concept.md`
+
+#### Problem
+
+The concept doc is the source of truth for what the work is and why. But the current
+`/_my_concept` command allows — and the agent gravitates toward — mixing outcomes with solution
+architecture. Terms like "stage contract," "attributed chain," and "content-addressable artifacts"
+leak into the problem space, and every downstream document inherits them. By the time the
+orchestrator reads the concept, it's thinking in stages and artifacts instead of "the user wants
+to tweak a setting and refit."
+
+The concept doc for the staged-fitting pipeline captures "iterate on hyperparameters" strongly,
+"fit other xRHB configs" as intent only, and "iterate on model forms" weakly — despite all three
+being stated in the concept conversation.
+
+#### Strategy
+
+Groom `/_my_concept` to enforce outcome/behavior language and reject solution architecture:
+
+- **No terms that don't exist before this work.** If the concept introduces vocabulary (stages,
+  artifacts, chains, contracts), it's doing design, not capturing the problem.
+- **Problem framed as cost.** What can't the user do today, and what does it cost them?
+- **Success framed as capability.** What does the user do differently after?
+- **Strategy at the "what, not how" altitude.** "Replace the scattered fitting process with a
+  clean pipeline" — not "four explicit configurable steps with content-addressed artifacts."
+
+Build a set of product-anchoring documents (including PDRs) that can be used for outcome
+grounding, free of design and code biases.
+
+#### Acceptance Criteria
+
+- [ ] `/_my_concept` has explicit guidance rejecting solution-architecture language
+- [ ] The concept template separates problem/cost from strategy, with strategy constrained to
+      "what, not how"
+- [ ] Product-anchoring document set identified and referenced (concept, PDRs, epic problem
+      statements)
+- [ ] Test: re-run the staged-fitting concept through the revised command; all three outcome
+      dimensions (model iteration, hyperparameter iteration, multi-config fitting) captured at
+      equal strength
+
+---
+
+### [AOP-002] PDRs as live anchors during execution
+
+**Priority:** P0
+**Status:** Backlog
+**Estimate:** S
+**Category:** Workflow Improvement
+**Depends On:** AOP-001 (product-anchoring doc set)
+
+#### Problem
+
+PDRs (Product Design Records) are currently written after implementation as anchoring for future
+work. But the execution process — spec, design, implementation — is where the point gets lost.
+A PDR written at the start of an activity, with status tracking, would serve as an outcome anchor
+*within* the pipeline, not just after it.
+
+#### Strategy
+
+- Add status field to PDRs: `draft` | `in-progress` | `completed`
+- PDR written at activity start, referencing the spec or epic it supports
+- Pipeline commands can read the PDR for outcome grounding (the "what does done look like for
+  the user" framing) without touching design docs or code
+- Status tracks whether the capability has been implemented, addressing the "we want to do it
+  but it hasn't been built" ambiguity
+
+#### Acceptance Criteria
+
+- [ ] PDR template includes status field with defined values
+- [ ] PDR creation integrated into pipeline entry (concept or spec stage)
+- [ ] At least one pipeline command (design, implement) references the PDR for outcome grounding
+- [ ] PDR updates to `completed` as part of `/_my_close`
+
+---
+
+### [AOP-003] Carve out infected language from prompts
+
+**Priority:** P0
+**Status:** Backlog
+**Estimate:** L
+**Category:** Prompt Improvement
+
+#### Problem
+
+Pipeline command prompts use compressed, jargon-heavy language that agents pattern-match and
+propagate. "Attributed chain," "stage contract," "conservatism as configuration" — these terms
+become the agent's working vocabulary, and once the vocabulary is set, the agent writes about
+mechanisms instead of outcomes. The human review checkpoints become expensive because the
+reviewer has to decode the jargon to verify the point.
+
+#### Strategy
+
+Go through all prompts and rewrite in simplified technical English. Add voice guides where needed.
+
+#### Open question (noted by owner)
+
+This is a genuine tension. 99% of the markdown is consumed by another AI, so compressed
+language is token-efficient for agent-to-agent communication. But if we permit it, the remaining
+human checkpoints become painfully expensive. And it is hard to get Claude to code-switch between
+compressed-for-agents and plain-for-humans — it tends to write everything in whatever register it
+last read.
+
+Two approaches to test:
+- **Full plain English everywhere.** Longer prompts, but human-readable at every checkpoint.
+  Agents may produce clearer output because their input is clearer.
+- **Plain English for outcome-facing sections only.** Allow compressed language in mechanism
+  sections (design internals, implementation details) but enforce plain language in problem
+  statements, success criteria, and "The Point" sections.
+
+#### Acceptance Criteria
+
+- [ ] Audit of all `_my_*` commands for jargon-heavy language
+- [ ] At least the outcome-facing sections rewritten in plain technical English
+- [ ] Decision documented: full plain English vs. outcome-sections-only
+- [ ] Voice guide updated or extended if needed
+
+---
+
+### [AOP-004] Fix test quality — real behaviors, not existence proofs
+
+**Priority:** P1
+**Status:** Backlog
+**Estimate:** L
+**Category:** Quality Improvement
+
+#### Problem
+
+Tests generated by agents are currently useless:
+- ~95% prove a thing exists (class instantiates, method returns something, file is present)
+- Almost none test real edge cases or end-to-end behaviors
+- The test suite gives false confidence — green check marks on tests that don't verify anything
+  meaningful
+
+This connects to the anchoring problem: an agent that doesn't understand the *point* of the code
+writes tests that check structure, not behavior, because structure is extractable and behavior
+requires understanding.
+
+#### Strategy
+
+TBD — needs its own research/concept pass. Possible directions:
+- Test prompts that require stating the behavior under test before writing the assertion
+- Example-based guidance: "a good test for a fitting pipeline checks that changing a
+  hyperparameter produces a different fit, not that the pipeline object has a `fit` method"
+- Spec-derived test requirements: success criteria in the spec map to test cases
+
+#### Acceptance Criteria
+
+- [ ] Concrete strategy defined (needs research)
+- [ ] At least `/_my_implement` updated with test-quality guidance
+- [ ] Measurable: ratio of behavior-testing vs. existence-testing assertions improves in a
+      real project
+
+---
+
+### [AOP-005] Force contemplation on outcomes — comprehension pump
+
+**Priority:** P0
+**Status:** Backlog
+**Estimate:** M
+**Category:** Hook / Enforcement Mechanism
+
+#### Problem
+
+The pipeline has 26 "understand the point" instructions. All 14 instruction-type mechanisms can
+be silently skipped. All 5 template slots can be filled by extraction. The 4 product-lens gates
+catch contradiction but not absence. Zero mechanisms produce a transfer task — a question whose
+answer requires synthesis, not extraction.
+
+The core asymmetry: the agent does 100% of steps that produce an auditable artifact and ~0% of
+steps that are "read and understand." Norms get skimmed; steps that must produce checkable
+output get done.
+
+#### Strategy
+
+Convert "understand the point" into steps that emit something checkable, using two approaches:
+
+**Exhibit A: Comprehension-pump hook (directed self-reflection)**
+
+A Stop hook that blocks the agent with three directed transfer questions before allowing
+completion at high-leverage moments (orchestrator orientation, handoff writing, deliverable
+writing). Each question forces a different kind of synthesis:
+
+1. "What problem existed before this work — what couldn't the user do?"
+2. "What does the user do differently after? What capability do they gain?"
+3. "How does the strategy solve that specific problem? Why this approach?"
+
+The hook is three static strings, no LLM critic. Value: forces three re-derivation passes.
+Limitation: the agent can still produce three plausible-sounding wrong answers — but it's
+harder than producing one, and the output is visible.
+
+Full design and implementation options documented in:
+`.project/research/20260818-151200_anchor-on-the-point-inventory.md` (Hook Implementation section)
+
+**Exhibit B: Multi-turn outcome anchoring before execution**
+
+A prompting pattern that anchors the agent on outcomes before it reads any design docs or code.
+The agent reads ONLY the concept doc and product-anchoring materials, then answers directed
+questions about the problem and strategy. Only after this anchoring step does it proceed to
+read design/implementation docs.
+
+Tested manually with promising results: the agent produced nuanced, graded analysis of outcome
+capture strength ("captured strongly," "captured as intent only," "captured weakest") when
+restricted to the concept doc and asked transfer questions. Unclear if the pattern holds without
+human follow-up questions — needs testing.
+
+Example prompt pattern (tested on staged-fitting-pipeline):
+```
+Read ONLY the concept doc. In 5 sentences or less, cover:
+- What is the problem we are solving
+- What are the fundamental design patterns that must hold
+- What does that mean for the design of [specific item]
+
+Do NOT read any documents I did not directly reference.
+```
+
+#### Open design questions
+
+1. Can the Stop hook's three-pass pattern produce the same depth as human-directed questioning,
+   or does it flatten to extraction without follow-up?
+2. Should the outcome-anchoring step be a separate command (`/_my_orient`) or integrated into
+   existing commands?
+3. How to prevent the agent from reading design/code docs during the anchoring step — instruction
+   ("do NOT read") vs. structural (subagent with restricted tool access)?
+
+#### Acceptance Criteria
+
+- [ ] At least one approach (hook or multi-turn) prototyped and tested on a real work item
+- [ ] Test result documented: did the agent's understanding improve measurably vs. baseline?
+- [ ] If successful, integrated into at least the three high-leverage points (orchestrator
+      orientation, handoff, deliverable writing)
+- [ ] The agent's comprehension output is visible (not just internally processed)
+
+---
+
 ## P1 - High Priority
 
 ### [BL-001] Improve `/implement` command code scrutiny
