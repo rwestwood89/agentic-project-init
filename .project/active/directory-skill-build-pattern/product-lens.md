@@ -44,3 +44,25 @@ Notes on the three owner decisions, so they are not re-litigated: all three are 
   have covered it. The epic's High risk needs re-pointing at Item 4 — flagged to the owner.
   Item 2 keeps the weaker but real evidence: underscores are legal skill names, and a
   directory-form skill resolves and reads a sibling (proven with `example-skill`).
+
+### Follow-up: epic restructured, both handoffs landed (2026-08-20, same day)
+
+The owner reordered the epic after these dispositions were written: this item moved from first to
+last, and the skill itself is now built and proven on Claude before any packaging work. Item
+numbering changed — this item is **Item 5**, not Item 2. The two forward handoffs above are no
+longer outstanding:
+
+- **spec-F2 resolved.** The `_my_mental_model` allowlist entry is now in *this* item's scope, stated
+  in the spec's "Added to scope by the restructure" section and in the epic's Item 5 In Scope, keyed
+  pack-side. It is also guarded by a manifest assertion in the design's Validation section, so
+  omitting it fails a test instead of failing silently.
+- **spec-F3 resolved.** The `/_my_*` slash-resolution proof is owned by epic Item 3, which creates
+  the real directory and invokes it; the epic's risk table is re-pointed there. Item 3's done-state
+  additionally requires recording the working form of a sibling reference.
+
+Consequence for the design, recorded so a later reviewer sees it was deliberate: decision **D5**
+(parameterize the build's roots so a tmpdir fixture pack could prove the name mapping) is now
+**rejected** — the real skill exercises the mapping and the nested copy every build, so the fixture
+duplicated its subject. **D7**'s rationale narrowed from "the throwaway proof subject" to "the
+pack's copyable example, plus retiring known dead weight," and is droppable at the owner's
+discretion. Gate unchanged: **DISPOSED**.

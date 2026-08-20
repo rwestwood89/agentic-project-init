@@ -5,7 +5,9 @@
 **Created:** 2026-08-20 10:24
 **Complexity:** MEDIUM
 **Branch:** anchor-on-the-point
-**Epic:** MENTAL-ALIGN-V2, Item 2
+**Epic:** MENTAL-ALIGN-V2, **Item 5** — written as Item 2, moved last by the 2026-08-20 restructure
+(see the epic's "Restructure" section). The move changed two things in this spec, marked below:
+the allowlist entry became in-scope, and the throwaway-name decision lost its original purpose.
 
 ---
 
@@ -36,9 +38,14 @@ and deliberately left it alone (`.project/active/pipeline-guide/design.md:41`). 
 skill example is a non-functional file in a form nobody should copy — exactly the pattern-matching
 failure ADR 0009 exists to prevent.
 
-The mental-alignment skill is the first capability that needs this plumbing, but the plumbing is
-generic and every future migration uses it. It gets proven on its own, with a placeholder skill,
-before any real behavior depends on it.
+The mental-alignment skill is the first capability that needs this plumbing, and the plumbing is
+generic — every future command→skill migration uses it.
+
+**Ordering, changed 2026-08-20.** This item was originally first in the epic, proving the lane with
+a placeholder before any real skill existed. The owner moved it last: the skill gets built and
+proven on Claude first, and this item then ships it to Codex. So by the time this runs,
+`claude-pack/skills/_my_mental_model/` already exists with an instruction sibling and a nested
+`feedback/` directory, and it is this item's real test subject rather than a stand-in.
 
 ## Success Criteria
 
@@ -47,8 +54,9 @@ before any real behavior depends on it.
       `~/.agents/skills/<name>/`, and the Claude install places the whole directory.
 - [ ] Invoking the example skill on Claude works, and a sibling file it references is readable
       from inside that invocation.
-- [ ] A `_my_`-prefixed skill directory would reach Codex under its `my-<name>` form — directory
-      name and frontmatter name both.
+- [ ] `claude-pack/skills/_my_mental_model/` reaches Codex as `my-mental-model` — dist directory
+      name and generated frontmatter name both — and is present in the Codex build rather than
+      silently excluded from it.
 - [ ] The pack ships a directory-skill example in the correct form, so a future author copying it
       gets the right shape. `example-skill` is no longer inert on Claude.
 - [ ] The new sibling-copying behavior has a regression check, so a later change that drops
@@ -71,11 +79,17 @@ before any real behavior depends on it.
   Codex build (`codex-overrides/config.sh:58`).
 - **[HARD]** A flat `.md` file in `claude-pack/skills/` never registers as a skill in Claude Code.
   Any skill that must actually load has to be a directory with a `SKILL.md`.
-- **[NEED]** The pattern is proven under a throwaway name, not under `_my_mental_model`. The real
-  skill directory is created later, in Item 4, on an already-proven lane. (Owner, 2026-08-20.)
-- **[NEED]** The throwaway is `example-skill`, converted from the flat file to directory form and
-  kept in the pack afterwards, so the proof leaves behind both a durable regression fixture and
-  the copyable example. (Owner, 2026-08-20.)
+- **[NEED]** `example-skill` is converted from its flat file to directory form and kept in the
+  pack. (Owner, 2026-08-20.) *Premise changed by the restructure:* the owner chose this as a
+  throwaway subject so the lane could be proven without creating `_my_mental_model` prematurely.
+  Under the new ordering the real skill exists first and is the subject, so the conversion no
+  longer carries the proof. The decision stands on its remaining merits — it retires a file two
+  prior designs recorded as inert dead weight, and it leaves the pack a copyable directory-skill
+  example, which is what ADR 0009 exists to protect. It is now droppable at the owner's discretion
+  rather than load-bearing.
+- **[NEED]** The pattern is not proven under `_my_mental_model` *before* that skill exists.
+  (Owner, 2026-08-20.) Satisfied by construction now: the skill is built in epic Item 3, and this
+  item ships it.
 - **[INHERITED]** Sibling copying must reach files nested inside subdirectories, not only flat
   siblings — the real skill's `feedback/` directory is the case that breaks a flat walk.
   (`.project/concepts/mental-alignment-skill-design.md:252`.)
@@ -89,33 +103,45 @@ before any real behavior depends on it.
 
 ## Non-Goals
 
-- The mental-alignment coordinator, synthesis, or render behavior. Items 4 and 5.
-- Retiring the v1 command and builder, and their build wiring. Item 3.
-- Creating `claude-pack/skills/_my_mental_model/`. Item 4, per the owner decision above.
+- The mental-alignment coordinator, synthesis, or render behavior. Epic Items 3 and 4.
+- Deleting the two v1 authored files (`claude-pack/commands/_my_mental_model.md`,
+  `claude-pack/scripts/mental-model-builder.md`). Epic Item 2. Their **remaining build wiring,
+  docs, and test references are in scope here** — see "Added to scope by the restructure" below.
+- Creating `claude-pack/skills/_my_mental_model/` and its instruction and feedback files. Epic
+  Item 3.
 - Widening the runtime-neutrality scan to cover sibling files. ADR 0010 left this to spec; the
   decision is not to widen it, so sibling neutrality stays convention-only
   (owner, 2026-08-20). The scan remains `test_codex_orchestrator_pack.sh:336-338`, globbed
   `-g 'SKILL.md'`.
 - Migrating the remaining `_my_*` commands to skills, or moving the prose specs out of
   `claude-pack/scripts/`. Deferred by ADR 0009's scope note.
-- Adding `_my_mental_model` to `NATIVE_SKILL_ALLOWLIST`. `example-skill` is already allowlisted
-  (`codex-overrides/config.sh:59`), so this item performs no allowlist addition. Item 4 owns that
-  step, and the entry must be the **pack-side** directory name `_my_mental_model`, not the Codex
-  name `my-mental-model` — the check is keyed on the source directory (`build-codex-pack.sh:390`).
-  A missing entry excludes the skill from the Codex build with no error. (product-lens spec-F2.)
-- Proving that a `/_my_*` slash invocation resolves to a directory skill. Under the throwaway-name
-  decision the live probe is `example-skill`, which has no `_my_` prefix, so the first live
-  `/_my_*` directory-skill invocation is Item 4's proof. This item establishes the two weaker
-  facts that de-risk it: underscores are legal in a Claude skill name, and a directory-form skill
-  resolves and can read a sibling. The epic's High risk on this point needs re-pointing at Item 4.
-  (product-lens spec-F3.)
+- Proving that a `/_my_*` slash invocation resolves to a directory skill on **Claude**. That
+  happens in epic Item 3, which creates the real directory and invokes it, and the epic's risk
+  table is re-pointed there. Proving it on **Codex** is in scope here. (product-lens spec-F3.)
+
+## Added to scope by the restructure (2026-08-20)
+
+Moving this item last pulled three things in that were previously someone else's:
+
+- **[INHERITED]** Add `_my_mental_model` to `NATIVE_SKILL_ALLOWLIST`. The entry must be the
+  **pack-side** directory name `_my_mental_model`, not the Codex name `my-mental-model` — the check
+  is keyed on the source directory (`build-codex-pack.sh:370`). A missing entry excludes the skill
+  from the Codex build with no error. This was a Non-Goal when the item ran first and no such
+  directory existed. (product-lens spec-F2.)
+- **[INHERITED]** The remaining v1 wiring cleanup, which old epic Item 3 owned: the path rewrite at
+  `build-codex-pack.sh:138`, the shared-spec copy at `:426`, the description override at
+  `codex-overrides/config.sh:37`, the `README.md:131` catalog row, the `scripts/test_docs.sh`
+  retired list, and the `scripts/uninstall-project.sh:108-114` skill list. Each was verified
+  harmless if left in place, which is why the deletes could ship separately as epic Item 2.
+- **[INHERITED]** Wiring the Codex resumed-render path, using epic Item 1's confirmed finding that
+  Codex can continue a spawned agent. Item 1 also found Codex reports no per-agent token count.
 
 ## Open Questions / Deferred to design
 
-- **How the `_my_x` → `my-x` mapping gets proven.** The pack will contain no `_my_`-prefixed skill
-  directory when this item finishes, so the live probe cannot exercise the mapping. Design chooses:
-  a temporary fixture inside the pack test's tmpdir, or accept that the first live proof is Item
-  4's build.
+- ~~**How the `_my_x` → `my-x` mapping gets proven.**~~ **Resolved by the restructure.**
+  `_my_mental_model` exists before this item runs, so every build exercises the mapping and the
+  nested-sibling copy for real. The design's answer to this question (parameterize the build's
+  roots so a fixture pack can be built in a tmpdir) lost its purpose and is recorded as rejected.
 - **Where the Codex skill name comes from.** The build currently reads the frontmatter `name`
   (`build-codex-pack.sh:375`) and falls back to the directory name. On Claude the frontmatter name
   has to match the directory, so for a `_my_`-prefixed skill the build cannot trust frontmatter —
@@ -127,8 +153,10 @@ before any real behavior depends on it.
   `setup-global.sh`, or a general "managed symlink whose source no longer exists" sweep.
 - **What the regression check asserts.** Sibling presence in `dist/`, in a temp-HOME Codex
   install, or both.
-- **Whether `uninstall-project.sh:109`** (which hardcodes `example-skill.md`) needs the directory
-  form added here or belongs with Item 3's cleanup of that same list.
+- **What `uninstall-project.sh:108-114` should list.** It hardcodes `example-skill.md` in its
+  file loop and `show-me` in its directory loop. Both the converted `example-skill` and
+  `_my_mental_model` need directory entries, and the flat `example-skill.md` entry should stay for
+  projects vendored before this change. One list, one edit — no longer split across two items.
 - **What happens to the flat native-skill build lane** (`build-codex-pack.sh:335-365`). Converting
   `example-skill` leaves it with no user in the pack, but it still works: a flat `.md` dropped in
   `claude-pack/skills/` would build a functioning Codex skill while registering nothing on Claude
@@ -139,7 +167,7 @@ before any real behavior depends on it.
 
 ## Related Artifacts
 
-- **Epic:** `.project/backlog/epic_mental_alignment_skill.md` (MENTAL-ALIGN-V2, Item 2)
+- **Epic:** `.project/backlog/epic_mental_alignment_skill.md` (MENTAL-ALIGN-V2, Item 5)
 - **Required Reading:**
   - `.project/concepts/mental-alignment-skill-design.md` — Distribution lane, Appendix
     (Codex build/install changes, Claude install)

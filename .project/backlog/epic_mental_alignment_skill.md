@@ -1,18 +1,69 @@
 # Epic: Mental Alignment Skill v2
 
 **Epic ID**: MENTAL-ALIGN-V2
-**Status**: Draft
+**Status**: In progress (Item 1 done)
 **Priority**: P0
 **Created**: 2026-08-20
-**Estimated Effort**: 4-5.5 days
+**Restructured**: 2026-08-20 — see "Restructure" below
+**Estimated Effort**: 3-4.5 days remaining (0.5 days spent)
 
 ---
 
 ## Executive Summary
 
-Replace the failed single-agent mental-alignment command with a two-agent, one-pause skill that makes the thinking step visible, correctable, and improvable. The v1 shipped one fresh agent with one instruction set covering discovery, thinking, and rendering; it skipped the thinking, dropped the owner's reasoning, and forced one output shape. This epic builds the v2 skill directory with two agents (synthesis and render) separated by a mandatory human pause, three context policies classified from the request, and two feedback bodies across two tiers.
+Replace the failed single-agent mental-alignment command with a two-agent, one-pause skill that
+makes the thinking step visible, correctable, and improvable. The v1 shipped one fresh agent with
+one instruction set covering discovery, thinking, and rendering; it skipped the thinking, dropped
+the owner's reasoning, and forced one output shape. This epic builds the v2 skill directory with two
+agents (synthesis and render) separated by a mandatory human pause, three context policies
+classified from the request, and two feedback bodies across two tiers.
 
-**Critical Success Factor**: The synthesis step produces a readable, correctable skeleton before any HTML exists, and the owner's reasoning from conversation reaches it when policy says it should.
+**Build and prove the skill on Claude first. Runtime parity comes last, as one item.**
+
+**Critical Success Factor**: The synthesis step produces a readable, correctable skeleton before any
+HTML exists, and the owner's reasoning from conversation reaches it when policy says it should.
+
+---
+
+## Restructure (2026-08-20, owner decision)
+
+The original decomposition put the distribution plumbing first: prove the directory-skill build
+lane (old Item 2), retire v1 completely (old Item 3), then build the skill (old Items 4, 5). In
+practice that front-loaded a long chain of Claude-versus-Codex packaging questions ahead of the
+capability the epic exists to deliver, and the owner stopped it: *"I want to start testing the
+fucking skill, using claude is fine."*
+
+The dependency that justified the original order turned out to be one file deletion. Verified
+against the working tree:
+
+- Item 3's "must happen atomically" framing was overcautious. The only thing the skill items need
+  from v1 retirement is that `/_my_mental_model` resolve to the skill rather than the old command —
+  two `rm`s, now Item 2.
+- Leaving the rest of the v1 wiring in place breaks nothing. `build-codex-pack.sh:138` is a perl
+  substitution that stops matching; `:426` is guarded by `[ -f ]`; `codex-overrides/config.sh:37`
+  becomes an unused map key; `test_docs.sh` requires a README catalog row only for command files
+  that **exist**, and `_my_mental_model` is not in that test's retired-names list, so the leftover
+  README row does not fail either.
+- The Claude install needs no build change at all: `setup-global.sh:126-134` already symlinks whole
+  skill directories, so siblings arrive with the skill.
+
+**Old → new item mapping**, so the Product-Lens block and the source documents below stay readable:
+
+| Old | New | Change |
+|---|---|---|
+| Item 1 — Codex resume spike | Item 1 | Done 2026-08-20 |
+| Item 2 — Directory-skill build pattern | **Item 5** | Moved last, absorbed old Item 3's cleanup |
+| Item 3 — V1 retirement | **Item 2** (the two deletes) + **Item 5** (the wiring) | Split |
+| Item 4 — Coordinator + synthesis | **Item 3** | Claude-only now |
+| Item 5 — Render + switch + feedback | **Item 4** | Claude-only now |
+
+The spec, design, and product-lens ledger already written for old Item 2 live at
+`.project/active/directory-skill-build-pattern/` and are now Item 5's artifacts. The three owner
+decisions recorded there still stand; one of them has a narrowed rationale, noted in Item 5.
+
+**Do not rebuild `dist/codex/` before Item 5.** Leaving it alone keeps the installed Codex copy of
+the v1 skill working in the meantime. Rebuilding after Item 2's deletes would remove the Codex side
+of `/_my_mental_model` with nothing replacing it.
 
 ---
 
@@ -45,38 +96,60 @@ Replace the failed single-agent mental-alignment command with a two-agent, one-p
 
 ## Success Criteria
 
+Claude-first (Items 2-4):
+
 - [ ] A question produces a readable synthesis markdown (narrative + metadata + judgment) before any HTML, and the owner sees it at a mandatory pause
 - [ ] The owner's conversation reasoning reaches the synthesis under carried policy (fork), and clean-room restrictions are honored
 - [ ] Both render paths (resumed agent, fresh agent) produce HTML that inherits the synthesis narrative and adds a detail layer — not the same words in a different format
-- [ ] Comparison works: both renders on one synthesis, sequential, with wall-clock time and tokens reported
+- [ ] Comparison works: both renders on one synthesis, sequential, with wall-clock time reported (see Item 1's token-measurement finding)
 - [ ] Feedback lands project-local first, attributed to the run; shared starters ship with the skill; promotion targets the shared file
-- [ ] The skill resolves by `/_my_mental_model` on both runtimes, with instruction files and feedback reachable; v1 surfaces are gone
-- [ ] Existing tests pass; build pipeline handles the directory-skill sibling pattern
+- [ ] `/_my_mental_model` resolves to the skill directory on Claude, with instruction files and feedback reachable
+
+Parity and cleanup (Item 5):
+
+- [ ] The skill resolves and runs equivalently on Codex, with its sibling files reachable there
+- [ ] Every v1 surface is gone and every reference to it updated
+- [ ] Existing tests pass; the build pipeline handles the directory-skill sibling pattern generically
 
 ---
 
 ## Epic Strategy
 
 **Value Delivery Path**:
-- First, prove the directory-skill build pattern works with dummy files — this is reusable infrastructure for every future skill migration, and it unblocks everything else.
-- Then retire v1, so there's one clean surface to build on.
-- Then build the highest-value slice: the coordinator + synthesis step, which is useful on its own (the owner can take just the markdown).
-- Last, the render step + switch + feedback, which exercises the composed whole.
+- First release the name (two deletes), so the skill can own `/_my_mental_model`.
+- Then build the highest-value slice: the coordinator + synthesis step, which is useful on its own
+  (the owner can take just the markdown) and which proves the sibling-file mechanics by using them.
+- Then the render step + switch + feedback, which exercises the composed whole.
+- Last, packaging: the Codex native-skill lane, the name mapping, and the v1 cleanup — one item, by
+  which point the real skill is a working subject to test the lane against.
 
-**Critical Path**:
-- Item 2 (build pattern) → Item 3 (v1 retirement) → Item 4 (synthesis) → Item 5 (render + feedback)
-- Item 1 (Codex resume spike) runs in parallel with item 2, but must land before item 5, whose switch design depends on the answer.
+**Critical Path**: Item 2 → Item 3 → Item 4 → Item 5. Item 1 is done.
 
 **Decomposition Logic**:
-- Item 2 is isolated as the reusable pattern — it proves the Claude skill → Codex skill pipeline for directory skills, independent of mental-alignment behavior. Future skill migrations reuse this directly.
-- Item 3 is separated from item 2 because v1 retirement is a file-by-file cleanup that depends on the new pattern being in place, but is otherwise independent work. Mixing it with item 2 would obscure the reusable pattern with mental-alignment-specific cleanup.
-- Items 4 and 5 split at the mandatory human pause, which is a real architectural seam. The synthesis is independently valuable; the render step exercises the composed whole and owns the feedback system.
-- Spec details intentionally deferred: the synthesis template (section-by-section contents), the pairing mechanism (filename stem vs. metadata pointer), classification wording, comparison naming, spawn-prompt composition, feedback file formats, the promotion procedure.
+- Item 2 is the minimum unblock: the name. Nothing else about v1 retirement gates the skill work.
+- Items 3 and 4 split at the mandatory human pause, which is a real architectural seam. The
+  synthesis is independently valuable; the render step exercises the composed whole and owns the
+  feedback system.
+- Item 5 is isolated as the reusable packaging pattern — it proves the Claude skill → Codex skill
+  pipeline for directory skills, independent of mental-alignment behavior, and future skill
+  migrations reuse it directly. Running it last means it has a real skill with real siblings to
+  prove itself against instead of a placeholder.
+- Spec details intentionally deferred: the synthesis template (section-by-section contents), the
+  pairing mechanism (filename stem vs. metadata pointer), classification wording, comparison
+  naming, spawn-prompt composition, feedback file formats, the promotion procedure.
 
 **De-risking**:
-- Item 1 exists because the Codex resume capability is an unverified bet. The design handles the fallback (Codex always takes fresh), but item 5's spec needs to know the answer.
-- The fork bet (carried policy improves synthesis quality) is tested in use during item 4, judged by the owner — not requiring its own spike.
-- The directory-skill mechanism is the third unverified bet: no `/_my_*` slash invocation resolves to a directory skill anywhere in the repo today. Item 2 proves it with a first invocation after install.
+- Item 1 (done) confirmed Codex can resume a spawned agent, so the render switch has both shapes on
+  both runtimes. It also found Codex reports no per-agent token count — a constraint on the
+  comparison, recorded in Item 4.
+- The fork bet (carried policy improves synthesis quality) is tested in use during Item 3, judged by
+  the owner — not requiring its own spike.
+- The Claude sibling-file mechanics — can a skill read a flat sibling, a nested one, and how does it
+  refer to its own directory — are answered by building Item 3, not by a separate probe. Early
+  evidence: underscore-prefixed directory skills do register on Claude (observed 2026-08-20 with
+  throwaway probe skills).
+- The Codex-side unknowns are Item 5's, and a prepared probe prompt for them sits at
+  `/tmp/directory-skill-spike-prompt.md` (its Claude half is superseded by the above).
 
 ---
 
@@ -99,169 +172,114 @@ Gate: CLEAR
 2. **Unowned proofs.** (a) Codex resume — item 1; (b) carried policy produces better synthesis — exercised in item 4, owner-judged; (c) directory-skill lane end-to-end — item 2 for the build lane, verified at first real invocation after item 4. Coverage is implicit but complete.
 3. **ADR reference.** ADRs 0009 (directory-skills pattern) and 0010 (native-skill Codex lane) were already filed at concept-design acceptance. Item 2's spec should reference these existing ADRs rather than filing new ones.
 
+### Post-restructure note (2026-08-20)
+
+The block above was written against the original numbering; read it through the mapping table in
+"Restructure". Its gate stands CLEAR. Observation 1's "items 4 and 5" are now Items 3 and 4;
+observation 2's "item 4" is now Item 3 and its "item 2" is now Item 5; observation 3's "item 2" is
+now Item 5. Observation 2(c) improves under the new order: the directory-skill lane's first real
+invocation now happens in Item 3, *before* the build lane is touched, so the lane is proven against
+a real skill rather than a placeholder.
+
+Two forward handoffs from the spec-stage lens on old Item 2
+(`.project/active/directory-skill-build-pattern/product-lens.md`, gate DISPOSED) land in this file:
+
+- **spec-F2** — the `NATIVE_SKILL_ALLOWLIST` entry is an easy step to lose, because a missing entry
+  excludes the skill from the Codex build with no error, and the check is keyed on the **pack-side**
+  directory name (`_my_mental_model`, not `my-mental-model`). Now explicit in Item 5's In Scope.
+- **spec-F3** — the "does a `/_my_*` slash invocation resolve to a directory skill" proof is now
+  owned by **Item 3**, which creates the real directory and invokes it. The risk table below is
+  re-pointed accordingly.
+
 ---
 
 ## Backlog Items
 
-### Item 1: Codex Resume Spike
+### Item 1: Codex Resume Spike — DONE (2026-08-20)
 
 **Type**: Research
-**Effort**: 0.5 days (spike + findings doc)
-**Dependencies**: None
-**Required Reading**:
-- `.project/concepts/mental-alignment-skill-design.md` (architectural bets, edge cases: "Resume is unavailable")
-- `.project/concepts/mental-alignment-checkpoint.md` (Open Questions §1, Appendix: resume precedent)
-
-**Objective**: Determine whether Codex can resume a spawned agent, which decides whether the render switch has two shapes on Codex or only the fresh-agent path.
-
-**Result (2026-08-20)**: `[AGENT]` Confirmed. Codex resumed one completed spawned agent through a follow-up task under the same identity, with conversation continuity proven by a retained-nonce check. Item 5 may ship the resumed path on Codex. Caveat: the observed collaboration results expose no per-agent token count, so Item 5 must resolve that measurement separately or report it as unavailable rather than estimate it. See `.project/active/codex-resume-spike/spike-findings.md`.
-
-**Why This Is One Work Item**:
-- A single targeted probe: one spawn, one resume attempt, findings doc
-- The answer is binary (yes / no / with-caveats) and gates item 5's switch design on Codex
-
-**In Scope (High Level)**:
-- Spawn a Codex agent, attempt to resume it with a follow-up message
-- Document whether the mechanism works, what limitations exist, and what the token-measurement story looks like
-- Record the decision that flows into item 5
-
-**Non-Goals / Out of Scope**:
-- Building the actual switch — that's item 5
-- Testing Claude resume — it's known to work via `SendMessage`
-- Performance benchmarking — just "does it work at all"
-
-**Success / Done State**:
-- [x] Findings doc with a definitive answer: Codex can / cannot resume a spawned agent, with evidence
-- [x] If yes: what the resume mechanism looks like and any caveats
-- [ ] If no: confirmation that the fallback (Codex always takes fresh) is the right path
-
+**Effort**: 0.5 days (spent)
 **Location**: `.project/active/codex-resume-spike/`
+**Deliverable**: `.project/active/codex-resume-spike/spike-findings.md`
 
-**Deliverables**:
-- `.project/active/codex-resume-spike/spike-findings.md`
+**Outcome**: **Confirmed.** Codex can continue a spawned agent after its first turn completes. A
+follow-up task to the same canonical agent identity started a second turn that recovered a nonce
+held only in the agent's first-turn context, verified by digest. So Item 4 can implement the Codex
+resumed-render path by retaining the synthesis agent's identity; the fresh-agent fallback is still
+needed when the live agent is unavailable.
+
+**Constraint discovered, carried into Item 4**: the Codex collaboration surface reported **no
+per-agent token usage** — spawn, completion, follow-up, wait, and status results exposed identity,
+lifecycle state, and final text, but no token count. The design's premise that the completion
+notification supplies the comparison's token measure does not hold on Codex. Item 4 must either
+find a supported measurement source or report that token comparison is unavailable there. It must
+not estimate.
 
 ---
 
-### Item 2: Directory-Skill Build Pattern
+### Item 2: Release the Name
 
-**Type**: Code/Integration
-**Effort**: 1-1.5 days (spec 2h, design 2h, plan 1h, execute 4-6h)
+**Type**: Cleanup
+**Effort**: ~10 minutes
 **Dependencies**: None
 **Required Reading**:
-- `.project/concepts/mental-alignment-skill-design.md` (Distribution lane, Appendix: Codex build/install changes, Claude install)
-- `.project/concepts/mental-alignment-skill-design-review.md` (ADR candidate 3 assessment, m4 disposition)
-- `.project/adr/0009-directory-skills-pattern.md`
-- `.project/adr/0010-native-skill-codex-lane.md`
+- `.project/concepts/mental-alignment-skill-design.md` (Appendix: "Retiring the v1 surfaces")
 
-**Objective**: Wire the Claude skill → Codex skill pipeline so directory skills with sibling files (instruction files, feedback directories) build and install correctly on both runtimes, using dummy files as the first test case.
+**Objective**: Delete the two v1 authored files so `/_my_mental_model` resolves to the skill
+directory Item 3 creates, and nothing else.
 
 **Why This Is One Work Item**:
-- The build-script changes, install-script changes, allowlist entry, and name mapping are tightly coupled — testing any one requires the others
-- This is reusable infrastructure: every future directory skill uses this pattern, so it deserves its own spec/design cycle independent of mental-alignment behavior
+- It is the only part of v1 retirement that gates the skill work, and it is two deletions
+- Splitting it from the rest of the cleanup is what lets Items 3 and 4 proceed without touching the
+  Codex lane at all
 
-**In Scope (High Level)**:
-- Create `claude-pack/skills/_my_mental_model/` with dummy `SKILL.md` and dummy sibling files (placeholders for `design_synthesis.md`, `visualize.md`, `feedback/`)
-- Extend `build-codex-pack.sh` to copy sibling files in directory skills (currently `build-codex-pack.sh:395` matches only `SKILL.md`)
-- Extend `setup-codex.sh` to install sibling files (currently `setup-codex.sh:267` installs only `SKILL.md`)
-- Add to `NATIVE_SKILL_ALLOWLIST` in `codex-overrides/config.sh:58`
-- Apply `_my_mental_model` → `my-mental-model` name mapping for the dist directory and frontmatter
-- Ensure the SKILL.md frontmatter description is plain prose (Codex YAML parse chokes on leading `*`)
-- Verify `setup-global.sh` symlink behavior for directory skills (expected: already works, `setup-global.sh:126-134`)
-- Test the pattern end-to-end: build, install on both runtimes, invoke by `/_my_mental_model`, confirm sibling files are reachable
-
-**Non-Goals / Out of Scope**:
-- Implementing the actual coordinator/synthesis/render logic — that's items 4 and 5
-- Retiring the v1 command and builder — that's item 3
-- Widening the runtime-neutrality scan to cover sibling files — that's a spec-time decision per ADR 0010; this item honors the convention, not the enforcement
-- Filing new ADRs — 0009 and 0010 already exist
-
-**Success / Done State**:
-- [ ] `/_my_mental_model` resolves to the skill directory on Claude (via symlink) and invokes successfully
-- [ ] `build-codex-pack.sh` copies sibling files into `dist/codex/skills/my-mental-model/`; `setup-codex.sh` installs them to `~/.agents/skills/my-mental-model/`
-- [ ] Existing tests pass; the skill's sibling files are present after build and install
-- [ ] The pattern is generic: another directory skill with siblings would work the same way
-
-**Location**: `.project/active/directory-skill-build-pattern/`
-
-**Deliverables**:
-- `.project/active/directory-skill-build-pattern/spec.md`
-- `.project/active/directory-skill-build-pattern/design.md`
-- `.project/active/directory-skill-build-pattern/plan.md`
-
----
-
-### Item 3: V1 Retirement
-
-**Type**: Code/Integration
-**Effort**: 0.5-1 day (spec 1h, design 1h, plan 0.5h, execute 2-3h)
-**Dependencies**: Item 2 (the new skill directory must exist and the build pipeline must handle it before the v1 surfaces are removed)
-**Required Reading**:
-- `.project/concepts/mental-alignment-skill-design.md` (Appendix: "Retiring the v1 surfaces" — the verified file-by-file inventory)
-
-**Objective**: Remove every v1 surface — the command, builder, and their build wiring — so there is one clean skill-directory entry point for items 4 and 5 to build on.
-
-**Why This Is One Work Item**:
-- The retirement is a file-by-file checklist (the design's Appendix verifies it against the working tree), tightly coupled: removing the command without removing the builder's build wiring leaves dangling references, and vice versa
-- It must happen atomically — after this item, `/_my_mental_model` resolves only through the skill directory
-
-**In Scope (High Level)**:
+**In Scope**:
 - Delete `claude-pack/commands/_my_mental_model.md`
 - Delete `claude-pack/scripts/mental-model-builder.md`
-- Remove path rewrite at `build-codex-pack.sh:138` and shared-spec copy at `build-codex-pack.sh:426`
-- Remove command description override at `codex-overrides/config.sh:37`
-- Update `README.md:131` (catalog row: replace command entry with skill entry)
-- Update `scripts/test_docs.sh` (retired list at line 59 — add `_my_mental_model` so the test forbids a README mention of the old command; the skill's replacement row uses the new name)
-- Update `scripts/uninstall-project.sh:108-114` (add the skill directory to the cleanup list)
-- Rebuild `dist/codex/` (manifest currently lists `my-mental-model` under `command_skills` and `mental-model-builder.md` under `scripts` — both must go, replaced by the skill-directory entry)
-- Verify all tests pass after removal
+- Confirm the suite still passes (docs, pipeline-sync, adr, global-setup, codex-orchestrator)
 
 **Non-Goals / Out of Scope**:
-- Changing the existing stage offers in `_my_concept_design_review` and `_my_epic_plan` — they reference `/_my_mental_model` by name, which still resolves to the skill
-- Migrating the single feedback file at `.project/mental-alignment/feedback.md` — that's item 5's concern
-- Implementing skill behavior — that's items 4 and 5
+- Every other v1 reference — build wiring, `config.sh` override, README row, `test_docs.sh` retired
+  list, `uninstall-project.sh` list, `dist/` rebuild. All Item 5. Each is verified harmless if left
+  in place; see "Restructure".
+- Rebuilding `dist/codex/`. Explicitly deferred so the installed Codex copy keeps working.
 
 **Success / Done State**:
-- [ ] No file named `_my_mental_model.md` exists in `claude-pack/commands/`; no `mental-model-builder.md` in `claude-pack/scripts/`
-- [ ] `build-codex-pack.sh`, `setup-codex.sh`, `codex-overrides/config.sh` contain no references to the retired files
-- [ ] `dist/codex/` manifest reflects the skill-directory entry, not the old command or script
-- [ ] All existing tests pass (docs, pipeline-sync, codex-orchestrator, global-setup)
-
-**Location**: `.project/active/v1-retirement/`
-
-**Deliverables**:
-- `.project/active/v1-retirement/spec.md`
-- `.project/active/v1-retirement/design.md`
-- `.project/active/v1-retirement/plan.md`
+- [ ] Neither file exists
+- [ ] Full existing suite passes with them gone
+- [ ] `dist/codex/` untouched
 
 ---
 
-### Item 4: Coordinator + Synthesis Step
+### Item 3: Coordinator + Synthesis Step (Claude)
 
 **Type**: Implementation
 **Effort**: 1-1.5 days (spec 2h, design 3h, plan 1h, execute 4-6h)
-**Dependencies**: Items 2 and 3 (the skill directory must exist with the build pipeline wired, and v1 must be retired)
+**Dependencies**: Item 2
 **Required Reading**:
 - `.project/concepts/mental-alignment-checkpoint.md` (SC1-SC5, SC8-SC11, SC13; Key Concepts §1-§4; Owner's Words on the three steps, clean room, carried policy)
 - `.project/concepts/mental-alignment-skill-design.md` (Core Model: coordinator and synthesis agent; Design Principles §1-§2; Flow; How It Works)
 
-**Objective**: Implement the coordinator's classification logic and the synthesis agent's thinking step, producing a readable synthesis markdown at a mandatory pause.
+**Objective**: Implement the coordinator's classification logic and the synthesis agent's thinking
+step, producing a readable synthesis markdown at a mandatory pause — running on Claude.
 
 **Why This Is One Work Item**:
 - The coordinator's classification (policy + shape) and the synthesis agent's behavior are tightly coupled through the spawn-prompt composition — the coordinator decides what goes in the prompt, and the synthesis agent acts on it
-- The pause is the natural boundary: after this item, a question produces a synthesis and stops; the render step (item 5) picks up from there
+- The pause is the natural boundary: after this item, a question produces a synthesis and stops; the render step (Item 4) picks up from there
 
 **In Scope (High Level)**:
-- Replace dummy `SKILL.md` with the real coordinator: classify context policy (carried / discovered / clean room) and output shape (checkpoint / plain document) from the request, state the classification, compose the spawn prompt
-- Replace dummy `design_synthesis.md` with real synthesis instructions: how to think about a system, what to discover, how to structure the narrative, what the synthesis file contains (narrative + metadata + judgment)
+- Create `claude-pack/skills/_my_mental_model/` with the real coordinator `SKILL.md`: classify context policy (carried / discovered / clean room) and output shape (checkpoint / plain document) from the request, state the classification, compose the spawn prompt
+- Author `design_synthesis.md`: how to think about a system, what to discover, how to structure the narrative, what the synthesis file contains (narrative + metadata + judgment)
 - Author `feedback/synthesis.md` — the shared starter feedback body for synthesis (cross-project guidance, not empty)
 - Synthesis agent reads `design_synthesis.md` + both synthesis feedback bodies, discovers evidence per policy, writes synthesis markdown to `.project/mental-alignment/runs/{YYYYMMDD-HHMMSS}_{slug}.md`
 - Coordinator presents the synthesis at the mandatory pause
 - Fork for carried policy (`subagent_type: "fork"`); fresh agent for discovered and clean room (with restriction restated and unenforced nature stated)
+- Install with `./scripts/setup-global.sh` (no script change needed — it already symlinks whole skill directories, `setup-global.sh:126-134`) and invoke by `/_my_mental_model`
 
 **Non-Goals / Out of Scope**:
-- The render step, the switch, and the comparison — that's item 5
-- The HTML feedback body — that's item 5
-- The feedback recording and promotion workflow — that's item 5
+- The render step, the switch, and the comparison — Item 4
+- The HTML feedback body, feedback recording, and promotion — Item 4
+- Anything Codex: the allowlist entry, the name mapping, the sibling build/install lane, runtime-neutral phrasing enforcement — Item 5
 - Classification wording details and the synthesis template section-by-section are spec concerns, not pre-decided here
 
 **Success / Done State**:
@@ -270,86 +288,139 @@ Gate: CLEAR
 - [ ] Under carried policy, the synthesis agent is a fork and conversation reasoning reaches the output
 - [ ] Under clean-room policy, restriction language is honored (fresh agent, restriction restated, unenforced nature stated)
 - [ ] Every run pauses after the synthesis is presented; no HTML is built
+- [ ] **`/_my_mental_model` resolves to the skill directory on Claude and the coordinator reads its sibling instruction file and nested feedback file.** This is the epic's directory-skill-resolution proof (product-lens spec-F3). Record the working form of the sibling reference — relative path, absolute path, or an injected variable — because every future skill's instruction files depend on it.
 
 **Location**: `.project/active/coordinator-synthesis/`
 
 **Deliverables**:
-- `.project/active/coordinator-synthesis/spec.md`
-- `.project/active/coordinator-synthesis/design.md`
-- `.project/active/coordinator-synthesis/plan.md`
-- `claude-pack/skills/_my_mental_model/SKILL.md` (real coordinator)
-- `claude-pack/skills/_my_mental_model/design_synthesis.md` (real instructions)
-- `claude-pack/skills/_my_mental_model/feedback/synthesis.md` (shared starter)
+- `.project/active/coordinator-synthesis/{spec,design,plan}.md`
+- `claude-pack/skills/_my_mental_model/SKILL.md`
+- `claude-pack/skills/_my_mental_model/design_synthesis.md`
+- `claude-pack/skills/_my_mental_model/feedback/synthesis.md`
 
 ---
 
-### Item 5: Render + Switch + Feedback
+### Item 4: Render + Switch + Feedback (Claude)
 
 **Type**: Implementation
 **Effort**: 1-1.5 days (spec 2h, design 3h, plan 1h, execute 4-6h)
-**Dependencies**: Item 4 (synthesis must exist for render to work); Item 1 (spike decides whether the switch has two shapes on Codex)
+**Dependencies**: Item 3
 **Required Reading**:
 - `.project/concepts/mental-alignment-checkpoint.md` (SC3, SC5-SC7, SC12; Key Concepts §2-§3, §5-§7; Owner's Words on skeleton/meat, execution shapes, feedback)
 - `.project/concepts/mental-alignment-skill-design.md` (Core Model: render agent + feedback bodies; How It Works: comparison, edge cases)
-- `.project/active/codex-resume-spike/spike-findings.md` (item 1 output — decides the Codex switch shape)
+- `.project/active/codex-resume-spike/spike-findings.md` (Item 1 output — resume confirmed; no per-agent token count on Codex)
 
-**Objective**: Implement the render paths (resumed and fresh), the owner's choice at the pause, the comparison mechanism, and the feedback system — completing the full end-to-end flow.
+**Objective**: Implement the render paths (resumed and fresh), the owner's choice at the pause, the
+comparison mechanism, and the feedback system — completing the full end-to-end flow on Claude.
 
 **Why This Is One Work Item**:
 - The switch (resume vs. fresh), the comparison (both on one synthesis), and the feedback recording are all triggered at the same moment — the owner's answer at the pause
 - This item exercises the composed whole: a successful run goes coordinator → synthesis → pause → choice → render → HTML → feedback, proving the two-agent shape works end-to-end
 
 **In Scope (High Level)**:
-- Replace dummy `visualize.md` with real render instructions: how to inherit the synthesis narrative and add a detail layer using what HTML can do (visuals, disclosure, color)
+- Author `visualize.md`: how to inherit the synthesis narrative and add a detail layer using what HTML can do (visuals, disclosure, color)
 - Author `feedback/html.md` — the shared starter feedback body for HTML rendering
 - Resume path: send follow-up message to the live synthesis agent (read `visualize.md` + HTML feedback, write HTML)
 - Fresh path: spawn new agent given synthesis path (read `visualize.md` + HTML feedback, write HTML)
-- Comparison: both paths sequential on one synthesis, distinct HTML names, wall-clock time and tokens reported in the terminal
+- Comparison: both paths sequential on one synthesis, distinct HTML names, wall-clock time reported in the terminal. **Token reporting: available on Claude via the completion notification's usage report; Item 1 found no per-agent token count on Codex, so the spec must decide what Codex reports and must not estimate.**
 - HTML output: paired to synthesis, inherits narrative, adds detail layer, lands in `runs/`
 - Checkpoint shape: metadata + judgment render into the HTML; plain document shape: judgment read back in terminal
 - Feedback recording: new feedback always lands project-local first (`feedback-synthesis.md`, `feedback-html.md`), attributed to run and HTML version
 - Promotion workflow: owner-initiated, targets the shared feedback file in the skill directory (not the instruction file); copy-install edge case fails closed (records promotion candidate project-locally)
-- Codex switch shape: if the spike found resume works, wire it; if not, Codex always takes the fresh path
 
 **Non-Goals / Out of Scope**:
 - Automated quality checks on the output — owner judges, feedback is the loop
 - Moving HTML into `docs/` — that's the owner's manual act
 - Migrating the old single feedback file — deprecated in place, new runs use the new system
+- Wiring the Codex resumed-render path — Item 5. Item 1 proved it works; the wiring waits for the lane.
 
 **Success / Done State**:
 - [ ] Both render paths (resumed agent, fresh agent) produce valid HTML paired to the synthesis
 - [ ] The HTML inherits the synthesis narrative and adds a detail layer — not the same words in a different format
-- [ ] Comparison produces two HTMLs from one synthesis, with wall-clock time and tokens reported
+- [ ] Comparison produces two HTMLs from one synthesis, with wall-clock time reported and the token story stated honestly per runtime
 - [ ] New feedback lands project-local, attributed to run and HTML version; shared starters ship with the skill
 - [ ] Promotion targets the shared feedback file; copy-install promotion fails closed
 
 **Location**: `.project/active/render-switch-feedback/`
 
 **Deliverables**:
-- `.project/active/render-switch-feedback/spec.md`
-- `.project/active/render-switch-feedback/design.md`
-- `.project/active/render-switch-feedback/plan.md`
-- `claude-pack/skills/_my_mental_model/visualize.md` (real instructions)
-- `claude-pack/skills/_my_mental_model/feedback/html.md` (shared starter)
+- `.project/active/render-switch-feedback/{spec,design,plan}.md`
+- `claude-pack/skills/_my_mental_model/visualize.md`
+- `claude-pack/skills/_my_mental_model/feedback/html.md`
+
+---
+
+### Item 5: Packaging — Codex Parity and V1 Cleanup
+
+**Type**: Code/Integration
+**Effort**: 1-1.5 days
+**Dependencies**: Items 2, 3, 4 (the real skill directory, with siblings and a nested feedback
+directory, is this item's test subject)
+**Required Reading**:
+- `.project/active/directory-skill-build-pattern/spec.md` (written 2026-08-20 as old Item 2)
+- `.project/active/directory-skill-build-pattern/design.md` (D1-D7)
+- `.project/active/directory-skill-build-pattern/product-lens.md` (gate DISPOSED, three findings)
+- `.project/concepts/mental-alignment-skill-design.md` (Distribution lane, Appendix)
+- `.project/adr/0009-directory-skills-pattern.md`, `.project/adr/0010-native-skill-codex-lane.md`
+
+**Objective**: Ship the skill directory on Codex with all of its files, and remove every remaining
+v1 surface. Establish the reusable directory-skill packaging pattern that every future migration
+uses.
+
+**Why This Is One Work Item**:
+- The build-script changes, install-script changes, allowlist entry, and name mapping are tightly coupled — testing any one requires the others
+- The remaining v1 cleanup is a file-by-file checklist over the same scripts, so doing it separately would touch the same lines twice
+- Running last means the lane is proven against the real skill instead of a placeholder
+
+**In Scope (High Level)**:
+- Extend `build-codex-pack.sh` to copy sibling files, including nested directories (`build-codex-pack.sh:395` matches only `SKILL.md` at `-mindepth 2 -maxdepth 2`, so `feedback/` is not even discovered)
+- Extend `setup-codex.sh` to install sibling files (`setup-codex.sh:267` installs only `SKILL.md`), and fix the re-install gap: `install_path`'s managed-file check (`setup-codex.sh:19-22`) greps for `Generated from`, which a verbatim-copied sibling lacks, so siblings would be skipped on every install after the first
+- Add `_my_mental_model` to `NATIVE_SKILL_ALLOWLIST` (`codex-overrides/config.sh:58`). **The entry must be the pack-side directory name `_my_mental_model`, not `my-mental-model` — the check is keyed on the source directory (`build-codex-pack.sh:370`), and a missing entry excludes the skill with no error** (product-lens spec-F2)
+- Apply the `_my_x` → `my-x` name mapping for the dist directory and generated frontmatter
+- Keep the SKILL.md frontmatter description plain prose (Codex YAML parse chokes on a leading `*`); native skills have no description override lane (`build-codex-pack.sh:243-255`)
+- Wire the Codex resumed-render path per Item 1's findings
+- Resolve the Codex-side unknowns (does Codex load a symlinked skill directory; does it tolerate a frontmatter name that differs from the directory name; does it read flat and nested siblings; how does a Codex skill reference its own directory). Prepared probe prompt: `/tmp/directory-skill-spike-prompt.md`, sections B1-B8
+- Remaining v1 cleanup: path rewrite at `build-codex-pack.sh:138`, shared-spec copy at `:426`, description override at `codex-overrides/config.sh:37`, `README.md:131` catalog row, `scripts/test_docs.sh` retired list, `scripts/uninstall-project.sh:108-114` skill list
+- Rebuild `dist/codex/` and refresh both installs
+- Convert `claude-pack/skills/example-skill.md` to directory form (`example-skill/SKILL.md` + a flat sibling + a nested sibling) and add a stale-managed-symlink sweep to `setup-global.sh`. **Rationale narrowed by the restructure**: the owner chose this conversion (2026-08-20) as the throwaway probe for the build lane, and the real skill is now the probe instead. The conversion still earns its place as the pack's copyable directory-skill example and as a regression fixture, and it retires a file two prior designs recorded as inert dead weight (`.project/active/pipeline-guide/design.md:41`) — but it is now droppable at the owner's discretion rather than load-bearing.
+
+**Non-Goals / Out of Scope**:
+- Any change to skill behavior — Items 3 and 4 own that
+- Widening the runtime-neutrality scan to sibling files. Owner decision 2026-08-20; sibling neutrality stays convention-only per ADR 0010. The scan keeps its `-g 'SKILL.md'` glob (`test_codex_orchestrator_pack.sh:336-338`)
+- Migrating the remaining `_my_*` commands to skills, or relocating the prose specs out of `claude-pack/scripts/` — deferred by ADR 0009's scope note
+- Filing new ADRs — 0009 and 0010 already exist
+
+**Success / Done State**:
+- [ ] Every file of the skill directory reaches `dist/codex/skills/my-mental-model/` and then `~/.agents/skills/my-mental-model/`, at the same relative paths
+- [ ] The skill resolves and runs on Codex, reading its sibling instruction file and its nested feedback file
+- [ ] Re-running either installer converges: added files appear, changed files update, removed files disappear
+- [ ] No v1 surface remains, and no script or test references one
+- [ ] The pattern is generic: another directory skill with siblings works the same way, guarded by a regression check
+- [ ] Existing tests pass
+
+**Location**: `.project/active/directory-skill-build-pattern/`
+
+**Deliverables**:
+- `.project/active/directory-skill-build-pattern/plan.md` (spec, design, product-lens already written)
 
 ---
 
 ## Dependencies
 
 **External**:
-- Codex runtime: the spike (item 1) tests whether it supports agent resume
 - Claude Code runtime: `SendMessage` continuation for the resume path, fork mechanism for carried policy
+- Codex runtime: agent resume confirmed by Item 1; per-agent token reporting is absent
 
 **Internal**:
-- ADRs 0009 and 0010 (already filed) — item 2 implements the decisions they record
+- ADRs 0009 and 0010 (already filed) — Item 5 implements the decisions they record
 
 **Item Dependency Graph**:
 ```
-Item 1 (no deps) ─────────────────────────────┐
-Item 2 (no deps)                               │
-  └─► Item 3 (depends on 2)                   │
-        └─► Item 4 (depends on 2, 3)          │
-              └─► Item 5 (depends on 4, 1) ◄──┘
+Item 1 (done) ──────────────────────────────┐
+Item 2 (no deps)                            │
+  └─► Item 3                                │
+        └─► Item 4 ◄─────────────────────────┘
+              └─► Item 5
 ```
 
 ---
@@ -358,26 +429,29 @@ Item 2 (no deps)                               │
 
 | Risk | Impact | Mitigation |
 |------|--------|------------|
-| Codex cannot resume a spawned agent | Med | Item 1 (spike) de-risks early; fallback is Codex always takes the fresh path — the design already handles this |
-| Directory-skill slash resolution doesn't work | High | Item 2 tests with dummy files before any behavior depends on it; `setup-global.sh` symlink behavior is already verified in the design |
-| Fork doesn't carry conversation reasoning effectively | Med | Tested in use during item 4; the mechanism exists (`subagent_type: "fork"`); if quality doesn't improve, carried policy degrades to discovered, not to failure |
-| V1 retirement misses a reference | Low | The design's Appendix has a verified file-by-file inventory; existing tests (docs, pipeline-sync) catch most gaps |
+| Directory-skill slash resolution doesn't work | High | Now proven in **Item 3**, on the real skill, before any packaging work depends on it (was Item 2; re-pointed per product-lens spec-F3). `setup-global.sh` symlink behavior is already verified, and underscore-prefixed skill directories were observed registering on Claude 2026-08-20. |
+| A skill can't read its sibling files, or the reference form is cwd-dependent | High | Item 3's done-state requires reading both a flat and a nested sibling and recording the working reference form. If this fails, the split-instruction-file shape — the entire repair for v1 — needs a different carrier, and we learn it in Item 3 rather than after two more items. |
+| Fork doesn't carry conversation reasoning effectively | Med | Tested in use during Item 3; the mechanism exists (`subagent_type: "fork"`); if quality doesn't improve, carried policy degrades to discovered, not to failure |
+| Codex can't be measured for the token comparison | Low | Confirmed already by Item 1. Item 4 states the limitation instead of estimating. |
+| Codex won't load symlinked skill directories or tolerate a name mismatch | Med | Item 5's own probe (`/tmp/directory-skill-spike-prompt.md` B1-B8). The fallback is the copy-tree design already written in `design.md` D1-D3, so a negative answer costs nothing but the simplification. |
+| V1 retirement misses a reference | Low | The concept-design's Appendix has a verified file-by-file inventory; existing tests (docs, pipeline-sync) catch most gaps. Item 2's two deletes are verified harmless on their own. |
 
 ---
 
 ## Timeline
 
-**Total Effort**: 4-5.5 days
+**Total Effort**: 3-4.5 days remaining
 
-| Item | Effort | Dependencies | Parallelizable |
-|------|--------|--------------|----------------|
-| Item 1: Codex Resume Spike | 0.5 days | None | Yes — runs parallel to Item 2 |
-| Item 2: Directory-Skill Build Pattern | 1-1.5 days | None | Yes — runs parallel to Item 1 |
-| Item 3: V1 Retirement | 0.5-1 day | Item 2 | Sequential after Item 2 |
-| Item 4: Coordinator + Synthesis | 1-1.5 days | Items 2, 3 | Sequential after Item 3 |
-| Item 5: Render + Switch + Feedback | 1-1.5 days | Items 4, 1 | Sequential after Item 4 |
+| Item | Effort | Dependencies |
+|------|--------|--------------|
+| Item 1: Codex Resume Spike | done | — |
+| Item 2: Release the Name | ~10 min | None |
+| Item 3: Coordinator + Synthesis | 1-1.5 days | Item 2 |
+| Item 4: Render + Switch + Feedback | 1-1.5 days | Item 3 |
+| Item 5: Packaging | 1-1.5 days | Items 2, 3, 4 |
 
-**Shortest path (with parallelism)**: ~4 days (items 1 and 2 overlap).
+Strictly sequential now. The parallelism in the original plan existed only because the spike ran
+alongside the build-pattern item; both of those are resolved or moved.
 
 ---
 
@@ -389,7 +463,11 @@ Item 2 (no deps)                               │
 - TBD
 
 **What Could Improve**:
-- TBD
+- Front-loading distribution plumbing ahead of the capability. The original decomposition led with
+  the Codex build lane on the reasoning that it was reusable infrastructure; in practice it stalled
+  the epic on packaging questions, and the dependency it was protecting turned out to be a single
+  file deletion. Worth checking, next time, whether a claimed hard dependency survives reading the
+  code.
 
 **Surprises**:
 - TBD
@@ -397,4 +475,4 @@ Item 2 (no deps)                               │
 ---
 
 **Last Updated**: 2026-08-20
-**Next Action**: Approve epic, then begin Item 1 (spike) and Item 2 (build pattern) in parallel
+**Next Action**: Item 2 — delete the two v1 files — then `/_my_spec` for Item 3
