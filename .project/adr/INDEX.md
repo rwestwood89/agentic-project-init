@@ -6,6 +6,8 @@
 - 0006 · Concept-design review reads ADRs but does not file them · seams: claude-pack/commands, project-pack
 - 0007 · pre_pr is a branch gate run after close · seams: claude-pack/commands, claude-pack/rules, docs, codex-overrides
 - 0008 · Product-ledger touch-point map: reads at session start + lens SOURCES, write at close · seams: claude-pack, project-pack, product-lens
+- 0009 · Pack capabilities ship as directory skills, not commands with shared scripts · seams: claude-pack, scripts/setup-global.sh, codex-overrides, future capabilities
+- 0010 · Native-skill Codex lane — copy whole, keep bodies runtime-neutral · seams: scripts/build-codex-pack.sh, scripts/setup-codex.sh, codex-overrides/config.sh, future native skills
 
 - 0002 · Decision-record touch points: read at concept-design and design, write at acceptance and close · seams: claude-pack/commands · amended
 - 0003 · Product-lens adds product-truth touch points and can file decision records · seams: claude-pack/commands, project-pack · superseded → 0004

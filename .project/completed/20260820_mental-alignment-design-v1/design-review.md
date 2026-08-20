@@ -1,3 +1,10 @@
+> **SUPERSEDED 2026-08-20 — do not treat anything here as current.**
+>
+> Part of the v1 design chain for the mental-alignment checkpoint, archived after the concept was overhauled on
+> 2026-08-19 and 2026-08-20. See `design-revised.md` in this folder for the list of claims that are now wrong.
+>
+> **Live concept:** `.project/concepts/mental-alignment-checkpoint.md`
+
 # Concept-Design Review: Mental Alignment Checkpoint
 
 **Concept:** `.project/concepts/mental-alignment-checkpoint-design.md`

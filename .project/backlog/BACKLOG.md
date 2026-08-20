@@ -138,6 +138,28 @@ Pipeline redesign: new bridge command (epic_plan), certification step (audit), a
 
 ---
 
+## P0 - Mental Alignment Skill v2
+
+### [MENTAL-ALIGN-V2] Mental Alignment Skill v2
+
+**Priority:** P0
+**Status:** Draft
+**Estimate:** 4-5.5 days (5 items)
+**Category:** Skill Implementation
+
+Replace the failed single-agent `/_my_mental_model` command with a two-agent, one-pause skill directory. Three diagnosed structural failures in v1 (thinking unnamed, reasoning dropped, shape mandatory) are repaired by splitting synthesis and render into two agents separated by a mandatory human pause, with context policy classified from the request and two-tier feedback.
+
+**Epic:** `.project/backlog/epic_mental_alignment_skill.md`
+
+**Items**:
+- [ ] Item 1: Codex Resume Spike (0.5 days) — determine if Codex can resume a spawned agent
+- [ ] Item 2: Directory-Skill Build Pattern (1-1.5 days) — wire Claude skill → Codex skill pipeline for directory skills with siblings
+- [ ] Item 3: V1 Retirement (0.5-1 day) — delete command + builder, remove build wiring, update docs/tests (depends on 2)
+- [ ] Item 4: Coordinator + Synthesis Step (1-1.5 days) — classification, spawn, synthesis markdown, mandatory pause (depends on 2, 3)
+- [ ] Item 5: Render + Switch + Feedback (1-1.5 days) — render paths, comparison, feedback tiers + promotion (depends on 4, 1)
+
+---
+
 ## P0 - Anchor on the Point
 
 These five tickets address one root failure: agents lose the purpose of the work and produce
@@ -394,6 +416,60 @@ Do NOT read any documents I did not directly reference.
 
 ---
 
+### [AOP-006] Design review questions must be grounded in end-product terms
+
+**Priority:** P0
+**Status:** Backlog
+**Estimate:** M
+**Category:** Command Improvement
+**Affected Files:** `claude-pack/commands/_my_design_review.md`, `claude-pack/commands/_my_ask_me.md`
+
+#### Problem
+
+The design review almost always produces a coded list of items marked "needs owner review" —
+items the reviewer couldn't resolve on its own. The owner then has to invoke `/_my_ask_me` to
+work through them, and even then the questions are painful to answer because they aren't stated
+in end-product terms. The reviewer asks about plumbing decisions (backwards-compat shims,
+allowlist strategies, gate flavors) dressed up as design dilemmas, when most of them either
+dissolve on grounding or take five seconds once phrased as "here's what changes about the
+artifact/model you actually ship."
+
+Observed pattern from a real session: four "owner review" items, three dissolved the moment
+the owner forced grounding (a backwards-compat question was an established pattern, an
+allowlist question was already decided, a gates question was two flavors of something unwanted),
+and the one real decision (capacity check timing) took five seconds.
+
+The root cause: the reviewer formulates questions in the design's internal vocabulary instead
+of translating them to what changes about the thing the user ships. If the reviewer can't
+phrase it that way, it's the reviewer's homework, not the owner's question.
+
+#### Strategy
+
+Two changes, reinforcing each other:
+
+1. **Design review: translate before escalating.** Before marking anything "needs owner review,"
+   the reviewer must restate it as "here's what changes about the artifacts/model you actually
+   ship." If it can't be restated that way, the reviewer resolves it — it's a design-internal
+   decision, not an owner decision. Items that survive this filter go to the owner already
+   grounded.
+
+2. **`/_my_ask_me`: enforce the same grounding.** When `/_my_ask_me` receives items from a
+   design review, it should refuse to present a question it can't phrase in end-product terms.
+   The agent does the translation work, not the owner.
+
+#### Acceptance Criteria
+
+- [ ] `/_my_design_review` includes explicit guidance: restate every escalation as what changes
+      about the shipped product before marking it for owner review
+- [ ] Items that can't be restated in end-product terms are resolved by the reviewer, not
+      escalated
+- [ ] `/_my_ask_me` enforces the same grounding when processing review items — no
+      plumbing-vocabulary questions reach the owner
+- [ ] Test: re-run a design review that previously produced 3+ "owner review" items; count
+      should drop and survivors should be answerable in one sentence
+
+---
+
 ## P1 - High Priority
 
 ### [BL-001] Improve `/implement` command code scrutiny
@@ -482,6 +558,34 @@ Add prompting to enforce codebase discovery before finalizing specs/designs.
 - **Can be applied during EPIC-002.1 and EPIC-002.2 migration**
 
 ---
+
+### [BL-009] Secret scan before anything gets committed
+
+**Priority:** P1
+**Status:** Backlog
+**Estimate:** S
+**Category:** New Agent / Safety
+**Affected Files:** `claude-pack/agents/secret-scan.md` (or `claude-pack/scripts/`), `CLAUDE.md`,
+`claude-pack/commands/_my_pre_pr.md`
+
+#### Problem
+Agents write files into `.project/` constantly — research notes, synthesis docs, generated HTML, status
+reports. Any of them can quote a line from a config or an env file while illustrating a point, and once that
+lands in a commit the token is in git history. Nothing currently looks.
+
+#### Proposed Solution
+A secret-scan agent (or script it can drive) with three call sites:
+
+1. **Automatic on new or modified files under `.project/`** — scan before they are committed.
+2. **`CLAUDE.md` instruction** — run it before any commit.
+3. **`/_my_pre_pr`** — run it over the diff going into the PR, not just `.project/`.
+
+Tight patterns only: credential-shaped assignments, tokens, private-key material. The point is zero false
+positives, because a noisy scan gets ignored.
+
+#### Notes
+- Raised 2026-08-20 while deciding checks for `/_my_mental_model`. That command's generated HTML is low risk
+  on its own, so the value is the general case, not that one skill.
 
 ## P2 - Medium Priority
 

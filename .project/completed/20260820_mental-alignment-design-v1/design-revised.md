@@ -1,3 +1,30 @@
+> **SUPERSEDED 2026-08-20 — do not treat anything here as current.**
+>
+> This is the v1 design of the mental-alignment checkpoint. It shipped, as
+> `claude-pack/commands/_my_mental_model.md` plus `claude-pack/scripts/mental-model-builder.md`. The owner then
+> used it, found it wanting, and overhauled the concept on 2026-08-19 and 2026-08-20. A new concept-design
+> replaces this document.
+>
+> **Live concept:** `.project/concepts/mental-alignment-checkpoint.md`
+>
+> **What this document now gets wrong:**
+>
+> - The ratified bet "do not introduce a coordinator component" — the new design has a coordinating entry point
+>   that classifies, spawns, pauses, and then resumes or re-spawns.
+> - Command-to-one-job-subagent as the shape — replaced by a skill directory holding an entry point and two
+>   instruction files, and by two named steps with a pause between them.
+> - One report per run, never more than one — a run produces a markdown synthesis plus one *or two* HTMLs.
+> - The single `.project/mental-alignment/feedback.md` — replaced by two feedback bodies across two tiers.
+> - Redaction and static-HTML invariants as *enforced* properties — the owner decided on 2026-08-20 that
+>   nothing verifies them; they are instructions the HTML step follows.
+> - `ADR Candidates: None` — its stated reason (the split is an existing pack pattern) no longer holds, since
+>   this is the first `_my_*` skill and sets the migration precedent.
+>
+> **What still stands:** the five design principles, the separate-comprehension-surface bet, the interactive
+> stage offers including non-interactive suppression, the `runs/` convention, research reuse and
+> re-verification, promotion resolving fail-closed to authored source only, and read-but-never-write on live
+> decisions.
+
 # Design: Mental Alignment Checkpoint
 
 **Status:** Proposed after review
