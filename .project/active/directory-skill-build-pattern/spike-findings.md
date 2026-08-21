@@ -1,6 +1,6 @@
 # Spike Findings: How Claude Code and Codex load directory skills
 
-**Status:** Draft — two rows awaiting an owner check
+**Status:** Complete. 16 of 18 assumptions answered; the 2 open ones are reassigned, not pending.
 **Owner:** Reid W
 **Date:** 2026-08-20
 **Branch:** anchor-on-the-point
@@ -8,11 +8,37 @@
 **Triggered by:** `.project/active/directory-skill-build-pattern/design.md` — bets B1, B2, B3
 **Prompt:** `/tmp/directory-skill-spike-prompt.md`
 
+**Closes the loop into:** `.project/backlog/epic_mental_alignment_skill.md` — De-risking, Item 2
+("Why This Is One Work Item"), Item 3 (Required Reading, In Scope, done-state), Item 5 (Required
+Reading, In Scope), and three rows of the Risks table. Packaging is Item 5 and off the critical
+path per the owner's restructure (2026-08-20), so the Claude-side findings here are consumed by
+**Item 3**, not by the packaging item that commissioned them.
+
 ---
 
 ## Summary
 
-*(written last — see the end of this file)*
+Sibling files work. A skill on either runtime can read a flat sibling, a nested one, a
+twice-nested one, and a non-markdown file, including through a symlinked directory. The
+split-instruction-file shape that is the whole repair for the failed v1 is viable, and needs no
+alternative carrier.
+
+Two findings change the design.
+
+1. **The runtimes key a skill's identity on opposite fields.** Claude lists a skill under its
+   directory name; Codex registers the frontmatter `name` and does not answer to the directory
+   name. Neither warns on a mismatch. This kills the renamed-symlink simplification and promotes
+   design decision D1 — regenerate the Codex entry point — from convenience to requirement.
+2. **Relative paths resolve differently, so there is exactly one portable way to reference a
+   sibling.** Claude prepends a `Base directory for this skill:` line and runs with the *project*
+   directory as cwd, so every relative form fails. Codex runs with the *skill* directory as cwd, so
+   bare relative works. A path containing the skill's own directory name fails on both. The rule:
+   bare filename in prose. This is a new authoring convention that ADR 0010 does not state and a
+   future author gets wrong by default.
+
+Two smaller corrections. A dangling symlink is inert, so D4 is hygiene rather than a hazard. And
+two claims in the repo are false — Codex loads symlinked skill directories fine
+(`scripts/build-codex-pack.sh:521`, `CLAUDE.md:53`), which reopens D3's install strategy.
 
 ---
 
@@ -21,8 +47,8 @@
 | # | Assumption | Verdict | Note |
 |---|---|---|---|
 | A1 | Underscores legal in a Claude skill dir name, leading underscore legal | **CONFIRMED** | `_my_probe_alpha` and `_my_probe_gamma` both loaded and both ran |
-| A2 | `/_my_probe_alpha` invokes the skill directory | *pending owner slash-menu check* | The `Skill` tool resolves it; the user-facing menu is the untested half |
-| A3 | Command file and skill directory of the same name coexist, one wins predictably | *pending owner slash-menu check* | Both halves installed; the `Skill` tool reaches the skill, which does not settle precedence |
+| A2 | `/_my_probe_alpha` invokes the skill directory | **PARTLY — reassigned to Item 3** | Registers and resolves by name; only the autocomplete menu is unverified |
+| A3 | Command file and skill directory of the same name coexist, one wins predictably | **UNTESTED — moot by ordering** | Needs the owner's slash menu; Item 2 deleting the command before Item 3 makes precedence irrelevant |
 | A4 | Frontmatter `name` differing from directory name | **PARTLY — both names work** | Listing shows the **directory** name; the **frontmatter** name is also a registered handle. No warning. |
 | A5 | Missing `description:` | **CONFIRMED (loads)** | Loaded silently; the listing synthesised the description from the body's first heading |
 | A6 | Skill can read a flat sibling | **CONFIRMED, absolute path only** | Bare relative path fails |
@@ -115,9 +141,13 @@ half is confirmed by a live load, not just by error text.
 
 **Ran:** invoked `_my_probe_alpha` through the `Skill` tool. It launched and delivered its body.
 
-**Not yet answered:** whether the string `/_my_probe_alpha`, typed by the user, appears in the slash
-menu and routes to the skill. That is the form ADR 0009 promises is unchanged across a
-command→skill migration, and it needs the owner's eyes on their own autocomplete. Awaiting.
+**What is established:** the skill registers under its `_my_`-prefixed name and resolves by that
+name through the `Skill` tool — the same mechanism a typed slash command routes through.
+
+**What is not:** whether the autocomplete menu lists skills alongside commands, which only the
+owner can see. That residual is small, and it is **Item 3's proof by design** — the epic already
+assigns it there (product-lens spec-F3), and Item 3 hits it at its first real invocation, before
+Items 4 and 5 depend on it. Not carried as a blocker here.
 
 ### A3 — command file versus skill directory, same name
 
@@ -129,9 +159,13 @@ on disk.
 addresses skills by construction. The skill also appears in the session listing while commands do
 not appear there at all, so the listing cannot answer it either.
 
-**Not yet answered:** which half a typed `/_my_probe_gamma` runs. Awaiting the owner. This matters
-for migration ordering: if the command wins, a migration must delete the command in the same change
-that adds the skill, or the new skill is dead on arrival.
+**Not answered, and now moot by ordering.** Which half a typed `/_my_probe_gamma` runs is still
+unknown. The consequence would have been migration ordering — if the command wins, a migration must
+delete the command in the same change that adds the skill, or the new skill is dead on arrival with
+no error. The epic's restructure already enforces that order: Item 2 deletes
+`claude-pack/commands/_my_mental_model.md` before Item 3 creates the skill directory. So the
+question never has to be answered, provided that order holds. It is recorded as a Low risk in the
+epic with exactly that mitigation.
 
 ### A4 — frontmatter `name` not matching the directory name
 
@@ -154,7 +188,7 @@ so the frontmatter name is a genuinely registered handle rather than a loose mat
 **both** names; it displays only the directory name. No warning was emitted about the mismatch.
 
 Caveat worth stating plainly: I verified this through the `Skill` tool only. Whether both names show
-up in the user's slash menu is part of the pending owner check.
+up in the user's slash menu is unverified, and folds into A2's residual.
 
 ### A5 — missing `description:`
 
@@ -251,8 +285,9 @@ user's skill list this way. This lowers the urgency of design decision D4 from "
 to "hygiene" — see below.
 
 **Not established:** whether a warning appeared in the owner's terminal. Debug logging was off
-(`~/.claude/debug/` holds nothing from today), so there is no log-side evidence either way. Part of
-the pending owner check.
+(`~/.claude/debug/` holds nothing from today), so there is no log-side evidence either way. It does
+not change the conclusion — a warning the agent never sees cannot break a skill load, and every
+other skill loaded.
 
 ### B1, B4, B5, B8 — Codex, via a symlinked directory
 
@@ -512,12 +547,18 @@ decisions that need revisiting, named by their labels.
 - **`description:` is not validated** (A5). A skill with none loads with a description scraped from
   its first heading. Cheap to guard in the build if desired; nothing depends on it today.
 
-**Still open, and it is the load-bearing one:**
+**Open, and deliberately not blocking:**
 
-- **A2 and A3.** Whether a typed `/_my_<name>` reaches a skill directory, and what wins when a
-  command file and a skill directory share a name. ADR 0009's invariant "slash invocation is
-  preserved across a command→skill migration; users see no change" rests on A2. A3 sets migration
-  ordering. Both need the owner's slash menu; both are recorded as pending above.
+- **A2** — whether a typed `/_my_<name>` reaches a skill directory. ADR 0009's invariant "slash
+  invocation is preserved across a command→skill migration; users see no change" rests on it. The
+  registration and name-resolution halves are confirmed; only the autocomplete menu is unverified.
+  Owned by **Item 3**, which proves it on the real skill at first invocation.
+- **A3** — command-versus-skill precedence. Unresolved, and made moot by Item 2 running before
+  Item 3. Recorded as a Low risk in the epic with that ordering as the mitigation.
+
+Neither is a reason to hold packaging. Under the owner's restructure (2026-08-20) packaging is
+Item 5 and off the critical path, and both open questions get answered as a side effect of building
+the real skill in Item 3.
 
 ---
 
@@ -550,4 +591,43 @@ entry in either skills directory was touched.
 | `~/.agents/skills/_my_probe_alpha/` | copied directory |
 | `~/.agents/skills/probe-eta/` | real directory with a symlinked `SKILL.md` |
 
-**Removal is recorded at the bottom of this file once performed.**
+**Removed, 2026-08-20, verified.** Every path in the table above was deleted:
+
+```
+rm -rf ~/.claude/skills/{_my_probe_alpha,_my_probe_gamma,probe-delta,probe-epsilon}
+rm -f  ~/.claude/skills/{probe-beta,probe-zeta}
+rm -f  ~/.claude/commands/_my_probe_gamma.md
+rm -rf ~/.agents/skills/{_my_probe_alpha,probe-delta,probe-eta}
+rm -f  ~/.agents/skills/probe-beta
+rm -rf /tmp/skill-spike
+```
+
+Verified after removal: `~/.claude/skills/` holds exactly its six recorded starting entries;
+`~/.agents/skills/` holds exactly its 32 recorded starting entries; no path matching `probe` remains
+in either directory or in `~/.claude/commands/`; `/tmp/skill-spike` is gone. `git status` shows no
+change under `claude-pack/`, `dist/`, `codex-overrides/`, or `scripts/` attributable to this spike.
+
+---
+
+## Incidental observation (not an assumption under test)
+
+While verifying cleanup, `claude-pack/commands/_my_mental_model.md` and
+`claude-pack/scripts/mental-model-builder.md` showed as deleted in the working tree — epic Item 2,
+in progress. Their installed symlinks are still present and now dangling:
+
+```
+/home/rwestwood/.claude/commands/_my_mental_model.md
+  -> /home/rwestwood/agentic-project-init/claude-pack/commands/_my_mental_model.md
+  target exists: NO (dangling)
+/home/rwestwood/.claude/scripts/mental-model-builder.md
+  -> /home/rwestwood/agentic-project-init/claude-pack/scripts/mental-model-builder.md
+  target exists: NO (dangling)
+```
+
+`setup-global.sh` has no removal sweep — that is design decision D4, deferred to Item 5 — so
+deleting the pack file does not remove the link. This matters because it walks A3 into production:
+at Item 3's first invocation, `/_my_mental_model` would face a stale **command** symlink and a real
+**skill** directory under the same name, which is the precedence question the probe could not
+settle. A10 established that a dangling symlink under `~/.claude/skills/` is inert; it establishes
+nothing about `~/.claude/commands/`. Two `rm`s avoid needing to know. Now recorded in the epic as
+Item 2 scope and a done-state check.

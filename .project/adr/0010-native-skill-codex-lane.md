@@ -3,9 +3,9 @@ id: 0010
 title: Native-skill Codex lane — copy whole, keep bodies runtime-neutral
 date: 2026-08-20
 owner: Reid W
-status: active
+status: superseded
 amended_by: []
-superseded_by: null
+superseded_by: 0011
 provenance: "[AGENT] (ratified by owner, 2026-08-20)"
 seams: [scripts/build-codex-pack.sh, scripts/setup-codex.sh, codex-overrides/config.sh, future native skills]
 supersedes: null

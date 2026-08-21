@@ -1,7 +1,7 @@
 {
-  "generated_at": "2026-08-13T23:25:02Z",
-  "source_revision": "5662abc",
-  "source_root": "/home/reid/agentic-project-init",
+  "generated_at": "2026-08-17T18:54:17Z",
+  "source_revision": "bcb2a4a",
+  "source_root": "/home/rwestwood/agentic-project-init",
   "included": {
     "command_skills": ["my-ask-me", "my-audit", "my-close", "my-concept", "my-concept-design", "my-concept-design-review", "my-design", "my-design-review", "my-epic-plan", "my-example-command", "my-git-manage", "my-handoff", "my-implement", "my-learning-test", "my-mental-model", "my-orchestrate", "my-pipeline", "my-plan", "my-ponytail", "my-pre-pr", "my-product-design", "my-project-find", "my-quick-edit", "my-research", "my-slop", "my-spec", "my-spec-review", "my-spike", "my-status", "my-wrap-up"],
     "skills": ["example-skill", "show-me"],

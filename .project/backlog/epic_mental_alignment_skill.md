@@ -144,12 +144,15 @@ Parity and cleanup (Item 5):
   comparison, recorded in Item 4.
 - The fork bet (carried policy improves synthesis quality) is tested in use during Item 3, judged by
   the owner — not requiring its own spike.
-- The Claude sibling-file mechanics — can a skill read a flat sibling, a nested one, and how does it
-  refer to its own directory — are answered by building Item 3, not by a separate probe. Early
-  evidence: underscore-prefixed directory skills do register on Claude (observed 2026-08-20 with
-  throwaway probe skills).
-- The Codex-side unknowns are Item 5's, and a prepared probe prompt for them sits at
-  `/tmp/directory-skill-spike-prompt.md` (its Claude half is superseded by the above).
+- The sibling-file mechanics on **both** runtimes are answered, by a probe run against throwaway
+  skills on 2026-08-20. Findings: `.project/active/directory-skill-build-pattern/spike-findings.md`.
+  Siblings are readable flat, nested, and through a symlink, on Claude and on Codex; underscore-
+  prefixed directory skills register on both. The one rule that came out of it: reference a sibling
+  by **bare filename in prose**, never by a path containing the skill's own directory name — each
+  runtime resolves relative paths differently and that is the only portable form.
+- Two things the probe did not settle. Whether a **typed** `/_my_*` reaches a skill directory stays
+  Item 3's proof, unchanged. Whether a same-named command file shadows a skill is moot if Item 2
+  runs first — see Risks.
 
 ---
 
@@ -232,10 +235,21 @@ directory Item 3 creates, and nothing else.
 - It is the only part of v1 retirement that gates the skill work, and it is two deletions
 - Splitting it from the rest of the cleanup is what lets Items 3 and 4 proceed without touching the
   Codex lane at all
+- Running it **before** Item 3 is not optional. Precedence between a same-named user command and a
+  user skill is unverified (`.project/active/directory-skill-build-pattern/spike-findings.md`, A3),
+  so deleting the command first is what guarantees `/_my_mental_model` reaches the skill
 
 **In Scope**:
 - Delete `claude-pack/commands/_my_mental_model.md`
 - Delete `claude-pack/scripts/mental-model-builder.md`
+- **Remove the two installed symlinks the deletes strand**: `~/.claude/commands/_my_mental_model.md`
+  and `~/.claude/scripts/mental-model-builder.md`. Deleting the pack files does not remove them —
+  `setup-global.sh` has no removal sweep (that is D4, deferred to Item 5), so both persist as
+  dangling symlinks. Observed dangling 2026-08-20. Leaving the command one in place means Item 3's
+  first invocation of `/_my_mental_model` faces a stale command symlink **and** a real skill
+  directory under the same name, which is precisely the command-versus-skill precedence question the
+  probe could not settle (`.project/active/directory-skill-build-pattern/spike-findings.md`, A3).
+  Two `rm`s close it; the alternative is discovering A3's answer in production
 - Confirm the suite still passes (docs, pipeline-sync, adr, global-setup, codex-orchestrator)
 
 **Non-Goals / Out of Scope**:
@@ -246,6 +260,7 @@ directory Item 3 creates, and nothing else.
 
 **Success / Done State**:
 - [ ] Neither file exists
+- [ ] Neither stale symlink exists under `~/.claude/` — `test -e` passes on nothing
 - [ ] Full existing suite passes with them gone
 - [ ] `dist/codex/` untouched
 
@@ -259,6 +274,7 @@ directory Item 3 creates, and nothing else.
 **Required Reading**:
 - `.project/concepts/mental-alignment-checkpoint.md` (SC1-SC5, SC8-SC11, SC13; Key Concepts §1-§4; Owner's Words on the three steps, clean room, carried policy)
 - `.project/concepts/mental-alignment-skill-design.md` (Core Model: coordinator and synthesis agent; Design Principles §1-§2; Flow; How It Works)
+- `.project/active/directory-skill-build-pattern/spike-findings.md` — **read "Relative paths resolve differently" before authoring any instruction file.** The Claude-side sibling mechanics this item was going to discover are already measured (A1, A4-A10)
 
 **Objective**: Implement the coordinator's classification logic and the synthesis agent's thinking
 step, producing a readable synthesis markdown at a mandatory pause — running on Claude.
@@ -274,6 +290,7 @@ step, producing a readable synthesis markdown at a mandatory pause — running o
 - Synthesis agent reads `design_synthesis.md` + both synthesis feedback bodies, discovers evidence per policy, writes synthesis markdown to `.project/mental-alignment/runs/{YYYYMMDD-HHMMSS}_{slug}.md`
 - Coordinator presents the synthesis at the mandatory pause
 - Fork for carried policy (`subagent_type: "fork"`); fresh agent for discovered and clean room (with restriction restated and unenforced nature stated)
+- Write every sibling reference as a **bare filename in prose** — `design_synthesis.md`, `feedback/synthesis.md` — never as a path containing the skill's own directory name. On Claude the invocation prepends `Base directory for this skill: <absolute path>` and the agent joins from there; on Codex the working directory already *is* the skill directory. Bare-filename prose is the only form that resolves on both. Evidence: `.project/active/directory-skill-build-pattern/spike-findings.md`, A8 and B5. **Rationale corrected 2026-08-20:** this line previously argued the rule was what kept Item 5 from needing a rewrite pass "it is forbidden to have (ADR 0010)". The owner reversed 0010 — skill directories now go through the Codex adapter, so a rewrite pass exists (`.project/adr/0011-native-skill-codex-adapter.md`). Bare-filename prose is still the better form where it fits, on its own merits, but it is a preference now rather than a constraint
 - Install with `./scripts/setup-global.sh` (no script change needed — it already symlinks whole skill directories, `setup-global.sh:126-134`) and invoke by `/_my_mental_model`
 
 **Non-Goals / Out of Scope**:
@@ -283,12 +300,12 @@ step, producing a readable synthesis markdown at a mandatory pause — running o
 - Classification wording details and the synthesis template section-by-section are spec concerns, not pre-decided here
 
 **Success / Done State**:
-- [ ] A question produces a synthesis markdown at `runs/` with narrative, metadata, and judgment sections
-- [ ] The coordinator states its classification (policy + shape) before spawning
+- [x] A question produces a synthesis markdown at `runs/` with narrative, metadata, and judgment sections
+- [x] The coordinator states its classification (policy + shape) before spawning
 - [ ] Under carried policy, the synthesis agent is a fork and conversation reasoning reaches the output
 - [ ] Under clean-room policy, restriction language is honored (fresh agent, restriction restated, unenforced nature stated)
-- [ ] Every run pauses after the synthesis is presented; no HTML is built
-- [ ] **`/_my_mental_model` resolves to the skill directory on Claude and the coordinator reads its sibling instruction file and nested feedback file.** This is the epic's directory-skill-resolution proof (product-lens spec-F3). Record the working form of the sibling reference — relative path, absolute path, or an injected variable — because every future skill's instruction files depend on it.
+- [x] Every run pauses after the synthesis is presented; no HTML is built
+- [x] **`/_my_mental_model` resolves to the skill directory on Claude and the coordinator reads its sibling instruction file and nested feedback file.** This is the epic's directory-skill-resolution proof (product-lens spec-F3). The working form of the sibling reference is already measured, not open: Claude prepends `Base directory for this skill: <absolute path>` to the invocation, every relative form fails, and `pwd` is the *project* directory, not the skill's (`.project/active/directory-skill-build-pattern/spike-findings.md`, A8). Confirm it holds for this skill; do not re-derive it.
 
 **Location**: `.project/active/coordinator-synthesis/`
 
@@ -301,6 +318,13 @@ step, producing a readable synthesis markdown at a mandatory pause — running o
 ---
 
 ### Item 4: Render + Switch + Feedback (Claude)
+
+**Status**: Implemented 2026-08-20, first validation run passed. V1 was a resumed render on a
+clean-room, checkpoint-shape question, run in `echo-workspace` through the global symlink install —
+the owner got their artifact and the detail layer is labelled and real (spec `## Success Criteria`
+carries the evidence). Still untested: the fresh path, the comparison, plain-document shape, the
+correction gate, feedback recording, and promotion. Phrase list for Item 5:
+`.project/active/render-switch-feedback/harness-phrases.md`.
 
 **Type**: Implementation
 **Effort**: 1-1.5 days (spec 2h, design 3h, plan 1h, execute 4-6h)
@@ -336,9 +360,12 @@ comparison mechanism, and the feedback system — completing the full end-to-end
 
 **Success / Done State**:
 - [ ] Both render paths (resumed agent, fresh agent) produce valid HTML paired to the synthesis
-- [ ] The HTML inherits the synthesis narrative and adds a detail layer — not the same words in a different format
+  — resumed confirmed by V1; fresh untested
+- [x] The HTML inherits the synthesis narrative and adds a detail layer — not the same words in a different format
 - [ ] Comparison produces two HTMLs from one synthesis, with wall-clock time reported and the token story stated honestly per runtime
+  — never run; V1 did confirm the readings mechanism on a solo render (`wall clock: 10m 44s`, `tokens: not measured`)
 - [ ] New feedback lands project-local, attributed to run and HTML version; shared starters ship with the skill
+  — starters ship; recording untested
 - [ ] Promotion targets the shared feedback file; copy-install promotion fails closed
 
 **Location**: `.project/active/render-switch-feedback/`
@@ -357,11 +384,12 @@ comparison mechanism, and the feedback system — completing the full end-to-end
 **Dependencies**: Items 2, 3, 4 (the real skill directory, with siblings and a nested feedback
 directory, is this item's test subject)
 **Required Reading**:
+- `.project/active/directory-skill-build-pattern/spike-findings.md` — **read first.** 16 of 18 packaging assumptions answered against both runtimes, 2026-08-20. Two of its findings change D1-D4; the section "What this changes in the design" names them.
 - `.project/active/directory-skill-build-pattern/spec.md` (written 2026-08-20 as old Item 2)
 - `.project/active/directory-skill-build-pattern/design.md` (D1-D7)
 - `.project/active/directory-skill-build-pattern/product-lens.md` (gate DISPOSED, three findings)
 - `.project/concepts/mental-alignment-skill-design.md` (Distribution lane, Appendix)
-- `.project/adr/0009-directory-skills-pattern.md`, `.project/adr/0010-native-skill-codex-lane.md`
+- `.project/adr/0009-directory-skills-pattern.md`, `.project/adr/0011-native-skill-codex-adapter.md` (which supersedes `0010-native-skill-codex-lane.md` — read 0010 only for what changed)
 
 **Objective**: Ship the skill directory on Codex with all of its files, and remove every remaining
 v1 surface. Establish the reusable directory-skill packaging pattern that every future migration
@@ -379,16 +407,18 @@ uses.
 - Apply the `_my_x` → `my-x` name mapping for the dist directory and generated frontmatter
 - Keep the SKILL.md frontmatter description plain prose (Codex YAML parse chokes on a leading `*`); native skills have no description override lane (`build-codex-pack.sh:243-255`)
 - Wire the Codex resumed-render path per Item 1's findings
-- Resolve the Codex-side unknowns (does Codex load a symlinked skill directory; does it tolerate a frontmatter name that differs from the directory name; does it read flat and nested siblings; how does a Codex skill reference its own directory). Prepared probe prompt: `/tmp/directory-skill-spike-prompt.md`, sections B1-B8
+- **The Codex-side unknowns are resolved — no probe needed in this item** (`.project/active/directory-skill-build-pattern/spike-findings.md`, B1-B8). Codex loads a symlinked skill *directory*, but silently refuses to register a skill whose `SKILL.md` is a symlink. It reads flat, twice-nested, and non-markdown siblings, and tolerates stray files with no warning. Its working directory during a run **is** the skill directory. It accepts underscore-prefixed names. And it registers the **frontmatter `name`**, not the directory name — which kills the renamed-symlink simplification and makes D1's generated entry point mandatory rather than convenient. The derived Codex name must land in the generated frontmatter; `build-codex-pack.sh:386` already writes it, so the work here is to not simplify it away
+- **Reopened by the same findings:** `~/.agents/skills/<name>` → `dist/codex/skills/<name>` as a whole-directory symlink would converge with no mirror logic at all. The design dismissed that on `build-codex-pack.sh:521`'s claim that "Codex reads copies, not symlinks", which the probe shows is false. Choose between it and D3's mirror deliberately, and correct that line plus `CLAUDE.md:53` either way. Hard constraint if symlinking: whole directory only, never `SKILL.md` alone
+- **D4 rescoped, not dropped:** the stale-managed-symlink sweep in `setup-global.sh` is hygiene rather than a hazard. A dangling symlink in `~/.claude/skills/` is inert — absent from the listing, no warning, the rest of the skill set unaffected (`.project/active/directory-skill-build-pattern/spike-findings.md`, A10). Prioritise it as tidiness
 - Remaining v1 cleanup: path rewrite at `build-codex-pack.sh:138`, shared-spec copy at `:426`, description override at `codex-overrides/config.sh:37`, `README.md:131` catalog row, `scripts/test_docs.sh` retired list, `scripts/uninstall-project.sh:108-114` skill list
 - Rebuild `dist/codex/` and refresh both installs
 - Convert `claude-pack/skills/example-skill.md` to directory form (`example-skill/SKILL.md` + a flat sibling + a nested sibling) and add a stale-managed-symlink sweep to `setup-global.sh`. **Rationale narrowed by the restructure**: the owner chose this conversion (2026-08-20) as the throwaway probe for the build lane, and the real skill is now the probe instead. The conversion still earns its place as the pack's copyable directory-skill example and as a regression fixture, and it retires a file two prior designs recorded as inert dead weight (`.project/active/pipeline-guide/design.md:41`) — but it is now droppable at the owner's discretion rather than load-bearing.
 
 **Non-Goals / Out of Scope**:
 - Any change to skill behavior — Items 3 and 4 own that
-- Widening the runtime-neutrality scan to sibling files. Owner decision 2026-08-20; sibling neutrality stays convention-only per ADR 0010. The scan keeps its `-g 'SKILL.md'` glob (`test_codex_orchestrator_pack.sh:336-338`)
+- ~~Widening the runtime-neutrality scan to sibling files; sibling neutrality stays convention-only per ADR 0010.~~ **Superseded 2026-08-20.** The owner reversed ADR 0010 (`.project/adr/0011-native-skill-codex-adapter.md`): skill bodies may carry harness-specific phrasing and the adapter translates every file. Sibling neutrality is no longer an obligation, so there is nothing to scan for. The owner also rejected any test that enumerates harness-specific phrases. Whether the existing scan survives at all is an Open Question in the revised spec
 - Migrating the remaining `_my_*` commands to skills, or relocating the prose specs out of `claude-pack/scripts/` — deferred by ADR 0009's scope note
-- Filing new ADRs — 0009 and 0010 already exist
+- Filing new ADRs. 0009 stands; 0010 was reversed by the owner and superseded by **0011** (filed 2026-08-20 at spec time, so it would not steer Items 3 and 4 while reversed). Item 5 implements 0009 and 0011, and updates the documents still citing 0010
 
 **Success / Done State**:
 - [ ] Every file of the skill directory reaches `dist/codex/skills/my-mental-model/` and then `~/.agents/skills/my-mental-model/`, at the same relative paths
@@ -412,7 +442,7 @@ uses.
 - Codex runtime: agent resume confirmed by Item 1; per-agent token reporting is absent
 
 **Internal**:
-- ADRs 0009 and 0010 (already filed) — Item 5 implements the decisions they record
+- ADRs 0009 and 0011 (0011 supersedes 0010, reversed by the owner 2026-08-20) — Item 5 implements the decisions they record
 
 **Item Dependency Graph**:
 ```
@@ -430,10 +460,11 @@ Item 2 (no deps)                            │
 | Risk | Impact | Mitigation |
 |------|--------|------------|
 | Directory-skill slash resolution doesn't work | High | Now proven in **Item 3**, on the real skill, before any packaging work depends on it (was Item 2; re-pointed per product-lens spec-F3). `setup-global.sh` symlink behavior is already verified, and underscore-prefixed skill directories were observed registering on Claude 2026-08-20. |
-| A skill can't read its sibling files, or the reference form is cwd-dependent | High | Item 3's done-state requires reading both a flat and a nested sibling and recording the working reference form. If this fails, the split-instruction-file shape — the entire repair for v1 — needs a different carrier, and we learn it in Item 3 rather than after two more items. |
+| A skill can't read its sibling files, or the reference form is cwd-dependent | **Resolved** | Answered by probe 2026-08-20 (`.project/active/directory-skill-build-pattern/spike-findings.md`, A6-A9, B4-B5). Siblings are readable on both runtimes — flat, nested, and through a symlink — so the split-instruction-file shape works and needs no other carrier. The reference form **is** cwd-dependent, and differently on each runtime, so the authoring rule is now fixed in Item 3's In Scope: bare filename in prose, never a path containing the skill's own directory name. Item 3 confirms rather than discovers. |
 | Fork doesn't carry conversation reasoning effectively | Med | Tested in use during Item 3; the mechanism exists (`subagent_type: "fork"`); if quality doesn't improve, carried policy degrades to discovered, not to failure |
 | Codex can't be measured for the token comparison | Low | Confirmed already by Item 1. Item 4 states the limitation instead of estimating. |
-| Codex won't load symlinked skill directories or tolerate a name mismatch | Med | Item 5's own probe (`/tmp/directory-skill-spike-prompt.md` B1-B8). The fallback is the copy-tree design already written in `design.md` D1-D3, so a negative answer costs nothing but the simplification. |
+| Codex won't load symlinked skill directories or tolerate a name mismatch | **Resolved** | Probe run 2026-08-20 (`.project/active/directory-skill-build-pattern/spike-findings.md`, B1-B3). Symlinked directories load, and a name mismatch is tolerated — but Codex keys on the frontmatter name, so the simplification is dead and the copy-tree design (D1-D3) stands as written. A symlinked `SKILL.md` alone silently fails to register; never ship that shape. |
+| A same-named command file shadows a new skill directory | Low | Unverified. The probe did not settle precedence between a user command and a user skill (`.project/active/directory-skill-build-pattern/spike-findings.md`, A3). Item 2 deletes the v1 command before Item 3 creates the skill, so ordering makes it moot — keep that order and the question never has to be answered. |
 | V1 retirement misses a reference | Low | The concept-design's Appendix has a verified file-by-file inventory; existing tests (docs, pipeline-sync) catch most gaps. Item 2's two deletes are verified harmless on their own. |
 
 ---

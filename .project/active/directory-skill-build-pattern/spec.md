@@ -1,183 +1,291 @@
-# Spec: Directory-Skill Build Pattern
+# Spec: Directory-Skill Codex Adapter
 
-**Status:** Draft
+**Status:** Draft (revision 3)
 **Owner:** Reid W
-**Created:** 2026-08-20 10:24
-**Complexity:** MEDIUM
+**Created:** 2026-08-20 10:24 · **Revised:** 2026-08-20 (rev 2 → rev 3, incorporating `spec-review.md`)
+**Complexity:** HIGH
 **Branch:** anchor-on-the-point
-**Epic:** MENTAL-ALIGN-V2, **Item 5** — written as Item 2, moved last by the 2026-08-20 restructure
-(see the epic's "Restructure" section). The move changed two things in this spec, marked below:
-the allowlist entry became in-scope, and the throwaway-name decision lost its original purpose.
+**Epic:** MENTAL-ALIGN-V2, **Item 5**
+
+---
+
+## Revision note
+
+**Revision 1 → 2.** The epic was restructured so the skill got built on Claude first, which made
+`claude-pack/skills/_my_mental_model/` this item's real test subject and pulled the allowlist entry
+and the v1 wiring cleanup in. Then the owner reversed ADR 0010: skill directories now go through the
+same Codex adapter as commands. Everything revision 1 inherited from 0010 — the no-rewriting rule,
+byte-identical siblings, the decision not to widen the neutrality scan — was deleted rather than
+qualified.
+
+**Revision 2 → 3**, from `spec-review.md` (verdict Revise) and the owner walkthrough recorded in its
+Resolutions:
+
+- The working-directory premise flipped from a constraint to a **defect to fix**. Revision 2 treated
+  "Codex runs a skill with the skill directory as cwd" as `[HARD]` and designed around it. The owner:
+  the project directory is the correct behavior, so find out why it changes and prevent it.
+- **Item 4 is Claude-only; this item owns all Codex adaptation.** That replaces revision 2's
+  wording-not-behavior boundary, which was wrong.
+- The gloss revision 2 attached to *"if the build fails, the build fails"* was an agent inference
+  wearing an owner quote's authority. Deleted. No new failure conditions are added.
+- `example-skill.md` is deleted rather than converted, which removes a `[NEED]`, a success criterion,
+  and an open question.
+- The phrase inventory stops claiming a count. Item 4 landed mid-session and grew `SKILL.md` from 98
+  to 277 lines.
+
+`design.md` is still revision 1 and now contradicts this spec in more places than before — its
+byte-identical-siblings invariant, its "the generated `SKILL.md` is the only file the build rewrites"
+decision, its `example-skill` decision (D7), and its flat-lane decision (D6, now settled by the
+owner). It needs its own revision pass.
 
 ---
 
 ## Problem
 
-The pack ships each capability as a command file in `claude-pack/commands/` that delegates to a
-shared prose spec in `claude-pack/scripts/`. ADR 0009 replaces that shape: a capability becomes a
-skill directory — `SKILL.md` entry point plus sibling instruction and feedback files, shipped and
-versioned as one unit. That decision is owner-graded and already recorded.
+A pack capability is a skill directory — an entry point plus the instruction and feedback files it
+reads, shipped as one unit (ADR 0009, `[OWNER]`). The Codex lane ships one file out of it.
+`build-codex-pack.sh:395` and `setup-codex.sh:267` both walk
+`find … -mindepth 2 -maxdepth 2 -name 'SKILL.md'`, so siblings are dropped and a nested `feedback/`
+directory is never even discovered. Claude symlinks the whole directory
+(`setup-global.sh:126-134`), so it works there. Codex gets an entry point referencing files nobody
+copied, with no error on either side. This matters because the split instruction files are the whole
+repair for the failed v1 — an agent given the thinking job cannot see the rendering job only if the
+two live in separate files that actually ship.
 
-Neither install lane can ship such a directory today.
+**Why ADR 0010's rule couldn't hold.** It required skill bodies to be written in runtime-neutral
+language, because no translation pass existed for them. The first real skill has to state things that
+differ per harness — where its own directory is, and how to spawn an agent that inherits the
+conversation — so the requirement is unmeetable. Commands never hit this: a command is a single file
+with nothing beside it, so no pack file had ever needed to locate itself. The command lane has
+absorbed harness differences since it was written, through a substitution dictionary in
+`sanitize_command_body_for_skill` (`build-codex-pack.sh:133-160`). The fix is to point that lane at
+skill directories too, which is ADR 0011.
 
-- `build-codex-pack.sh:395` finds directory skills with `find ... -mindepth 2 -maxdepth 2 -type f
-  -name 'SKILL.md'`. It copies the entry point and nothing else. A nested subdirectory such as
-  `feedback/` is not even discovered by that walk.
-- `setup-codex.sh:267` has the same shape, so the install repeats the omission.
-- `NATIVE_SKILL_ALLOWLIST` (`codex-overrides/config.sh:58`) is opt-in — a skill directory missing
-  from it is dropped from the Codex build with no error.
+**The unknown underneath all of it.** A substitution dictionary translates *vocabulary*. It cannot
+translate a working directory. `SKILL.md` writes its output to project-relative paths — eight of
+them, including the synthesis file the skill exists to produce. If a Codex skill run really has the
+skill directory as its working directory, every one of those writes lands inside
+`~/.agents/skills/my-mental-model/` instead of the repo, silently. But roughly thirty shipped
+command-derived Codex skills already write relative `.project/…` paths
+(`dist/codex/skills/my-spec/SKILL.md:63` among them), and they are not known to be broken — so
+either the probe's reading does not generalize to normal skill runs, or there is a much larger
+pre-existing defect. This is unresolved and it gates the shape of the work. See Open Questions.
 
-Claude is fine: `setup-global.sh:126-134` symlinks whole skill directories, so siblings arrive
-with the skill. That asymmetry is what makes this dangerous. The first directory skill would work
-on Claude and arrive on Codex as an entry point pointing at instruction files that were never
-copied — a silent half-install, discovered only when someone runs the skill on Codex.
-
-There is a second, quieter problem. `claude-pack/skills/example-skill.md` is a flat `.md` file,
-and flat files never register as skills in Claude Code. Two prior designs recorded it as inert
-and deliberately left it alone (`.project/active/pipeline-guide/design.md:41`). So the pack's only
-skill example is a non-functional file in a form nobody should copy — exactly the pattern-matching
-failure ADR 0009 exists to prevent.
-
-The mental-alignment skill is the first capability that needs this plumbing, and the plumbing is
-generic — every future command→skill migration uses it.
-
-**Ordering, changed 2026-08-20.** This item was originally first in the epic, proving the lane with
-a placeholder before any real skill existed. The owner moved it last: the skill gets built and
-proven on Claude first, and this item then ships it to Codex. So by the time this runs,
-`claude-pack/skills/_my_mental_model/` already exists with an instruction sibling and a nested
-`feedback/` directory, and it is this item's real test subject rather than a stand-in.
+**The leftovers.** Epic Item 2 deleted the two v1 authored files; three references remain in the
+tree: the path rewrite at `build-codex-pack.sh:138`, the shared-spec copy at `:426`, and the
+description override at `codex-overrides/config.sh:37`. A fourth is the stale `README.md:131`
+command-catalog row, which nothing catches any more — `test_docs.sh`'s completeness check stopped
+requiring that row the moment the command file was deleted. `dist/codex/` is also deliberately
+stale. Separately, `build-codex-pack.sh:338-365` is a second lane that turns a flat `.md` into a
+working Codex skill while Claude registers nothing — the same one-sided silent failure, mirrored.
 
 ## Success Criteria
 
-- [ ] A skill directory containing sibling files **and** a nested subdirectory installs complete
-      on both runtimes: every file reaches `dist/codex/skills/<name>/` and then
-      `~/.agents/skills/<name>/`, and the Claude install places the whole directory.
-- [ ] Invoking the example skill on Claude works, and a sibling file it references is readable
-      from inside that invocation.
-- [ ] `claude-pack/skills/_my_mental_model/` reaches Codex as `my-mental-model` — dist directory
-      name and generated frontmatter name both — and is present in the Codex build rather than
-      silently excluded from it.
-- [ ] The pack ships a directory-skill example in the correct form, so a future author copying it
-      gets the right shape. `example-skill` is no longer inert on Claude.
-- [ ] The new sibling-copying behavior has a regression check, so a later change that drops
-      siblings fails a test rather than shipping.
-- [ ] Anyone who installed the old flat `example-skill.md` does not keep a stale symlink at
-      `~/.claude/skills/example-skill.md` after re-running the installer.
-- [ ] The existing suite passes: docs, pipeline-sync, codex-orchestrator-pack, global-setup, adr.
+- [ ] Every file under an allowlisted skill directory reaches `dist/codex/skills/<name>/` and then
+      `~/.agents/skills/<name>/`, at the same relative paths, nested directories included
+- [ ] The Codex adapter runs over every file in the skill directory, not only `SKILL.md`
+- [ ] **The skill's harness-specific inventory is re-derived from the files at execution time**, as
+      exact source strings rather than paraphrases, and every entry is either a dictionary
+      substitution or an edit to the skill. No count is fixed in advance
+- [ ] `my-mental-model` runs on Codex end to end: it locates its own directory, reads
+      `design_synthesis.md`, `visualize.md`, and both `feedback/` bodies, spawns a context-inheriting
+      agent under carried policy, resumes that agent for the render, and **writes its run artifacts
+      into the project** rather than into the installed skill directory
+- [ ] The Codex comparison reports the missing per-agent token count honestly rather than estimating
+      it (epic Item 1 found no supported source)
+- [ ] `/_my_mental_model` on Claude does what it did before this item: locates its directory, the
+      synthesis agent reads its instruction files, carried policy forks, and runs land in
+      `.project/mental-alignment/runs/`. Most of the edited lines live in the file Claude reads live
+      through the install symlink, so this item is editing a working capability
+- [ ] The skill reaches Codex as `my-mental-model` — dist directory and generated frontmatter name
+      both — and is present in the build rather than silently excluded from it
+- [ ] Documents that still steer future work no longer cite ADR 0010 as live guidance; historical and
+      append-only records keep their 0010 citations (see the `[OWNER]` item on supersession)
+- [ ] The two false claims about Codex and symlinks are corrected — `build-codex-pack.sh:521` and
+      `CLAUDE.md:53` — whichever install strategy is chosen
+- [ ] Re-running either installer converges: added files appear, changed files update, files removed
+      from the pack disappear from the target
+- [ ] No v1 surface remains, and no script or test references one
+- [ ] The existing suite passes: docs, pipeline-sync, adr, global-setup, codex-orchestrator-pack
 
 ## Known Requirements
 
-- **[HARD]** A Claude skill's name is its directory name. The runtime rejects parentheses,
-  commas, control characters, a leading `/`, surrounding whitespace, backslashes, and
-  wildcard-suffix names. Underscores are permitted. (Read from the installed runtime,
-  `claude-code 2.1.237`, 2026-08-20 — this is what makes a future `_my_mental_model` directory a
-  legal skill name.)
+**Owner decisions, 2026-08-20**
+
+- **[OWNER]** Skill directories go through the same Codex adapter as commands, applied recursively
+  over every file in the directory. Owner: *"it seems like the only good solution is just extending
+  the same 'codex adapter' pattern from 'command' to 'skill'."*
+- **[OWNER]** **This item owns all Codex adaptation; Item 4 owns none of it.** Owner: *"Item 4 is not
+  going to worry about Codex whatsoever. Item 4's job is to ship a usable claude skill. that's it.
+  Item 5 needs to figure out how to make it work for codex."* So the boundary is: this item does not
+  change what the skill does on Claude, and does whatever it takes to make the same capability work
+  on Codex — the phrase edits, the working-directory problem, the resumed-render path, and the token
+  reporting all land here.
+- **[OWNER]** **The project directory is the correct working directory for a skill run.** Owner:
+  *"it SHOULD be this — moving to the skill directory would be really dumb. so yes, we need to run a
+  small probe to figure out why it would be changing directories and how to prevent it."* The intent
+  is to fix the cause, not to adapt the skill to it. The probe is an Open Question below.
+- **[OWNER-VERBATIM]** *"if the build fails, the build fails"* / *"if the build doesn't fail, I find
+  out when the skill fails."* Meaning: no tolerance is built for failure, and **no new failure
+  conditions are added**. `NATIVE_SKILL_ALLOWLIST` stays opt-in and silent. Owner, on the inference
+  revision 2 attached to this quote: *"when I said that I meant 'if it fails for any reason'. we are
+  not adding more checks. … I am not here to try and catch a one-time issue — we will test it, find
+  out, fix it."*
+- **[OWNER]** No test enumerates harness-specific phrases, because a phrase you can list is one you
+  would have already put in the dictionary. The detector is the skill failing on the runtime.
+- **[OWNER]** Every harness-specific phrase in the skill is either captured in the dictionary or the
+  skill is adjusted. Per-phrase choice is design's.
+- **[OWNER]** `claude-pack/skills/example-skill.md` is **deleted**, not converted to directory form.
+  Owner: *"delete it."* Consequences: the flat native-skill lane (`build-codex-pack.sh:338-365`)
+  loses its only user and is deleted rather than guarded, and
+  `scripts/uninstall-project.sh:109` drops its `example-skill.md` entry.
+- **[OWNER]** ADR 0010 is superseded, not deleted — the log is append-only per ADR 0001 and `adr.sh`
+  has no delete verb. Filed at spec time rather than deferred to execution, because 0010 stayed
+  `active` while epic Items 3 and 4 ran and its reversed invariant was steering how they authored
+  skill files (product-lens spec-F4): `.project/adr/0011-native-skill-codex-adapter.md`, provenance
+  `[OWNER]`, 0010 now `status: superseded`. Re-pointing citations covers only documents that still
+  steer future work. `0010` and `0011` themselves, the `INDEX.md` superseded row, `spike-findings.md`
+  as a dated record, and every append-only `product-lens.md` block keep their 0010 references.
+
+**Forced by the runtimes** (probes of 2026-08-20 —
+`.project/active/directory-skill-build-pattern/spike-findings.md`)
+
+- **[HARD]** Codex registers the frontmatter `name` and does not answer to the directory name (B3).
+  Claude displays the directory name and accepts both (A4). So the Codex entry point must be
+  regenerated with the derived name written into its frontmatter.
+- **[HARD]** Claude runs a skill with the project directory as the working directory and prepends
+  `Base directory for this skill: <abs path>` (A8). No relative path containing the skill's own
+  directory name resolves on either runtime.
+- **[INFERRED]** *Codex* runs a skill with the skill's own directory as the working directory. `pwd`
+  returned that in two probes (B5), but the probe never wrote a relative file, and ~30 shipped
+  command skills would be broken if this generalized. Held as inferred, not hard, pending the probe.
+- **[HARD]** Codex silently refuses to register a skill whose `SKILL.md` is a symlink (B2). It does
+  load a symlinked skill *directory* (B1) — which makes `build-codex-pack.sh:521` and `CLAUDE.md:53`
+  ("Codex reads copies, not symlinks") false.
+- **[HARD]** A skill directory absent from `NATIVE_SKILL_ALLOWLIST` (`codex-overrides/config.sh:58`)
+  is excluded from the Codex build with no error. The check is keyed on the **pack-side** directory
+  name (`build-codex-pack.sh:370`), so the entry must be the literal `_my_mental_model`.
 - **[HARD]** Native skills take their Codex description from their own frontmatter; there is no
-  override map for them (`build-codex-pack.sh:243-255`). Codex's YAML parse fails on a leading
-  `*`, so the description must be plain prose.
-- **[HARD]** A skill directory absent from `NATIVE_SKILL_ALLOWLIST` is silently excluded from the
-  Codex build (`codex-overrides/config.sh:58`).
-- **[HARD]** A flat `.md` file in `claude-pack/skills/` never registers as a skill in Claude Code.
-  Any skill that must actually load has to be a directory with a `SKILL.md`.
-- **[NEED]** `example-skill` is converted from its flat file to directory form and kept in the
-  pack. (Owner, 2026-08-20.) *Premise changed by the restructure:* the owner chose this as a
-  throwaway subject so the lane could be proven without creating `_my_mental_model` prematurely.
-  Under the new ordering the real skill exists first and is the subject, so the conversion no
-  longer carries the proof. The decision stands on its remaining merits — it retires a file two
-  prior designs recorded as inert dead weight, and it leaves the pack a copyable directory-skill
-  example, which is what ADR 0009 exists to protect. It is now droppable at the owner's discretion
-  rather than load-bearing.
-- **[NEED]** The pattern is not proven under `_my_mental_model` *before* that skill exists.
-  (Owner, 2026-08-20.) Satisfied by construction now: the skill is built in epic Item 3, and this
-  item ships it.
+  override map (`build-codex-pack.sh:243-255`). A leading `*` crashes Codex's YAML parse, so the
+  description must be plain prose.
+- **[HARD]** A flat `.md` file in `claude-pack/skills/` never registers as a skill on Claude.
+- **[HARD]** `setup-codex.sh`'s overwrite guard greps each file's first 20 lines for `Generated from`
+  (`:19-22`). A file without that marker is classified user-authored and skipped from the second
+  install onward.
+
+**The harness-specific inventory — two classes, no fixed count**
+
+As of 2026-08-20 the skill is `SKILL.md` (277 lines), `design_synthesis.md`, `visualize.md`, and two
+`feedback/` bodies. `visualize.md` and `feedback/html.md` are clean. `design_synthesis.md:30` ("you
+are a fork of the conversation") reads on both harnesses. Everything else is in `SKILL.md`, and it
+splits into two classes that need different answers:
+
+- **Vocabulary** — tool and parameter names, and sentences about how the harness hands the skill its
+  own directory. Around a dozen spots as of Item 4's landing, including the base-directory sentences,
+  `subagent_type: "fork"`, the `Agent` tool, `SendMessage`, and the `Read`-not-`cat` instruction.
+  Item 4 handed over its own list at `.project/active/render-switch-feedback/harness-phrases.md`.
+  These are what a dictionary is for.
+- **Project-relative paths** — eight of them, `SKILL.md:51`, `:54`, `:66`, `:132`, `:134`, `:148`,
+  `:231`, `:233`. **A dictionary cannot fix these**, because there is no string to swap: a
+  Codex-side skill has no way to name the project root from inside its own directory. They are the
+  reason the working-directory probe gates this item.
+
+Both lists are stale the moment the skill is edited again, which is why the criterion above requires
+re-deriving them at execution time, as literal strings.
+
+**Absorbed from upstream**
+
 - **[INHERITED]** Sibling copying must reach files nested inside subdirectories, not only flat
-  siblings — the real skill's `feedback/` directory is the case that breaks a flat walk.
+  siblings — the skill's `feedback/` directory is the case that breaks a flat walk.
   (`.project/concepts/mental-alignment-skill-design.md:252`.)
-- **[INHERITED]** No sanitization pass exists for native skill bodies. Both the entry point and
-  its siblings must be written in runtime-neutral delegation language. (ADR 0010.)
-- **[INHERITED]** The three Codex changes are: copy siblings in the build, install siblings, and
-  add the directory to the allowlist. (`.project/concepts/mental-alignment-skill-design.md:112-113`,
-  ADR 0010.)
-- **[INFERRED]** The example skill's content stays a placeholder. It demonstrates the shape — an
-  entry point that reads a sibling — and carries no real capability.
+- **[INHERITED]** The `_my_x` → `my-x` mapping applies to native skills, for the dist directory and
+  the generated frontmatter name. (ADR 0011 invariants;
+  `.project/concepts/mental-alignment-skill-design.md:255`.) This is not tidiness — ship the native
+  skill as `_my_mental_model` and two live commands break: `claude-pack/commands/_my_epic_plan.md:44`
+  and `_my_concept_design_review.md:219` reference `/_my_mental_model`, which the command lane
+  rewrites to `` `my-mental-model` `` (`build-codex-pack.sh:155-158`). Their Codex skills would offer
+  the owner a name nothing answers to.
+- **[INHERITED]** Codex can continue a completed spawned agent, so the resumed-render path exists
+  there; the collaboration surface reports no per-agent token count.
+  (`.project/active/codex-resume-spike/spike-findings.md`.)
 
 ## Non-Goals
 
-- The mental-alignment coordinator, synthesis, or render behavior. Epic Items 3 and 4.
-- Deleting the two v1 authored files (`claude-pack/commands/_my_mental_model.md`,
-  `claude-pack/scripts/mental-model-builder.md`). Epic Item 2. Their **remaining build wiring,
-  docs, and test references are in scope here** — see "Added to scope by the restructure" below.
-- Creating `claude-pack/skills/_my_mental_model/` and its instruction and feedback files. Epic
-  Item 3.
-- Widening the runtime-neutrality scan to cover sibling files. ADR 0010 left this to spec; the
-  decision is not to widen it, so sibling neutrality stays convention-only
-  (owner, 2026-08-20). The scan remains `test_codex_orchestrator_pack.sh:336-338`, globbed
-  `-g 'SKILL.md'`.
-- Migrating the remaining `_my_*` commands to skills, or moving the prose specs out of
+- **Changing what the skill does on Claude.** Items 3 and 4 own its behavior. This item edits the
+  skill only as far as Codex adaptation requires, and a Claude-side break introduced here is fixed
+  here.
+- Adding build-time checks or new failure conditions. Owner decision, above.
+- A general-purpose detector for harness-specific phrases. Owner decision, above.
+- Automated behavioral tests of the skill on either runtime. Verification is manual invocation.
+- Deleting ADR 0010's file, or re-pointing historical and append-only records away from it.
+- Migrating the remaining `_my_*` commands to skills, or relocating the prose specs out of
   `claude-pack/scripts/`. Deferred by ADR 0009's scope note.
-- Proving that a `/_my_*` slash invocation resolves to a directory skill on **Claude**. That
-  happens in epic Item 3, which creates the real directory and invokes it, and the epic's risk
-  table is re-pointed there. Proving it on **Codex** is in scope here. (product-lens spec-F3.)
-
-## Added to scope by the restructure (2026-08-20)
-
-Moving this item last pulled three things in that were previously someone else's:
-
-- **[INHERITED]** Add `_my_mental_model` to `NATIVE_SKILL_ALLOWLIST`. The entry must be the
-  **pack-side** directory name `_my_mental_model`, not the Codex name `my-mental-model` — the check
-  is keyed on the source directory (`build-codex-pack.sh:370`). A missing entry excludes the skill
-  from the Codex build with no error. This was a Non-Goal when the item ran first and no such
-  directory existed. (product-lens spec-F2.)
-- **[INHERITED]** The remaining v1 wiring cleanup, which old epic Item 3 owned: the path rewrite at
-  `build-codex-pack.sh:138`, the shared-spec copy at `:426`, the description override at
-  `codex-overrides/config.sh:37`, the `README.md:131` catalog row, the `scripts/test_docs.sh`
-  retired list, and the `scripts/uninstall-project.sh:108-114` skill list. Each was verified
-  harmless if left in place, which is why the deletes could ship separately as epic Item 2.
-- **[INHERITED]** Wiring the Codex resumed-render path, using epic Item 1's confirmed finding that
-  Codex can continue a spawned agent. Item 1 also found Codex reports no per-agent token count.
+- Widening the adapter to `claude-pack/rules/` or agents. `sanitize_rule_body_for_codex` already
+  exists and is untouched here.
+- Fixing the ~30 command-derived Codex skills, if the probe finds they have the same
+  working-directory problem. That is a separate work item; this spec's job is to say which half it is
+  taking (see Open Questions).
 
 ## Open Questions / Deferred to design
 
-- ~~**How the `_my_x` → `my-x` mapping gets proven.**~~ **Resolved by the restructure.**
-  `_my_mental_model` exists before this item runs, so every build exercises the mapping and the
-  nested-sibling copy for real. The design's answer to this question (parameterize the build's
-  roots so a fixture pack can be built in a tmpdir) lost its purpose and is recorded as rejected.
-- **Where the Codex skill name comes from.** The build currently reads the frontmatter `name`
-  (`build-codex-pack.sh:375`) and falls back to the directory name. On Claude the frontmatter name
-  has to match the directory, so for a `_my_`-prefixed skill the build cannot trust frontmatter —
-  it has to derive `my-<name>`. Design settles whether that is a new helper or the existing
-  `strip_command_prefix` / `to_hyphen_name` pair.
-- **What the sibling walk includes and excludes.** Depth, dotfiles, whether non-markdown files
-  (scripts, assets) are in scope.
-- **How the stale `~/.claude/skills/example-skill.md` symlink is removed** — a targeted cleanup in
-  `setup-global.sh`, or a general "managed symlink whose source no longer exists" sweep.
-- **What the regression check asserts.** Sibling presence in `dist/`, in a temp-HOME Codex
-  install, or both.
-- **What `uninstall-project.sh:108-114` should list.** It hardcodes `example-skill.md` in its
-  file loop and `show-me` in its directory loop. Both the converted `example-skill` and
-  `_my_mental_model` need directory entries, and the flat `example-skill.md` entry should stay for
-  projects vendored before this change. One list, one edit — no longer split across two items.
-- **What happens to the flat native-skill build lane** (`build-codex-pack.sh:335-365`). Converting
-  `example-skill` leaves it with no user in the pack, but it still works: a flat `.md` dropped in
-  `claude-pack/skills/` would build a functioning Codex skill while registering nothing on Claude
-  — the same silent per-runtime asymmetry as the problem above, mirrored. Delete the lane, or keep
-  it and make it fail loudly. Design decides. (product-lens spec-F1.)
+**The blocking one, and it needs code rather than a decision:**
+
+- **Why does a Codex skill run report a working directory other than the project directory, and how
+  is that prevented?** Run as `/_my_spike` before design commits to a shape. Three questions, not
+  one — the third exists because taking the skill-directory working directory away removes the only
+  way a Codex skill currently locates its own files, since Codex supplies no base-directory line:
+  1. Where does a *relative write* actually land during a Codex skill run? The existing probe read
+     `pwd` and never wrote a file, which is the operation that breaks.
+  2. Is the working directory controllable — a setting, a frontmatter field, an invocation flag?
+  3. If it is forced to the project directory, how does the skill then reach its own siblings?
+
+  Dependent on the answer: whether the eight project-relative paths are rewritten in the skill or
+  fixed underneath, and whether the ~30 command skills share the defect.
+
+**The rest:**
+
+- **Which files the adapter transforms.** Markdown only, or every text file? What happens to a script
+  or a binary asset sitting in a skill directory.
+- **Whether substitutions are global or scoped per source file.**
+  `sanitize_command_body_for_skill` applies every rule to every body it processes. Stock vocabulary
+  belongs there, but a one-off sentence from a single skill turns the dictionary into a patch table
+  that fires on any body containing the string. That changes the shape of the answer, not just where
+  the dictionary lives — so it pairs with the next question.
+- **Whether the dictionary stays inline** in `sanitize_command_body_for_skill` or becomes a table
+  both lanes read. Two hand-maintained copies of the same list, kept in step by nobody, is the
+  failure mode to avoid (product-lens smell 1).
+- **Where the `Generated from` marker goes.** If every transformed file carries it, the install's
+  per-file guard works as-is. A non-markdown sibling can't carry a markdown marker, so a
+  directory-granularity guard may still be needed for those.
+- **Whether the existing dist scan survives** (`test_codex_orchestrator_pack.sh:336-338`). Its only
+  defensible job now is confirming the adapter *ran*, not detecting phrases nobody listed. Note its
+  regex matches `subagent_type=` with an equals sign while the skill uses the colon form, so exactly
+  one current spot would trip it. Keep it with that narrowed job, widen it, or delete it.
+- **Install strategy.** Copy mirror, or a whole-directory symlink from `~/.agents/skills/<name>` into
+  `dist/`. The probe reopened the symlink option by falsifying the claim it was dismissed on; note
+  that `dist/` is wiped at the start of every build (`build-codex-pack.sh:258`).
+- **Ordering of the v1 wiring deletions.**
 
 ---
 
 ## Related Artifacts
 
 - **Epic:** `.project/backlog/epic_mental_alignment_skill.md` (MENTAL-ALIGN-V2, Item 5)
+- **Spec review:** `.project/active/directory-skill-build-pattern/spec-review.md` — verdict Revise,
+  findings L1-1…L5-1 with owner resolutions; this revision incorporates it
 - **Required Reading:**
+  - `.project/active/directory-skill-build-pattern/spike-findings.md` — the packaging probes
+  - `.project/active/render-switch-feedback/harness-phrases.md` — Item 4's dictionary handoff
+  - `.project/active/codex-resume-spike/spike-findings.md` — epic Item 1
   - `.project/concepts/mental-alignment-skill-design.md` — Distribution lane, Appendix
-    (Codex build/install changes, Claude install)
-  - `.project/concepts/mental-alignment-skill-design-review.md` — ADR candidate 3 assessment,
-    m4 disposition
   - `.project/adr/0009-directory-skills-pattern.md`
-  - `.project/adr/0010-native-skill-codex-lane.md`
+  - `.project/adr/0011-native-skill-codex-adapter.md` — filed 2026-08-20, superseding
+    `0010-native-skill-codex-lane.md` (now `status: superseded`)
 - **Product-lens ledger:** `.project/active/directory-skill-build-pattern/product-lens.md`
-- **Design:** `.project/active/directory-skill-build-pattern/design.md` (to be created)
+  (spec revision 2 pass: DISPOSED, findings spec-F4/F5/F6)
+- **Design:** `.project/active/directory-skill-build-pattern/design.md` (revision 1 — needs a
+  revision pass; see the Revision note)
 
 ---
 
-**Next Steps:** After approval, proceed to `/_my_design`.
+**Next Steps:** Run the working-directory spike, fold its result in, then `/_my_design`.

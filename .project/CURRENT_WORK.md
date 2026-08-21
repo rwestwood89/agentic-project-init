@@ -1,6 +1,6 @@
 # Current Work
 
-**Last Updated**: 2026-08-13
+**Last Updated**: 2026-08-20
 
 ---
 
@@ -14,9 +14,33 @@
 - Artifacts: `.project/concepts/product-intent-ledger.md`; `.project/active/product-intent-ledger/{spec,design,plan,product-lens,audit}.md` + `fixture-{sandbox,expected-findings,transcripts}.md`.
 - Next: fresh-session re-audit; then `/_my_close`, `/_my_pre_pr` when the branch ships.
 
+### coordinator-synthesis — coordinator + synthesis step (Claude)
+- Epic MENTAL-ALIGN-V2, Item 3. **Complete (2026-08-20).** Spec reviewed and revised, implementation done, first real run verified.
+- Skill directory live at `claude-pack/skills/_my_mental_model/` with `SKILL.md`, `design_synthesis.md`, `feedback/synthesis.md`.
+- First run: `.project/mental-alignment/runs/20260820-131155_ralph-loop.md` — discovered-policy, plain-document shape, ~6m15s.
+- Carried and clean-room policies untested. Item 3 epic done-state: 4/6 checked, 2 unchecked (those two policies).
+
+### render-switch-feedback — render paths, comparison, and feedback (Claude)
+- Epic MENTAL-ALIGN-V2, Item 4. **Implemented 2026-08-20; first validation run passed.** Spec → spec-review → design → design-review (Rework, DR-1/2/3 dispositioned by owner) → revised design approved by owner → implemented with no separate plan (owner call: small enough).
+- Landed: `claude-pack/skills/_my_mental_model/visualize.md` (136 lines, the render agent's instruction file), `feedback/html.md` (shared starter, header only), and `SKILL.md` Steps 5–9 replacing the terminal stop — correction gate, routing + one brief with two envelopes, `# Renders` readings write-back, plain-document judgment read-back, feedback recording and promotion. `SKILL.md` 98 → 277 lines. Installation needed nothing: `~/.claude/skills/_my_mental_model` is a directory symlink, so both new files are already live.
+- Three owner decisions from design-review are baked in: clean room constrains the synthesis, not the render (default is free exploration, override offered at the pause); an unreachable synthesis agent at the correction gate **stops the run** — the coordinator never writes synthesis content; cross-runtime correctness belongs to the Codex adapter under ADR 0011, so the prose is Claude-native.
+- **Run V1 passed (2026-08-20): resumed path, clean-room policy, checkpoint shape.** Run in `echo-workspace`, not here, so it also proved reachability through the global directory symlink from another repo. Artifacts: `/home/rwestwood/echo-workspace/.project/mental-alignment/runs/20260820-152840_lofi-runner-architecture{.md,_resumed.html}`. Owner: "it worked … got my artifact." The central risk is answered for this run — the HTML labels 17 `render addition` spots, carries 11 tables and 3 inline SVG, and its source footer separates the owner's named clean-room sources from the four external sources it read for detail. It went after exactly the four claims the synthesis had flagged as cited-not-verified. D9's clean-room default held and the HTML says so on its face ("Clean room for the synthesis … Unrestricted for this render"). Safety limits clean: no script, handlers, embeds, or remote URLs. Step 7 wrote its `# Renders` block (`10m 44s`, `tokens: not measured`, `owner quality: not asked`).
+- SC1, SC3, SC7, SC9 checked. **Still untested: the fresh path (SC2), the comparison (SC5), plain-document shape and the terminal judgment read-back (SC4 half), the correction gate (SC10), feedback recording (SC6), promotion (SC8).**
+- Two observations from V1, neither a spec failure: the coordinator recorded `owner quality: not asked` where Step 7 says to offer it on a solo render, and the HTML used no `<details>` disclosure at all — a candidate for `feedback-html.md` once feedback recording gets exercised. The v1 `echo-workspace/.project/mental-alignment/feedback.md` was left untouched, which is the "deprecated in place" non-goal behaving.
+- Also landed: `.project/active/render-switch-feedback/harness-phrases.md` — the seven Claude-specific phrases Steps 5–9 introduced, with what each means for translation. **Item 5's dictionary input.** Nothing checks for it; an unlisted phrase ships clean and surfaces only on Codex. `visualize.md` needs no entries (it names no tool).
+- Known gap by design: no automated checks anywhere, and tokens read `not measured` on both runtimes (the spec's last open question, closed with a negative answer by the Claude resume probe in `design.md` Appendix A).
+- Deliberately not built: a second entry point for rendering a past synthesis through the skill. The design says it falls out of the fresh path rather than being a feature, so validation run 1 is driven by hand.
+- Next: a fresh-path render (design validation run 1 — cheapest against the existing local `runs/20260820-131155_ralph-loop.md`, whose agent is long gone), then plain-document shape, the correction gate, and feedback + promotion. Then `/_my_audit`.
+
 ### directory-skill-build-pattern — ship a skill directory with siblings on both runtimes
-- Epic MENTAL-ALIGN-V2, Item 2. **Spec in progress** (`.project/active/directory-skill-build-pattern/spec.md`).
-- Owner calls this session: prove the lane under a throwaway name, not `_my_mental_model` (created later, Item 4); the throwaway is `example-skill` converted from its inert flat file to directory form and kept as the example + regression fixture; do not widen the runtime-neutrality scan to siblings (stays convention-only per ADR 0010).
+- Epic MENTAL-ALIGN-V2, Item 5 (renumbered from old Item 2). **Spec at revision 3 (2026-08-20)** — spec-review verdict Revise, owner resolutions folded in. **Next: the working-directory spike, then `/_my_design`.**
+- **Blocking unknown:** why a Codex skill run reports a working directory other than the project directory. Owner's call is to fix the cause, not adapt — the project directory is correct. Eight project-relative paths in `SKILL.md` can't be fixed by a substitution dictionary, and ~30 shipped command skills write relative `.project/…` too, so either the probe reading doesn't generalize or there's a larger pre-existing defect. Probe must answer: where a relative *write* lands, whether the cwd is controllable, and how a skill reaches its siblings if the cwd is forced to the project root.
+- Owner boundary (2026-08-20): Item 4 is Claude-only; **Item 5 owns all Codex adaptation** — phrase edits, working directory, resumed-render path, token reporting.
+- `example-skill.md` is deleted, not converted; the flat native-skill build lane goes with it. No new build checks (the "if the build fails" gloss in revision 2 was an agent inference and was deleted from both the spec and ADR 0011).
+- **Owner reversed ADR 0010** (2026-08-20): skill directories now go through the same Codex adapter as commands, applied recursively over every file in the directory. ADR 0010 to be superseded, not deleted. `design.md` is revision 1 and needs a revision pass — its byte-identical-siblings invariant and no-rewriting Non-Goal are now wrong.
+- Audit of `claude-pack/skills/_my_mental_model/`: seven harness-specific spots, none in the dictionary; `SKILL.md:77` already fails the existing dist scan. No test will enumerate harness phrases (owner: if we knew them they'd be in the dictionary).
+- Deferred until after Items 3 and 4 — the real skill is the test subject, not a placeholder.
+- **Item 4 handed over a dictionary input** (2026-08-20): `.project/active/render-switch-feedback/harness-phrases.md`, seven new Claude-specific phrases in `SKILL.md` Steps 5–9. The seven pre-existing spots tabled in `spec.md:143-153` still have correct line numbers — Item 4's edits above line 87 replaced text line-for-line.
 
 ### mental-alignment-checkpoint — owner-facing HTML comprehension surface
 - **Implemented directly from the revised design by owner instruction (2026-08-09, "basic feature, straight to implementation"); uncommitted on `anchor-on-the-point`, no spec/plan/audit run.**
