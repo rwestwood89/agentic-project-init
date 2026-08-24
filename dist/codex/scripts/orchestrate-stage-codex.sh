@@ -39,7 +39,7 @@ stage_skill_name() {
 
 default_sandbox_for_stage() {
   case "$1" in
-    pipeline|status|project_find|project-find|spec_review|spec-review|design_review|design-review)
+    pipeline|status|project_find|project-find|concept_design_review|concept-design-review|spec_review|spec-review|design_review|design-review)
       printf 'read-only'
       ;;
     *)
@@ -181,6 +181,44 @@ RAW="$LOGDIR/$LABEL-$STAMP.jsonl"
 ERR="$LOGDIR/$LABEL-$STAMP.stderr"
 LAST="$LOGDIR/$LABEL-$STAMP.final.md"
 
+RUNNER_PID=""
+CLEANUP_GRACE=5
+
+cancel_runner() {
+  local signal="$1"
+  local signal_status="$2"
+  local runner_pid="$RUNNER_PID"
+  local escalation_pid=""
+
+  trap - HUP INT TERM
+  printf 'orchestrate-stage-codex: %s received %s; cancelling stage (raw: %s, stderr: %s, final: %s)\n' \
+    "$LABEL" "$signal" "$RAW" "$ERR" "$LAST" >&2
+
+  if [ -n "$runner_pid" ] && kill -0 "$runner_pid" 2>/dev/null; then
+    kill "-$signal" "$runner_pid" 2>/dev/null || true
+    (
+      sleep "$CLEANUP_GRACE"
+      if kill -0 "$runner_pid" 2>/dev/null; then
+        printf 'orchestrate-stage-codex: %s cleanup grace expired; killing owned process group %s\n' \
+          "$LABEL" "$runner_pid" >&2
+        kill -KILL -- "-$runner_pid" 2>/dev/null || true
+      fi
+    ) &
+    escalation_pid=$!
+
+    wait "$runner_pid" 2>/dev/null || true
+    RUNNER_PID=""
+    kill "$escalation_pid" 2>/dev/null || true
+    wait "$escalation_pid" 2>/dev/null || true
+  fi
+
+  exit "$signal_status"
+}
+
+trap 'cancel_runner HUP 129' HUP
+trap 'cancel_runner INT 130' INT
+trap 'cancel_runner TERM 143' TERM
+
 if [ "$MODE" = "run" ]; then
   CODEX_ARGS=(exec --json --output-last-message "$LAST" --sandbox "$SANDBOX" --cd "$WORKDIR" -)
 else
@@ -188,8 +226,12 @@ else
 fi
 [ -z "$MODEL" ] || CODEX_ARGS+=(--model "$MODEL")
 
-printf '%s' "$PROMPT" | timeout "$TIMEOUT" codex "${CODEX_ARGS[@]}" > "$RAW" 2> "$ERR"
+printf '%s' "$PROMPT" | timeout "$TIMEOUT" codex "${CODEX_ARGS[@]}" > "$RAW" 2> "$ERR" &
+RUNNER_PID=$!
+wait "$RUNNER_PID"
 RC=$?
+RUNNER_PID=""
+trap - HUP INT TERM
 [ "$RC" -eq 124 ] && die "stage timed out after ${TIMEOUT}s (raw: $RAW, stderr: $ERR)"
 [ "$RC" -ne 0 ] && die "codex exited $RC (raw: $RAW, stderr: $ERR)"
 

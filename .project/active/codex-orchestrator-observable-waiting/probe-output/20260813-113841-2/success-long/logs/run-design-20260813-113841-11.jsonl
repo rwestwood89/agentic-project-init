@@ -1,0 +1,7 @@
+{"type":"thread.started","thread_id":"019-spike-long"}
+{"type":"turn.started"}
+{"type":"item.completed","item":{"type":"agent_message","text":"fake progress 1/6"}}
+{"type":"item.completed","item":{"type":"agent_message","text":"fake progress 2/6"}}
+{"type":"item.completed","item":{"type":"agent_message","text":"fake progress 3/6"}}
+{"type":"item.completed","item":{"type":"agent_message","text":"fake progress 4/6"}}
+{"type":"item.completed","item":{"type":"agent_message","text":"fake progress 5/6"}}

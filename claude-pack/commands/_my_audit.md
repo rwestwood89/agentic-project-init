@@ -32,7 +32,26 @@ Adapt to what exists. Spec is required — refuse to audit without one. Plan and
 
 ### 2. Evaluate
 
-Use `Task` tool with `subagent_type=Explore` for broad code searches. Four areas:
+Use `Task` tool with `subagent_type=Explore` for broad code searches.
+
+**First, run the product-lens and lead with a holistic judgment.** Audit owns the
+implementation-level product check. Spawn a `general-purpose` subagent whose entire instruction
+set is `~/.claude/scripts/product-lens.md` (pack source: `claude-pack/scripts/product-lens.md`).
+SOURCES = the repo's durable product statements (`README`, `docs/`, `.project/adr/`,
+`.project/product/` index-first) plus any owner-verbatim in the concept / Required Reading;
+WORK = the implementation and its tests. Derive
+the point independently — do not inherit the spec's or design's framing. Append its verdict block
+(ledger format, product-lens spec §3) to `.project/active/{item}/product-lens.md`. Then scan
+**every** block in the ledger, not just this run (resolution-by-citation per §3): an earlier
+unresolved `BLOCK` stands even if this run is `CLEAR` and forbids Certify. If the ledger records
+`Epic: <id>`, also read that epic's live Product-Lens gate; an unresolved epic `BLOCK` forbids
+Certify. Then answer, holistically and before the four areas below: **is this the right piece of
+work?** A lens
+**DON'T**/**DO** finding graded owner/`[HARD]`, or any structural smell that fired in Code
+integrity, controls the verdict even if every rubric area is green. This judgment leads the audit;
+the four areas sit underneath it.
+
+Then the four areas:
 
 #### Plan completion
 Are all phases done? For each phase, verify the changes-required and validation items are genuinely complete. Flag placeholder code, TODOs, and partial implementations.
@@ -60,6 +79,14 @@ Does the code follow the architecture, key decisions, and required invariants? A
 - Backwards-compatibility shims with no current caller.
 - Optional parameters papering over missing data — `foo=None` defaults that let callers skip data they should have.
 
+**Product-drift smells** (product-lens spec §4, code/test-level). Mechanical tripwires — any that fires must escalate into the leading judgment above, never sit green in the rubric:
+
+- A test passes only because it selects one duplicate, one route, or one interpretation — the fusion-tea acceptance-test signature. Telltale: a suite is green because each assertion is scoped to a different route while two outputs exist for one source.
+- A special category exempts a case whose user-visible meaning is unchanged.
+- Two representations must be manually kept synchronized.
+- Correctness depends on downstream knowledge of an internal representation.
+- A baseline or compatibility requirement preserves behavior that contradicts the reason the product exists.
+
 For each finding: name `file:line`, say what's wrong, say what should change. Don't draft the fix.
 
 **Check auto-memory** (`feedback_*` entries) for project-specific patterns previously rejected. Respect those as hard constraints.
@@ -78,9 +105,24 @@ Write `.project/active/{item}/audit.md`:
 
 ---
 
+## The Point
+
+[The full problem this work serves, carried from the design's "The Point" and the spec — stated
+legibly here, not a pointer. A reader must find the original problem at this certification hop
+(spec SC1).]
+
 ## Summary
 
 [2-3 sentences: overall assessment. What's solid, what's not.]
+
+## Product Judgment
+
+[Lead with the holistic answer: **is this the right piece of work?** State the product-lens
+ledger gate (CLEAR / DISPOSED / BLOCKED) and name any structural smell that fired. An unresolved
+owner/`[HARD]` contradiction, or any structural smell that fired and the Product Judgment has not
+explicitly resolved, forbids Certify regardless of the rubric below — escalation raises a smell
+into this judgment, it does not resolve it. A lower-authority or can't-find finding is noted with
+its disposition and does not block certification.]
 
 ## Findings
 
@@ -101,7 +143,9 @@ Write `.project/active/{item}/audit.md`:
 
 ## Certification
 
-[List what was checked and what was marked. If partial, explain what's left open.]
+[List what was checked and what was marked. If partial, explain what's left open. **Certify
+requires the product-lens ledger gate not be BLOCKED** — an unresolved owner/`[HARD]`
+contradiction is Needs Work, not a nitpick.]
 
 **Not checked:** [Required. What this pass did not cover — areas, layers, or claims left
 unverified. A certification with unstated limits reads as a blank check.]
@@ -134,11 +178,15 @@ For each backlog item in the epic:
 
 If any items are uncertified, report the gaps and stop. Epic certification requires all items to pass first.
 
+Also scan each item's `product-lens.md` (every block, resolution-by-citation per the lens spec §3) and any epic finding it references; an unresolved `BLOCK` forbids epic certification the same as a missing item audit.
+
 ### 3. Assess against source documents
 
 Read the Source Documents and answer: does the delivered work fulfill the original shaping-tier intent? This is a higher-level assessment than item-level audit — it checks whether the whole adds up to what the concepts and research envisioned.
 
 Flag gaps where the shaping intent was lost, narrowed, or deviated from without justification.
+
+**Run the product-lens over the assembled epic** as an independent aggregate check: spawn a `general-purpose` subagent on `~/.claude/scripts/product-lens.md` (pack: `claude-pack/scripts/product-lens.md`); SOURCES = the repo's durable product statements (`README`, `docs/`, `.project/adr/`, `.project/product/` index-first) plus the epic's Source Documents; WORK = the delivered items together. It catches a whole-epic contradiction or omission that no single item audit owned (a composition gap). Append its verdict to the epic's **Product-Lens** block; an unresolved owner/`[HARD]` `BLOCK` or a fired-and-unresolved smell forbids epic certification.
 
 ### 4. Certify the epic
 
@@ -159,6 +207,6 @@ Flag gaps where the shaping intent was lost, narrowed, or deviated from without 
 
 **Related Commands:**
 - Before audit: `/_my_implement` to complete plan phases
-- After audit: `/_my_pre_pr` for automated quality checks, then `/_my_close` to archive
+- After audit: `/_my_close` to archive; then `/_my_pre_pr` when the item is shippable on its own (or once at the end of the epic)
 
 **Last Updated**: 2026-07-01

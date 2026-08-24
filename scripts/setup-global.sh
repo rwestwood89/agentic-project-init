@@ -124,8 +124,10 @@ done
 echo ""
 echo "Setting up skills..."
 if [ -d "$CLAUDE_PACK/skills" ]; then
+    # Files and directories both: Claude Code only registers directory skills
+    # (skills/<name>/SKILL.md); flat .md files are legacy.
     for file in "$CLAUDE_PACK"/skills/*; do
-        [ -f "$file" ] || continue
+        [ -f "$file" ] || [ -d "$file" ] || continue
         filename=$(basename "$file")
         create_symlink "$file" "$TARGET_DIR/skills/$filename" "$filename"
     done

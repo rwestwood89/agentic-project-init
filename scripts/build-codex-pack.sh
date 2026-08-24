@@ -134,6 +134,23 @@ sanitize_command_body_for_skill() {
     export COMMAND_SKILL_PREFIX
 
     strip_frontmatter "$file" | perl -0pe '
+        s{~/\.claude/scripts/product-lens\.md}{\$HOME/.codex/scripts/product-lens.md}g;
+        s{~/\.claude/scripts/mental-model-builder\.md}{\$HOME/.codex/scripts/mental-model-builder.md}g;
+        s{~/\.claude/commands/_my_ponytail\.md}{\$HOME/.agents/skills/my-ponytail/SKILL.md}g;
+        s{Use `Task` tool with `subagent_type=general-purpose`}{Use a fresh-context `default` subagent}g;
+        s{Use `Task` tool with `subagent_type=Explore`}{Use a fresh-context `explorer` subagent}g;
+        s{Use `Agent` tool with `subagent_type=Explore`}{Use a fresh-context `explorer` subagent}g;
+        s{use the `Task` tool with `subagent_type=Explore`}{use a fresh-context `explorer` subagent}g;
+        s{using `Task` tool with `subagent_type=Explore`}{using a fresh-context `explorer` subagent}g;
+        s{Spawn a `general-purpose` subagent}{Spawn a fresh-context `default` subagent}g;
+        s{spawn a `general-purpose` subagent}{spawn a fresh-context `default` subagent}g;
+        s{\*\*general-purpose agent\*\*}{**fresh-context `default` subagent**}g;
+        s{\*\*general-purpose agents:\*\*}{**fresh-context `default` subagents:**}g;
+        s{\*\*Explore agent\*\*}{**fresh-context `explorer` subagent**}g;
+        s{\*\*Explore agents:\*\*}{**fresh-context `explorer` subagents:**}g;
+        s{Use Explore subagent}{Use a fresh-context `explorer` subagent}g;
+        s{Task subagents}{Codex subagents}g;
+        s{using the Task tool}{using the collaboration tools}g;
         s{\$ARGUMENTS}{User-provided arguments are supplied when this skill is invoked.}g;
         s{/_my_([a-z_]+)}{
             my $n = $1;
@@ -347,14 +364,51 @@ while IFS= read -r file; do
     included_native_skills+=("$skill_name")
 done < <(find "$CLAUDE_PACK/skills" -maxdepth 1 -type f -name '*.md' | sort)
 
+# Directory skills (skills/<name>/SKILL.md) — the native Claude Code form.
+while IFS= read -r file; do
+    base="$(basename "$(dirname "$file")")"
+    if [ "${#NATIVE_SKILL_ALLOWLIST[@]}" -gt 0 ] && ! contains "$base" "${NATIVE_SKILL_ALLOWLIST[@]}"; then
+        excluded_native_skills+=("$base")
+        continue
+    fi
+
+    skill_name="$(extract_frontmatter_value "$file" "name" || true)"
+    if [ -z "$skill_name" ]; then
+        skill_name="$base"
+    fi
+    description="$(description_for_native_skill "$skill_name" "$file")"
+    skill_dir="$DIST_DIR/skills/$skill_name"
+    output_file="$skill_dir/SKILL.md"
+
+    mkdir -p "$skill_dir"
+    {
+        printf -- "---\n"
+        printf "name: %s\n" "$skill_name"
+        printf "description: %s\n" "$description"
+        printf -- "---\n\n"
+        printf "Generated from \`claude-pack/skills/%s/SKILL.md\`. Rebuild this file instead of editing it by hand.\n\n" "$base"
+        strip_frontmatter "$file"
+        printf "\n"
+    } > "$output_file"
+
+    included_native_skills+=("$skill_name")
+done < <(find "$CLAUDE_PACK/skills" -mindepth 2 -maxdepth 2 -type f -name 'SKILL.md' | sort)
+
 {
     printf "# AGENTS.md\n\n"
-    printf "Generated from \`claude-pack/rules/\`. Rebuild this file instead of editing it by hand.\n\n"
+    printf "Generated from \`claude-pack/rules/\` and \`codex-overrides/rules/\`. Rebuild this file instead of editing it by hand.\n\n"
     while IFS= read -r file; do
         printf "## From \`%s\`\n\n" "$(basename "$file")"
         sanitize_rule_body_for_codex "$file"
         printf "\n\n"
     done < <(find "$CLAUDE_PACK/rules" -maxdepth 1 -type f -name '*.md' | sort)
+    if [ -d "$OVERRIDES_DIR/rules" ]; then
+        while IFS= read -r file; do
+            printf "## From \`codex-overrides/rules/%s\`\n\n" "$(basename "$file")"
+            strip_frontmatter "$file"
+            printf "\n\n"
+        done < <(find "$OVERRIDES_DIR/rules" -maxdepth 1 -type f -name '*.md' | sort)
+    fi
 } > "$DIST_DIR/AGENTS.md"
 
 if [ -d "$OVERRIDES_DIR/scripts" ]; then
@@ -364,6 +418,17 @@ if [ -d "$OVERRIDES_DIR/scripts" ]; then
         included_scripts+=("$base")
     done < <(find "$OVERRIDES_DIR/scripts" -maxdepth 1 -type f | sort)
 fi
+
+# Shared subagent specs (product-lens, mental-model builder): referenced on demand by the
+# skills at $HOME/.codex/scripts/<name>.md (see the path rewrites in
+# sanitize_command_body_for_skill). Copied from the single source in claude-pack/scripts so
+# the Codex layer cannot drift from it.
+for shared_spec in product-lens.md mental-model-builder.md; do
+    if [ -f "$CLAUDE_PACK/scripts/$shared_spec" ]; then
+        cp -p "$CLAUDE_PACK/scripts/$shared_spec" "$DIST_DIR/scripts/$shared_spec"
+        included_scripts+=("$shared_spec")
+    fi
+done
 
 while IFS= read -r file; do
     base="$(basename "$file")"
@@ -452,3 +517,6 @@ echo "Agents:         ${#included_agents[@]} included, ${#excluded_agents[@]} ex
 echo "Hooks:          ${#included_hooks[@]} included, ${#excluded_hooks[@]} excluded"
 echo "Scripts:        ${#included_scripts[@]} included"
 echo "Replacements:   ${#included_replacements[@]} included"
+echo ""
+echo "NOTE: dist/ is built but not installed. Codex reads copies, not symlinks —"
+echo "run ./scripts/setup-codex.sh to refresh \$HOME/.codex and \$HOME/.agents."

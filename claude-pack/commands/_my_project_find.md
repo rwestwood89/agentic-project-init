@@ -96,6 +96,7 @@ General orientation - show everything needed to get started.
 1. `CURRENT_WORK.md` - What's active
 2. Active item's `plan.md` - Where we are
 3. `backlog/BACKLOG.md` - What's next
+4. `.project/product/INDEX.md` - What the product promises (skip if absent)
 
 **Output**: Comprehensive context summary for starting work.
 

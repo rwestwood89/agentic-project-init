@@ -29,27 +29,73 @@ The pipeline is a map, not a checklist. Your job is to decide what the work need
 
 - **Skip stages that do not buy confidence.** For a small, low-risk change, you may write a spec and self-review it, skip explicit `spec_review`, skip `design`, or go straight to `plan` or `implement` when the requirement is already clear.
 - **Do not seek clean verdict artifacts.** A persisted `Revise` verdict is historical evidence. If the finding is minor, localized, and objectively fixed, verify the fix yourself, record the reason, and continue.
-- **Rerun a reviewer only for material judgment.** Rerun `spec_review` or `design_review` when the fix changes requirements, acceptance criteria, architecture, interfaces, security posture, data model, migration behavior, or another decision where an independent review could change the outcome.
+- **Rerun a reviewer only for material judgment.** Rerun `concept_design_review`, `spec_review`, or `design_review` when the fix changes system shape, requirements, acceptance criteria, architecture, interfaces, security posture, data model, migration behavior, or another decision where an independent review could change the outcome.
 - **Use design when architecture is real.** Run `design` for cross-cutting changes, new interfaces, storage changes, user-visible flows with meaningful state, or decisions that future implementers need written down. Skip it for direct mechanical edits where the implementation path is obvious from the spec and existing patterns.
 - **Record skipped stages.** Put a short note in the next artifact, commit message, or final summary explaining what you skipped and why. The human should be able to audit your judgment without paying for redundant stage calls.
 
 ## Tools
 
-Delegate each stage through the Codex helper:
+Delegate each stage through the Codex helper, but keep the whole wait inside one host execution
+cell. For every `run` or `resume` call:
 
-```bash
-~/.codex/scripts/orchestrate-stage-codex.sh run <stage> <<'ARGS'
-...
-ARGS
+1. Send one concise launch update that names the stage. Send no commentary about unchanged state.
+2. Choose the helper timeout `T` in seconds and pass it with `--timeout T`. Set the enclosing
+   `functions.exec` yield to `T + 30` seconds. The first-line execution pragma requires the
+   calculated literal milliseconds; for the default `T = 600`, use
+   `// @exec: {"yield_time_ms": 630000}`.
+3. Inside that single `functions.exec` cell, call `tools.exec_command` with the normal helper
+   command and a quoted heredoc containing the stage input. If it returns a terminal session id,
+   drain that same session with `tools.write_stdin` inside the cell. Internal drains may repeat
+   because they do not return control to the parent model. Cap each internal drain at 300 seconds
+   and at the remaining outer deadline. Return the terminal output with `text(result.output)`.
+
+The cell body follows this shape:
+
+```javascript
+const helperTimeoutSeconds = 600; // Use the same literal passed to --timeout.
+const startedAt = Date.now();
+const outerDeadlineMs = (helperTimeoutSeconds + 30) * 1000;
+let result = await tools.exec_command({
+  cmd: "<helper run/resume command with --timeout T and a quoted heredoc>",
+  yield_time_ms: Math.min(outerDeadlineMs, 30000),
+  max_output_tokens: 10000,
+});
+
+while (result.session_id !== undefined) {
+  const remainingMs = outerDeadlineMs - (Date.now() - startedAt);
+  if (remainingMs <= 0) {
+    throw new Error("Codex stage exceeded its helper timeout and cleanup allowance");
+  }
+  result = await tools.write_stdin({
+    session_id: result.session_id,
+    chars: "",
+    yield_time_ms: Math.min(remainingMs, 300000),
+    max_output_tokens: 10000,
+  });
+}
+text(result.output);
 ```
 
-Resume a stage with answers, review feedback, or continuation context:
+Use these helper command shapes inside the cell:
 
 ```bash
-~/.codex/scripts/orchestrate-stage-codex.sh resume <session_id> <<'MSG'
+~/.codex/scripts/orchestrate-stage-codex.sh run <stage> --timeout T <<'ARGS'
+...
+ARGS
+
+~/.codex/scripts/orchestrate-stage-codex.sh resume <session_id> --timeout T <<'MSG'
 ...
 MSG
 ```
+
+Normally `functions.exec` returns only when the helper is terminal. If the outer cell yields early,
+call `functions.wait` only once on that cell for the remaining deadline. Do not poll or emit a
+no-news update. If that one fallback yields again, stop the cell with `functions.wait` using
+`terminate: true`, report a host compatibility failure, and do not route the incomplete stage
+forward.
+
+Do not schedule notifications, timers, control yields, or model-visible status checks. Keep JSONL
+and stderr in their retained files; do not forward their events into the main conversation.
 
 Each call returns compact JSON:
 
@@ -63,13 +109,13 @@ The helper maps pipeline stages to Codex skills. For example, `spec` invokes `$m
 
 ## Running the Pipeline
 
-1. **Orient.** Read the objective. Decide where to enter the pipeline and whether this is a single item or an epic.
+1. **Orient.** Read the objective. Use the entry questions in the pipeline skill (how well is the problem understood; is there a UX to settle; how big is the impact; does it split into shippable pieces) to decide where to enter and whether this is a single item or an epic.
 2. **Read `$my-pipeline`.** Use it as the canonical map for stages, branches, and paired reviews. Apply the stage selection policy above before invoking each stage.
 3. **Start each stage with enough context.** Include the objective, relevant prior artifacts, explicit decisions already made, and the stage outcome you need.
 4. **Handle questions by resuming.** If a stage asks questions, answer from the objective and your judgment. If the objective cannot settle a question, tell the stage to choose and record the decision.
 5. **Run review loops deliberately.** Feed must-fix findings back to the producing stage. For minor, objectively verifiable findings, verify the correction yourself and continue. Do not chase a review loop past about two rounds without a clear reason.
 6. **Commit decisions when appropriate.** Keep commits focused, with subjects that name the decision or completed stage.
-7. **Finish at the right boundary.** Leave `$my-close` to the human unless explicitly asked to archive the work.
+7. **Finish at the right boundary.** Leave `$my-close` and the post-close `$my-pre-pr` branch gate to the human unless explicitly asked.
 
 ## Stage Result Protocol
 
@@ -96,7 +142,7 @@ Pipeline reference: `$my-pipeline`.
 
 Common inputs: `$my-concept`, `$my-concept-design`, `$my-research`.
 
-Common stages: `$my-epic-plan`, `$my-spec`, `$my-spec-review`, `$my-product-design`, `$my-design`, `$my-design-review`, `$my-plan`, `$my-implement`, `$my-audit`, `$my-pre-pr`.
+Common stages: `$my-concept-design-review`, `$my-epic-plan`, `$my-spec`, `$my-spec-review`, `$my-product-design`, `$my-design`, `$my-design-review`, `$my-plan`, `$my-implement`, `$my-audit`, `$my-pre-pr`.
 
 De-risking stages: `$my-spike`, `$my-learning-test`.
 

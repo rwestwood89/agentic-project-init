@@ -231,7 +231,7 @@ If the answer trends toward yes, rip it out.
 
 **Related Commands:**
 - Before implement: ``my-design`` then ``my-plan``
-- After implement: ``my-audit`` to certify; ``my-pre-pr`` before submitting
+- After implement: ``my-audit`` to certify, ``my-close`` to archive; ``my-pre-pr`` only once the branch is ready to ship (after close — per item if it ships alone, else at epic end)
 
 **Last Updated**: 2025-12-31
 

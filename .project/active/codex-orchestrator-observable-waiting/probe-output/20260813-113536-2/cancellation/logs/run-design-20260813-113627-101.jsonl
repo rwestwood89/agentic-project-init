@@ -1,0 +1,5 @@
+{"type":"thread.started","thread_id":"019-spike-fresh"}
+{"type":"turn.started"}
+{"type":"item.completed","item":{"type":"agent_message","text":"fake stage alive"}}
+{"type":"item.completed","item":{"type":"agent_message","text":"fake stage alive"}}
+{"type":"item.completed","item":{"type":"agent_message","text":"fake stage alive"}}

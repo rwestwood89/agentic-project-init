@@ -1,0 +1,2 @@
+case=timeout rc=1 expected_rc=1 elapsed_seconds=2
+fake_pid=92 alive_after_wait=no signal_recorded=yes

@@ -33,19 +33,28 @@ field() {
     ' "$1"
 }
 
-# set_field <file> <key> <value> — replace a frontmatter value in place
+# set_field <file> <key> <value> — replace a frontmatter value in place;
+# fails loudly if the field is absent (a silent no-op would report success
+# without applying the mutation)
 set_field() {
     local file="$1" key="$2" value="$3" tmp
     tmp="$(mktemp)"
-    awk -v key="$key" -v value="$value" '
+    if ! awk -v key="$key" -v value="$value" '
         NR==1 && $0=="---" {infm=1; print; next}
         infm && $0=="---" {infm=0; print; next}
-        infm && index($0, key": ")==1 {print key": "value; next}
+        infm && index($0, key": ")==1 {print key": "value; found=1; next}
         {print}
-    ' "$file" > "$tmp" && mv "$tmp" "$file"
+        END {exit found ? 0 : 1}
+    ' "$file" > "$tmp"; then
+        rm -f "$tmp"
+        echo "Error: no frontmatter field '$key' in $file (malformed entry?)" >&2
+        exit 1
+    fi
+    mv "$tmp" "$file"
 }
 
-# entry_file <id> — resolve an id to its entry path
+# entry_file <id> — resolve an id to its entry path; ambiguity is an error,
+# never a silent pick (mutating an arbitrary duplicate rewrites the wrong entry)
 entry_file() {
     local match
     match="$(compgen -G "$ADR_DIR/$1-*.md" || true)"
@@ -53,7 +62,12 @@ entry_file() {
         echo "Error: no entry with id $1 in $ADR_DIR" >&2
         exit 1
     fi
-    echo "$match" | head -1
+    if [ "$(echo "$match" | wc -l)" -gt 1 ]; then
+        echo "Error: multiple entries share id $1 — resolve the duplicate ids first:" >&2
+        echo "$match" >&2
+        exit 1
+    fi
+    echo "$match"
 }
 
 regen_index() {
@@ -119,6 +133,19 @@ cmd_new() {
     done
     [ -n "$title" ] || title="$(echo "$slug" | tr '-' ' ')"
     mkdir -p "$ADR_DIR"
+    # serialize allocation + creation: parallel sessions race for the same number,
+    # and the free-number scan alone is not an atomic claim
+    LOCK="$ADR_DIR/.lock"
+    local tries=0
+    until mkdir "$LOCK" 2>/dev/null; do
+        tries=$((tries + 1))
+        if [ "$tries" -ge 100 ]; then
+            echo "Error: could not acquire $LOCK — remove it if no other adr.sh run is active" >&2
+            exit 1
+        fi
+        sleep 0.05
+    done
+    trap 'rmdir "$LOCK" 2>/dev/null' EXIT
     local id file date owner
     id="$(next_free_number)"
     file="$ADR_DIR/$id-$slug.md"
@@ -162,11 +189,16 @@ EOF
 cmd_supersede() {
     local old_id="${1:?usage: adr.sh supersede <old-id> <new-id>}"
     local new_id="${2:?usage: adr.sh supersede <old-id> <new-id>}"
+    if [ "$old_id" = "$new_id" ]; then
+        echo "Error: an entry cannot supersede itself" >&2
+        exit 1
+    fi
     local old_file new_file
     old_file="$(entry_file "$old_id")"
     new_file="$(entry_file "$new_id")"
     if [ "$(field "$old_file" status)" = "superseded" ]; then
-        echo "Warning: $old_id is already superseded by $(field "$old_file" superseded_by)" >&2
+        echo "Error: $old_id is already superseded by $(field "$old_file" superseded_by) — supersede that successor instead (overwriting the link would rewrite history)" >&2
+        exit 1
     fi
     set_field "$old_file" status superseded
     set_field "$old_file" superseded_by "$new_id"
@@ -178,6 +210,10 @@ cmd_supersede() {
 cmd_amend() {
     local old_id="${1:?usage: adr.sh amend <old-id> <new-id>}"
     local new_id="${2:?usage: adr.sh amend <old-id> <new-id>}"
+    if [ "$old_id" = "$new_id" ]; then
+        echo "Error: an entry cannot amend itself" >&2
+        exit 1
+    fi
     local old_file current
     old_file="$(entry_file "$old_id")"
     entry_file "$new_id" >/dev/null

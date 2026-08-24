@@ -77,7 +77,9 @@ A light "here's the problem as I understand it" reflection before or during the 
 
 [What's wrong or needed, and why it's worth doing now. One place. State the
 current pain and the gap plainly. Do not split this across multiple "why"
-sections — this is the only one.]
+sections — this is the only one. Where the problem carries a governing
+obligation with decision force, grade it by source authority (capture-fidelity)
+so the point's authority travels downstream, not just its wording.]
 
 ## Success Criteria
 
@@ -135,6 +137,30 @@ Before presenting, check:
 - Did I capture every detail the user gave, and mark my inferences `[INFERRED]`?
 - Is the depth proportional to the ask — thin where the input was thin?
 - Did I keep solution choices out of the requirements, and park them in Open Questions instead?
+
+**Run the product-lens on the drafted spec.** The spec is a place scope narrows, so an
+independent check re-derives the point here. Spawn a `general-purpose` subagent whose entire
+instruction set is `~/.claude/scripts/product-lens.md` (pack source:
+`claude-pack/scripts/product-lens.md`). SOURCES = the repo's durable product statements
+(`README`, `docs/`, `.project/adr/`, `.project/product/` index-first) plus any owner-verbatim
+in the concept / Required Reading;
+WORK = the drafted spec, especially Problem and Success Criteria. It checks both directions —
+does the spec contradict or narrow the point, and does it omit an obligation the point requires?
+Append its verdict block (ledger format, product-lens spec §3) to
+`.project/active/{feature-name}/product-lens.md` (append-only), and add a one-line pointer to the
+spec's Related Artifacts. An unresolved owner/`[HARD]` contradiction blocks the spec until
+dispositioned; a lower-authority or can't-find finding needs a visible disposition and may
+proceed. Do not embed the findings in the spec body — the pointer is enough.
+
+If the item belongs to an epic, **always** record the parent epic in this item's ledger — write
+`Epic: <id>` in the first block — whether or not the epic has a finding yet. This unconditional
+record is what lets ship gates and audit find the epic's live gate even for a BLOCK the epic raises
+*after* this item exists (a reference written only when a finding already exists would miss late
+epic findings). Then, for any epic finding that already exists, add a one-line **reference** — the
+finding and its **original source grade preserved exactly** (an owner/`[HARD]` finding stays
+owner/`[HARD]`; never downgrade at the hop) — *not* a restatement (copying duplicates and drifts,
+smell 1). The epic file stays the source of truth; gates resolve `Epic: <id>` against the epic's
+live gate. An epic BLOCK is not cleared by item creation.
 
 Then present the spec, take feedback, and iterate.
 

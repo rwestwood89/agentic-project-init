@@ -13,7 +13,7 @@ Read these fully:
 
 ## Finding Input Files
 
-If `$ARGUMENTS` names a file path or concept name, use it. If ambiguous or missing, scan `.project/concepts/` and `.project/research/` and ask the user which files are the source material for this epic.
+If `$ARGUMENTS` names a file path or concept name, use it. If ambiguous or missing, scan `.project/concepts/` and `.project/research/` and ask the user which files are the source material for this epic. When a named concept has a shaping product-design sibling (`.project/concepts/{name}-product-design.md`), include it among the candidates; it is not mandatory source material.
 
 Read every identified source file fully before proceeding.
 
@@ -41,7 +41,8 @@ Read every identified source file fully before proceeding.
    ```
 
    Include a brief note on the critical path and which items can run in parallel.
-3. **Wait for approval.** Adjust item boundaries, ordering, or scope as directed. Do not proceed to writing items until the user approves the decomposition.
+3. **Offer a mental-model checkpoint.** After presenting the decomposition and before asking for approval, offer one question-led HTML explanation (via `/_my_mental_model`) that reconnects the product intent, the proposed slicing, and code reality so the user can judge the breakdown. Skip the offer when your invocation carries the NON-INTERACTIVE orchestration marker — do not stop for it and do not let an orchestrator accept it for the user. Declining changes nothing; the stage proceeds identically.
+4. **Wait for approval.** Adjust item boundaries, ordering, or scope as directed. Do not proceed to writing items until the user approves the decomposition.
 
 ## Stage 3: Write Items
 
@@ -50,8 +51,9 @@ Read every identified source file fully before proceeding.
    - **Required Reading** per item — which source documents carry intent relevant to each specific item? Different items may reference different subsets. Not every item needs Required Reading.
    - **Epic Strategy** — value delivery path, critical path, decomposition rationale.
    - **De-risking** — does any item rest on an unverified bet about how something behaves? If so, consider surfacing a `/_my_spike` (confirm a known assumption with throwaway code) or `/_my_learning_test` (map an unfamiliar surface with kept tests) as an early item or first phase, so the bet is tested before dependents build on it.
-2. Write the full backlog items into the epic file, following the item template in `EPIC_GUIDE.md`. Fill in Epic Strategy, the dependency graph, risks, and timeline sections.
-3. Add an entry to `.project/backlog/BACKLOG.md` following the existing format (priority, status, estimate, brief description, items list with checkboxes).
-4. Present the completed epic to the user.
+2. **Run the product-lens over the decomposition.** The epic is where scope first narrows, so an independent check re-derives the point here. Spawn a `general-purpose` subagent whose entire instruction set is `~/.claude/scripts/product-lens.md` (pack source: `claude-pack/scripts/product-lens.md`). SOURCES = the repo's durable product statements (`README`, `docs/`, `.project/adr/`, `.project/product/` index-first) plus any owner-verbatim in the source concept; WORK = the proposed decomposition and each item's one-line purpose. It checks the slicing both directions — does any item narrow or contradict the point, and does the set omit an obligation the point requires? Record its verdict (the product-lens ledger block, format in that spec's §3) in the epic file under a **Product-Lens** heading. An unresolved owner/`[HARD]` contradiction blocks the epic until dispositioned; a lower-authority or can't-find finding needs a visible disposition and may proceed. An unresolved epic finding is not cleared by item creation: `_my_spec` carries it into each affected item's per-item ledger, which is the ledger downstream ship gates read.
+3. Write the full backlog items into the epic file, following the item template in `EPIC_GUIDE.md`. Fill in Epic Strategy, the dependency graph, risks, and timeline sections.
+4. Add an entry to `.project/backlog/BACKLOG.md` following the existing format (priority, status, estimate, brief description, items list with checkboxes).
+5. Present the completed epic to the user.
 
 $ARGUMENTS

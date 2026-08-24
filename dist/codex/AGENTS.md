@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Generated from `claude-pack/rules/`. Rebuild this file instead of editing it by hand.
+Generated from `claude-pack/rules/` and `codex-overrides/rules/`. Rebuild this file instead of editing it by hand.
 
 ## From `capture-fidelity.md`
 
@@ -74,8 +74,10 @@ resolve it silently, in either direction.
 ## Before Starting Non-Trivial Work
 
 1. **Read `.project/CURRENT_WORK.md`** — active work context, recent decisions, known issues
-2. **Read the relevant docs** for the area you're working in (check CLAUDE.md for pointers)
-3. **Check saved project context** for known gotchas before making assumptions
+2. **Skim `.project/product/INDEX.md` if present** — the product's implemented promises; open
+   only the entries relevant to your task. An absent or empty ledger just means none recorded.
+3. **Read the relevant docs** for the area you're working in (check CLAUDE.md for pointers)
+4. **Check saved project context** for known gotchas before making assumptions
 
 ## After Completing Work
 
@@ -151,14 +153,19 @@ Stages are quality tools, not mandatory ceremony. Use the smallest set of stages
 high-quality, auditable work for the risk in front of you.
 
 <!-- pipeline-shape -->
-`research`/`concept`/`concept_design` → `epic_plan` → `spec` → `spec_review` → [`product_design`] → `design` → `design_review` → `plan` → `implement` → `audit` → `pre_pr` → `close`
+`research`/`concept`/(`concept_design` → `concept_design_review`) → `epic_plan` → `spec` → `spec_review` → [`product_design`] → `design` → `design_review` → `plan` → `implement` → `audit` → `close` → `pre_pr`
 
-- **Entry depends on the work:** shaping (`research`/`concept`/`concept_design`) for a fuzzy idea,
-  `epic_plan` for a multi-item epic, or straight to `spec` for a single clear item.
-- **`[product_design]`** is optional — only for consumer-facing surfaces.
-- **Reviews pair with their artifact when they add confidence:** `spec_review` after `spec`,
-  `design_review` after `design`. For minor, objectively verifiable fixes, record the verification
-  and continue instead of rerunning a reviewer just to replace an old verdict.
+- **Entry follows the question "how well do you understand the problem?"** Not well: shape it
+  (`research`/`concept`/`concept_design`); many shippable pieces: `epic_plan`; a single clear
+  item: straight to `spec`.
+- **`[product_design]`** is optional — for consumer-facing surfaces; runs off a concept
+  (shaping tier) or a spec (single item), same function either way.
+- **`pre_pr` is the branch gate, run after `close`** — when the item is shippable on its own;
+  for items that ship together, run it once at the end of the epic. Never per-phase or mid-item.
+- **Reviews pair with their artifact when they add confidence:** `concept_design_review` after
+  `concept_design`, `spec_review` after `spec`, and `design_review` after `design`. For minor,
+  objectively verifiable fixes, record the verification and continue instead of rerunning a
+  reviewer just to replace an old verdict.
 - Small, scoped changes can skip the pipeline via `$my-quick-edit`.
 
 **For the full flow and when/how to use each stage, run `$my-pipeline`** (or read
@@ -284,5 +291,21 @@ These tics make the voice grating even when the content is right. Cut them.
 ## The test
 
 Before you send a message or save an artifact, ask: would a tired engineer skim it once and know what's going on and what to do? If not, it failed, no matter how complete or careful it looks.
+
+
+## From `codex-overrides/rules/collaboration.md`
+
+# Codex Collaboration Calls
+
+When calling `spawn_agent`:
+
+- `fork_turns: "all"` inherits the parent agent type, model, and reasoning effort. Do not combine
+  it with `agent_type`, `model`, or `reasoning_effort`.
+- `fork_turns` defaults to `"all"`, so specifying one of those overrides without setting
+  `fork_turns` is also invalid.
+- To select an agent type, model, or reasoning effort, set `fork_turns` to `"none"` or a positive
+  turn count.
+- Use `fork_turns: "none"` for fresh explorer, reviewer, and product-lens agents unless inherited
+  conversation history is specifically required.
 
 

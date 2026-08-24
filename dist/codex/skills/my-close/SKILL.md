@@ -33,12 +33,20 @@ Determine whether the argument is a work item or an epic:
 1. Read `spec.md`, `plan.md`, and `audit.md` from `active/{item}/` (skip any that don't exist).
 2. Check audit status: look for the `**Verdict:**` field in `audit.md`. Note whether it says "Certify," "Needs Work," or is absent.
 3. Find the parent epic: check the spec's Related Artifacts section for an epic reference. If not found, grep `.project/backlog/epic_*.md` for the item name. If no parent epic, note it as standalone.
-4. **Scan for emergent decisions**: read `plan.md` deviation/implementation notes and `audit.md` findings for decisions made *during* implementation — discovered constraints, deviations from the design, workarounds against another component or repo's behavior. Apply the density bar in `.project/adr/README.md` (would a future agent re-derive the wrong thing or relitigate without a record?). Most items yield none.
+4. **Scan for emergent decisions**: read `plan.md` deviation/implementation notes and `audit.md` findings for decisions made *during* implementation — discovered constraints, deviations from the design, workarounds against another component or repo's behavior. Apply the density bar in `.project/adr/README.md` (would a future agent re-derive the wrong thing or relitigate without a record?). Most items yield none. Also read `product-lens.md` if present: a finding disposed as an **intended contract change** (or a smell-7 change of who owns an invariant) is a decision to record via `adr.sh new`; if it changes a recorded decision, also `adr.sh amend|supersede` the affected active entry and set owner-ratified provenance (not the default `[AGENT]`). The ledger finding must cite the entry id. No other product-lens disposition files an ADR.
+5. **Scan for promises to record** — a separate question from the decision scan: decisions made
+   during implementation go to `.project/adr/`; this asks instead, *did this item implement (or
+   materially change) a product promise a cold agent could reasonably miss or undo?* Inputs:
+   `audit.md`'s The Point / product judgment, the spec's Success Criteria, plan deviation notes.
+   Bar: the density standard in `.project/product/README.md` (major use case, public surface, or
+   cross-cutting contract — judgment, not inventory). Most items yield none. A material change
+   to an already-recorded promise is a `supersede`/`amend` candidate, not a new entry.
 
 **Epic scope:**
 1. Read the epic file. Extract child items from the Backlog Items section — use each item's `**Location**:` field to get the folder name.
 2. For each child item, check whether it is in `active/` (needs archiving) or already in `completed/` (skip).
 3. For each active child, read `audit.md` and note certification status.
+4. **Read the epic's own Product-Lens block directly** (scan every block, resolution-by-citation per the lens spec §3). An unresolved epic `BLOCK` is a hard stop on epic close, independent of whether any child item references it.
 
 ## Step 3: Confirm
 
@@ -47,7 +55,11 @@ Present a summary to the user. Include:
 - What will be archived (source → destination paths).
 - What tracking files will be updated.
 - **Decisions to record** — the candidate decision-record entries from the emergent-decision scan, or "none found." For a workaround against another repo's behavior, note the placement: the ruling entry files in the repo that must uphold it, plus a local pointer entry (see `.project/adr/README.md`); if that repo is unreachable, file the pointer and surface the gap.
+- **Promises to record — or none** — the candidate product-ledger entries (or supersede/amend
+  flips) from the promise scan. Zero is the common case; close proceeds on "none" — this is
+  never a gate.
 - **Certification warnings** — if any item has no audit or a "Needs Work" verdict, flag it visibly. Example: `⚠️ {item} has no audit certification.`
+- **Product-lens gate (fail closed)** — for each item that reached spec or later, a `product-lens.md` ledger is *expected*; a **missing** ledger for audited work is itself a control failure, treated like a Needs-Work verdict. **Scan every block, not just the latest**: a `BLOCK` stands until a later block explicitly cites that finding and records an authorized disposition (a later unrelated `CLEAR`/`DISPOSED` does not clear it). For an item whose ledger records a parent epic (`Epic: <id>`), **always** read the parent epic's Product-Lens gate — not only when a finding is referenced. Any unresolved `BLOCK`, or a missing expected ledger, is a hard stop on archiving that item. Flag it visibly and do not close until it is cleared.
 - For epic scope: a list of child items showing which will be archived and which are already in `completed/`.
 
 **Wait for user confirmation. Do not proceed without it.**
@@ -60,12 +72,17 @@ After confirmation, execute in this order:
 
 Before moving anything, read the data you need for the CHANGELOG entry from the item's artifacts (spec Problem section, spec Created date, list of artifacts present). Once `git mv` runs, the source paths are gone.
 
-### 4b. File decision records
+### 4b. File decision records and promise entries
 
-For each approved candidate from the confirm step: `.project/scripts/adr.sh new <slug>`,
-fill in the body, set provenance and seams. Do this **before** archiving, while the source
-artifacts still exist at their `active/` paths. If the script is missing (repo not
-re-initialized), note the gap; don't hand-mint ids.
+For each approved decision candidate from the confirm step: `.project/scripts/adr.sh new <slug>`,
+fill in the body, set provenance and seams. For each approved promise candidate:
+`.project/scripts/product.sh new <slug>` (or `supersede`/`amend` for a material change to a
+recorded promise), fill Promise/Authority/Evidence/Scope, set provenance and surfaces, then
+stamp `product.sh check <id>` — `new` leaves `checked` null, and filing an audited item is
+the verification. In Authority, cite the item's artifacts at their post-close
+`completed/$(date +%Y%m%d)_{item}/` paths, since the archive is about to move them. Do all filing **before** archiving, while the
+source artifacts still exist at their `active/` paths for reading. If a script is missing (repo
+not re-initialized), note the gap; don't hand-mint ids.
 
 ### 4c. Archive
 
@@ -104,11 +121,12 @@ Do not auto-commit. Leave all changes staged.
 ---
 
 **Related Commands:**
-- Before close: ``my-audit`` to certify, ``my-pre-pr`` for quality checks
+- Before close: ``my-audit`` to certify
+- After close: ``my-pre-pr`` when the item is shippable on its own — otherwise once at the end of the epic
 - After close (epic items done): ``my-close` {epic}` to archive the epic
 - Session context: ``my-wrap-up`` to persist session state
 
-**Last Updated**: 2026-07-19 — added the emergent-decision scan and decision-record filing (W2) before archive.
+**Last Updated**: 2026-08-09 — added the product-promise scan/confirm/file beats beside the decision-record beats (ADR 0008).
 
 User-provided arguments are supplied when this skill is invoked.
 

@@ -39,7 +39,10 @@ agentic-project-init/
 ├── .project/                     # THIS REPO's project management
 │   └── (not distributed)
 │
-├── scripts/                      # Installation scripts
+├── codex-overrides/              # Codex-specific replacements/transforms
+├── dist/codex/                   # GENERATED Codex pack (rebuild, don't edit)
+│
+├── scripts/                      # Setup, build, and test scripts
 ├── docs/                         # Documentation
 └── README.md
 ```
@@ -82,10 +85,17 @@ Actual project management for this repository:
 
 This is NOT the template. The template is in `project-pack/`.
 
-### `scripts/` - Installation Tools
+### `scripts/` - Installation, Build, and Test Tools
 
-- `init-project.sh` - Sets up templates in a new project
-- `update-templates.sh` - Syncs latest template changes
+- `setup-global.sh` - Symlinks `claude-pack/` into `~/.claude/` (run once, and after adding commands)
+- `init-project.sh` - Copies the `.project/` template into a target project
+- `uninstall-global.sh` / `uninstall-project.sh` - Reverse the above
+- `build-codex-pack.sh` - Regenerates `dist/codex/` from `claude-pack/` + `codex-overrides/`
+- `test_*.sh` - Checks (pipeline sync, docs, ADR, installer, Codex pack)
+
+### `codex-overrides/` and `dist/codex/` - Codex Distribution
+
+`dist/codex/` is generated output — commands become skills, rules concatenate into `AGENTS.md`, and `/_my_x` is rewritten to `$my-x`. Never edit it by hand; edit `claude-pack/` or `codex-overrides/` and rerun `build-codex-pack.sh`.
 
 ## Workflow
 
@@ -100,14 +110,14 @@ This is NOT the template. The template is in `project-pack/`.
 
 1. `.claude/` symlinks make templates available
 2. `.project/` contains our actual work tracking
-3. Commands like `/capture`, `/recall` work normally
-4. Memories are stored in `.project/memories/` (not distributed)
+3. Commands like `/_my_status`, `/_my_spec`, `/_my_wrap_up` work normally
 
 ### Installing in Another Project
 
 ```bash
-./scripts/init-project.sh
-# Creates symlinks: .claude/* -> submodule/claude-pack/*
+./scripts/setup-global.sh      # once per machine: symlinks claude-pack/ into ~/.claude/
+cd /path/to/project
+~/agentic-project-init/scripts/init-project.sh
 # Copies template: .project/ from project-pack/
 # Suggests /init if no CLAUDE.md exists
 ```
