@@ -1,0 +1,8 @@
+PWD_LOGICAL=/home/rwestwood/agentic-project-init
+PWD_PHYSICAL=/home/rwestwood/agentic-project-init
+SKILL_DIRECTORY_ARG=/home/rwestwood/agentic-project-init/.agents/skills/codex-cwd-probe
+SCRIPT_DIRECTORY=/home/rwestwood/agentic-project-init/.project/active/directory-skill-build-pattern/cwd-spike/.agents/skills/codex-cwd-probe
+SCRIPT_REALPATH=/home/rwestwood/agentic-project-init/.project/active/directory-skill-build-pattern/cwd-spike/.agents/skills/codex-cwd-probe/probe.sh
+SIBLING_TOKEN=SIBLING-READ-OK-8V3K
+RELATIVE_TARGET_ABSOLUTE=/home/rwestwood/agentic-project-init/codex-cwd-relative-write.txt
+RELATIVE_WRITE_EXISTS=yes

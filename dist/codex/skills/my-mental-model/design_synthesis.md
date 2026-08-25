@@ -27,9 +27,9 @@ question. Name what you examined and what you skipped.
 **Clean room**: the owner restricted your sources. Honor the restriction. Read only what the
 restriction allows. State what you were restricted to and what you therefore could not examine.
 
-<!-- harness-block: carried-fork -->
-**Carried**: you are a fork of the conversation.
-<!-- /harness-block -->
+**Carried**: you were spawned with `fork_turns: "all"`, so the conversation's completed turns came
+with you. What the coordinator produced during the turn that spawned you did not, so treat the spawn
+prompt as the authority on the classification.
 The owner's reasoning is already in your context. Use it. You may still explore the codebase to
 verify or extend what the conversation established, unless a clean-room restriction says
 otherwise.

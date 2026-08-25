@@ -11,8 +11,11 @@ chooses, and record what the run produced. You do not write the synthesis or the
 
 ## Step 1: Note the skill directory
 
-The skill preamble gives this skill's base directory. Record the absolute path — you need it to
-locate the instruction and feedback files for both agents, and again at promotion in Step 9.
+<!-- harness-block: skill-base-directory -->
+The skill preamble gives this skill's base directory.
+<!-- /harness-block -->
+Record the absolute path — you need it to locate the instruction and feedback files for both
+agents, and again at promotion in Step 9.
 
 ## Step 2: Classify the request
 
@@ -72,18 +75,23 @@ visualize.md**. The synthesis agent's job ends at writing the synthesis file.
 
 ### Spawn the agent
 
+<!-- harness-block: synthesis-spawn -->
 - **Carried** (or carried + clean room): use `subagent_type: "fork"`. The fork inherits the
   conversation context.
 - **Discovered** or **clean room**: spawn a fresh agent. Use the `Agent` tool with no
   `subagent_type` (or `subagent_type: "general-purpose"`).
 
-Give the agent a descriptive name like `synthesis-{slug}`.
+Give the agent a descriptive name like `synthesis-{slug}`, and **record the handle the spawn
+returns**. That handle, not the name you asked for, is what addresses the agent later.
+<!-- /harness-block -->
 
 ## Step 4: Present the synthesis and pause
 
-When the synthesis agent completes, read the synthesis file it wrote using the `Read` tool (not
-`cat` via Bash — that clutters the terminal). Present the full synthesis to the owner in the
-conversation.
+When the synthesis agent completes, read the synthesis file it wrote.
+<!-- harness-block: read-synthesis-file -->
+Use the `Read` tool, not `cat` via Bash — that clutters the terminal.
+<!-- /harness-block -->
+Present the full synthesis to the owner in the conversation.
 
 This is the mandatory pause. The owner reads the synthesis, may correct it, and then chooses the
 render path:
@@ -112,9 +120,12 @@ If the owner corrects the synthesis, the correction lands in the file before any
 paths of a comparison have to read the same corrected file. If there are no corrections, go straight
 to Step 6.
 
-Send the correction to the synthesis agent by name (`synthesis-{slug}`) using `SendMessage`, in the
-owner's own words. Ask it to amend the synthesis file at its existing path and to confirm when done.
-Then re-read the file and check that the change is there.
+<!-- harness-block: correction-dispatch -->
+Send the correction to the synthesis agent with `SendMessage`, addressed to the handle you recorded
+at spawn, in the owner's own words.
+<!-- /harness-block -->
+Ask it to amend the synthesis file at its existing path and to confirm when done. Then re-read the
+file and check that the change is there.
 
 **You never write synthesis content.** Not a transcription, not a one-word fix, not the frontmatter.
 The agent that wrote a synthesis is the only thing that amends it, and you never hand the correction
@@ -167,9 +178,11 @@ of two differently worded prompts.
 
 ### Dispatch
 
-- **Resumed**: `SendMessage` to `synthesis-{slug}`.
+<!-- harness-block: render-dispatch -->
+- **Resumed**: `SendMessage` to the synthesis agent handle you recorded at spawn.
 - **Fresh**: the `Agent` tool with no `subagent_type` — a clean window is the whole point, so never
-  `fork`. Name it `render-{slug}-fresh`.
+  `fork`. Name it `render-{slug}-fresh`, and record the handle it returns.
+<!-- /harness-block -->
 
 Note the wall clock at dispatch and at completion for each render; Step 7 records it.
 

@@ -129,14 +129,26 @@ to_hyphen_name() {
     printf "%s" "${name//_/-}"
 }
 
-sanitize_command_body_for_skill() {
-    local file="$1"
-    export COMMAND_SKILL_PREFIX
+# A directory skill's Codex name (D2). `_my_x_y` becomes `my-x-y`, which is what the command lane
+# rewrites a `/_my_x_y` mention to, so cross-references from other skills resolve. Any other
+# directory name passes through unchanged. A pure function of the pack directory name — the
+# frontmatter is never consulted, because Claude requires it to match the directory.
+codex_name_for_skill_dir() {
+    local dir_name="$1"
 
-    strip_frontmatter "$file" | perl -0pe '
+    if [[ "$dir_name" == _my_* ]]; then
+        printf "%s%s" "$COMMAND_SKILL_PREFIX" "$(to_hyphen_name "$(strip_command_prefix "$dir_name")")"
+        return 0
+    fi
+    printf "%s" "$dir_name"
+}
+
+# Substitutions every Codex lane applies: shared path rewrites, the Claude agent-tool vocabulary,
+# and $ARGUMENTS. Reads a body on stdin and writes it on stdout, so a lane can pipe its own
+# lane-specific pass after this one (D8).
+apply_common_substitutions() {
+    perl -0pe '
         s{~/\.claude/scripts/product-lens\.md}{\$HOME/.codex/scripts/product-lens.md}g;
-        s{~/\.claude/scripts/mental-model-builder\.md}{\$HOME/.codex/scripts/mental-model-builder.md}g;
-        s{~/\.claude/commands/_my_ponytail\.md}{\$HOME/.agents/skills/my-ponytail/SKILL.md}g;
         s{Use `Task` tool with `subagent_type=general-purpose`}{Use a fresh-context `default` subagent}g;
         s{Use `Task` tool with `subagent_type=Explore`}{Use a fresh-context `explorer` subagent}g;
         s{Use `Agent` tool with `subagent_type=Explore`}{Use a fresh-context `explorer` subagent}g;
@@ -152,6 +164,15 @@ sanitize_command_body_for_skill() {
         s{Task subagents}{Codex subagents}g;
         s{using the Task tool}{using the collaboration tools}g;
         s{\$ARGUMENTS}{User-provided arguments are supplied when this skill is invoked.}g;
+    '
+}
+
+sanitize_command_body_for_skill() {
+    local file="$1"
+    export COMMAND_SKILL_PREFIX
+
+    strip_frontmatter "$file" | apply_common_substitutions | perl -0pe '
+        s{~/\.claude/commands/_my_ponytail\.md}{\$HOME/.agents/skills/my-ponytail/SKILL.md}g;
         s{/_my_([a-z_]+)}{
             my $n = $1;
             $n =~ tr/_/-/;
@@ -160,11 +181,117 @@ sanitize_command_body_for_skill() {
     '
 }
 
+# The Codex text for each `harness-block` key in a pack skill (D9). Keyed rather than matched on
+# sentence text, so rewording the Claude prose cannot silently break a substitution. Phrasing
+# follows codex-overrides/rules/collaboration.md, which already ships to Codex inside AGENTS.md.
+declare -A CODEX_SKILL_HARNESS_BLOCKS
+
+CODEX_SKILL_HARNESS_BLOCKS[skill-base-directory]="$(cat <<'HARNESS_BLOCK'
+Your available-skills inventory gives this skill's absolute `SKILL.md` path. The directory that
+path sits in is this skill's base directory.
+HARNESS_BLOCK
+)"
+
+CODEX_SKILL_HARNESS_BLOCKS[synthesis-spawn]="$(cat <<'HARNESS_BLOCK'
+- **Carried** (or carried + clean room): call `spawn_agent` with `fork_turns: "all"`, which passes
+  the surrounding conversation to the new agent. Do not set `agent_type`, `model`, or
+  `reasoning_effort` alongside it — the call is invalid with any of them.
+- **Discovered** or **clean room**: call `spawn_agent` with `fork_turns: "none"`, stated
+  explicitly. `fork_turns` defaults to `"all"`, so omitting it hands the agent the whole
+  conversation — which under clean room breaks the restriction the owner asked for.
+
+Pass a `task_name` like `synthesis_{slug}` — lowercase letters, digits, and underscores only — and
+**record the agent identity the spawn returns**. It comes back in the form `/root/synthesis_{slug}`,
+and that value, not the name you asked for, is what addresses the agent later.
+HARNESS_BLOCK
+)"
+
+# Claude-only advice with no Codex equivalent: Codex reads files through its shell, so there is no
+# quieter tool to prefer. Registered empty, which deletes the span.
+CODEX_SKILL_HARNESS_BLOCKS[read-synthesis-file]=""
+
+CODEX_SKILL_HARNESS_BLOCKS[correction-dispatch]="$(cat <<'HARNESS_BLOCK'
+Send the correction to the synthesis agent as a follow-up task (`followup_task`), addressed to the
+agent identity you recorded at spawn, in the owner's own words.
+HARNESS_BLOCK
+)"
+
+CODEX_SKILL_HARNESS_BLOCKS[render-dispatch]="$(cat <<'HARNESS_BLOCK'
+- **Resumed**: send a follow-up task (`followup_task`) to the synthesis agent identity you recorded
+  at spawn.
+- **Fresh**: `spawn_agent` with `fork_turns: "none"` — a clean window is the whole point, so never
+  `"all"`. Pass a `task_name` like `render_{slug}_fresh` and record the identity it returns.
+HARNESS_BLOCK
+)"
+
+CODEX_SKILL_HARNESS_BLOCKS[carried-fork]="$(cat <<'HARNESS_BLOCK'
+**Carried**: you were spawned with `fork_turns: "all"`, so the conversation's completed turns came
+with you. What the coordinator produced during the turn that spawned you did not, so treat the spawn
+prompt as the authority on the classification.
+HARNESS_BLOCK
+)"
+
+# Replace each `harness-block` span with the Codex text registered for its key, dropping the markers
+# either way (D9). An unregistered key leaves the Claude wording in place and says nothing — the
+# owner's call that this adapter adds no new failure conditions; the detector is running the skill
+# on Codex. A key registered as empty deletes the span. A malformed marker matches nothing and
+# survives into dist, where the test suite catches it.
+substitute_harness_blocks() {
+    local line key replacement
+    local dropping=0
+
+    while IFS= read -r line || [ -n "$line" ]; do
+        case "$line" in
+            '<!-- harness-block: '*' -->')
+                key="${line#'<!-- harness-block: '}"
+                key="${key%' -->'}"
+                if [ -n "${CODEX_SKILL_HARNESS_BLOCKS[$key]+registered}" ]; then
+                    replacement="${CODEX_SKILL_HARNESS_BLOCKS[$key]}"
+                    if [ -n "$replacement" ]; then
+                        printf '%s\n' "$replacement"
+                    fi
+                    dropping=1
+                else
+                    dropping=0
+                fi
+                continue
+                ;;
+            '<!-- /harness-block -->')
+                dropping=0
+                continue
+                ;;
+        esac
+
+        if [ "$dropping" -eq 1 ]; then
+            continue
+        fi
+
+        printf '%s\n' "$line"
+    done
+}
+
+# The Codex adapter for a skill-directory file (ADR 0011). Reads a body on stdin, writes it on
+# stdout. The shared pass runs over the Claude prose first, so the registered Codex text ships
+# exactly as authored. The command lane's `/_my_x` slash-command rule is deliberately absent: it
+# fires inside the real path at _my_mental_model/SKILL.md and corrupts it (D8).
+sanitize_skill_body_for_codex() {
+    apply_common_substitutions | substitute_harness_blocks
+}
+
+# Rewrite one markdown file of an already-copied skill tree through the adapter, in place.
+adapt_skill_file_in_place() {
+    local file="$1"
+    local staged="$file.codex-adapt"
+
+    sanitize_skill_body_for_codex < "$file" > "$staged"
+    mv "$staged" "$file"
+}
+
 sanitize_rule_body_for_codex() {
     local file="$1"
     export COMMAND_SKILL_PREFIX
 
-    strip_frontmatter "$file" | perl -0pe '
+    strip_frontmatter "$file" | apply_common_substitutions | perl -0pe '
         s{~/.claude/commands/_my_pipeline\.md}{\$HOME/.agents/skills/my-pipeline/SKILL.md}g;
         s{/_my_\*}{\$my-*}g;
         s{/_my_([a-z_]+)}{
@@ -335,64 +462,48 @@ while IFS= read -r file; do
     included_agents+=("$agent_name")
 done < <(find "$CLAUDE_PACK/agents" -maxdepth 1 -type f -name '*.md' | sort)
 
-while IFS= read -r file; do
-    base="$(basename "$file" .md)"
+# Directory skills (skills/<name>/SKILL.md) — the native Claude Code form and the only skill
+# shape either runtime registers. The directory is the unit: copy the whole tree, then run the
+# Codex adapter over every markdown file that landed, then regenerate the entry point's
+# frontmatter (D1). The Codex name is a pure function of the pack directory name (D2), because
+# Claude keys a skill's identity on its directory while Codex registers the frontmatter name.
+while IFS= read -r skill_src; do
+    base="$(basename "$skill_src")"
+    source_entry_point="$skill_src/SKILL.md"
+    [ -f "$source_entry_point" ] || continue
+
     if [ "${#NATIVE_SKILL_ALLOWLIST[@]}" -gt 0 ] && ! contains "$base" "${NATIVE_SKILL_ALLOWLIST[@]}"; then
         excluded_native_skills+=("$base")
         continue
     fi
 
-    skill_name="$(extract_frontmatter_value "$file" "name" || true)"
-    if [ -z "$skill_name" ]; then
-        skill_name="$base"
-    fi
-    description="$(description_for_native_skill "$skill_name" "$file")"
+    skill_name="$(codex_name_for_skill_dir "$base")"
+    description="$(description_for_native_skill "$skill_name" "$source_entry_point")"
     skill_dir="$DIST_DIR/skills/$skill_name"
     output_file="$skill_dir/SKILL.md"
 
-    mkdir -p "$skill_dir"
-    {
-        printf -- "---\n"
-        printf "name: %s\n" "$skill_name"
-        printf "description: %s\n" "$description"
-        printf -- "---\n\n"
-        printf "Generated from \`claude-pack/skills/%s\`. Rebuild this file instead of editing it by hand.\n\n" "$(basename "$file")"
-        strip_frontmatter "$file"
-        printf "\n"
-    } > "$output_file"
+    cp -R "$skill_src" "$skill_dir"
 
-    included_native_skills+=("$skill_name")
-done < <(find "$CLAUDE_PACK/skills" -maxdepth 1 -type f -name '*.md' | sort)
+    # Markdown goes through the adapter; every other file stays byte-for-byte as copied.
+    mapfile -t skill_md_files < <(find "$skill_dir" -type f -name '*.md' | sort)
+    for skill_md in "${skill_md_files[@]}"; do
+        adapt_skill_file_in_place "$skill_md"
+    done
 
-# Directory skills (skills/<name>/SKILL.md) — the native Claude Code form.
-while IFS= read -r file; do
-    base="$(basename "$(dirname "$file")")"
-    if [ "${#NATIVE_SKILL_ALLOWLIST[@]}" -gt 0 ] && ! contains "$base" "${NATIVE_SKILL_ALLOWLIST[@]}"; then
-        excluded_native_skills+=("$base")
-        continue
-    fi
-
-    skill_name="$(extract_frontmatter_value "$file" "name" || true)"
-    if [ -z "$skill_name" ]; then
-        skill_name="$base"
-    fi
-    description="$(description_for_native_skill "$skill_name" "$file")"
-    skill_dir="$DIST_DIR/skills/$skill_name"
-    output_file="$skill_dir/SKILL.md"
-
-    mkdir -p "$skill_dir"
+    staged_entry_point="$output_file.codex-frontmatter"
     {
         printf -- "---\n"
         printf "name: %s\n" "$skill_name"
         printf "description: %s\n" "$description"
         printf -- "---\n\n"
         printf "Generated from \`claude-pack/skills/%s/SKILL.md\`. Rebuild this file instead of editing it by hand.\n\n" "$base"
-        strip_frontmatter "$file"
+        strip_frontmatter "$output_file"
         printf "\n"
-    } > "$output_file"
+    } > "$staged_entry_point"
+    mv "$staged_entry_point" "$output_file"
 
     included_native_skills+=("$skill_name")
-done < <(find "$CLAUDE_PACK/skills" -mindepth 2 -maxdepth 2 -type f -name 'SKILL.md' | sort)
+done < <(find "$CLAUDE_PACK/skills" -mindepth 1 -maxdepth 1 -type d | sort)
 
 {
     printf "# AGENTS.md\n\n"
@@ -423,7 +534,7 @@ fi
 # skills at $HOME/.codex/scripts/<name>.md (see the path rewrites in
 # sanitize_command_body_for_skill). Copied from the single source in claude-pack/scripts so
 # the Codex layer cannot drift from it.
-for shared_spec in product-lens.md mental-model-builder.md; do
+for shared_spec in product-lens.md; do
     if [ -f "$CLAUDE_PACK/scripts/$shared_spec" ]; then
         cp -p "$CLAUDE_PACK/scripts/$shared_spec" "$DIST_DIR/scripts/$shared_spec"
         included_scripts+=("$shared_spec")
@@ -518,5 +629,6 @@ echo "Hooks:          ${#included_hooks[@]} included, ${#excluded_hooks[@]} excl
 echo "Scripts:        ${#included_scripts[@]} included"
 echo "Replacements:   ${#included_replacements[@]} included"
 echo ""
-echo "NOTE: dist/ is built but not installed. Codex reads copies, not symlinks —"
-echo "run ./scripts/setup-codex.sh to refresh \$HOME/.codex and \$HOME/.agents."
+echo "NOTE: dist/ is built but not installed. Skills install as copies: Codex silently refuses"
+echo "a skill whose SKILL.md is a symlink, though it does load a symlinked skill directory."
+echo "Run ./scripts/setup-codex.sh to refresh \$HOME/.codex and \$HOME/.agents."

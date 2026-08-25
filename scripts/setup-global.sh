@@ -71,10 +71,43 @@ create_symlink() {
 create_dir() {
     local dir="$1"
     if [ "$DRY_RUN" = true ]; then
-        [ ! -d "$dir" ] && echo -e "${BLUE}[DRY RUN] Would create: $dir${NC}"
-    else
-        mkdir -p "$dir"
+        if [ ! -d "$dir" ]; then
+            echo -e "${BLUE}[DRY RUN] Would create: $dir${NC}"
+        fi
+        return 0
     fi
+    mkdir -p "$dir"
+}
+
+# Remove symlinks we installed whose pack source no longer exists — a deleted or renamed command,
+# agent, rule, script, or skill. ADR 0009 promises more command→skill migrations, so removals and
+# renames are a recurring event rather than a one-off. Only symlinks pointing into this repo's
+# claude-pack/ are touched; anything the user put there themselves is left alone.
+sweep_dead_symlinks() {
+    local subdir entry link_target
+
+    for subdir in commands agents hooks skills rules scripts; do
+        [ -d "$TARGET_DIR/$subdir" ] || continue
+        for entry in "$TARGET_DIR/$subdir"/*; do
+            if [ ! -L "$entry" ]; then
+                continue
+            fi
+            link_target="$(readlink "$entry")"
+            case "$link_target" in
+                "$CLAUDE_PACK"/*) ;;
+                *) continue ;;
+            esac
+            if [ -e "$entry" ]; then
+                continue
+            fi
+            if [ "$DRY_RUN" = true ]; then
+                echo -e "${YELLOW}[DRY RUN] Would remove dead symlink: $subdir/$(basename "$entry")${NC}"
+            else
+                rm "$entry"
+                echo -e "${GREEN}  ✓ Removed dead symlink: $subdir/$(basename "$entry")${NC}"
+            fi
+        done
+    done
 }
 
 # Main execution
@@ -154,6 +187,11 @@ if [ -d "$CLAUDE_PACK/scripts" ]; then
         create_symlink "$file" "$TARGET_DIR/scripts/$filename" "$filename"
     done
 fi
+
+# Sweep symlinks whose pack source is gone
+echo ""
+echo "Removing dead symlinks..."
+sweep_dead_symlinks
 
 # Configure settings.json (hook configuration)
 echo ""

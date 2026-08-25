@@ -1,8 +1,8 @@
 # Spec: Directory-Skill Codex Adapter
 
-**Status:** Draft (revision 3)
+**Status:** Draft (revision 4)
 **Owner:** Reid W
-**Created:** 2026-08-20 10:24 · **Revised:** 2026-08-20 (rev 2 → rev 3, incorporating `spec-review.md`)
+**Created:** 2026-08-20 10:24 · **Revised:** 2026-08-20 (rev 3 → rev 4, incorporating the cwd spike)
 **Complexity:** HIGH
 **Branch:** anchor-on-the-point
 **Epic:** MENTAL-ALIGN-V2, **Item 5**
@@ -38,6 +38,12 @@ byte-identical-siblings invariant, its "the generated `SKILL.md` is the only fil
 decision, its `example-skill` decision (D7), and its flat-lane decision (D6, now settled by the
 owner). It needs its own revision pass.
 
+**Revision 3 → 4**, from `cwd-spike-findings.md`: the blocking working-directory premise was
+disproved. Activating a Codex skill preserves the session working root. `-C/--cd` controls that
+root, and the skill reaches siblings from the absolute `SKILL.md` path Codex supplies in its skills
+inventory. The eight project-relative paths need no rewrite, and the shipped command-derived skills
+do not share a defect. The earlier spike's B5 conclusion is corrected in place.
+
 ---
 
 ## Problem
@@ -61,15 +67,13 @@ absorbed harness differences since it was written, through a substitution dictio
 `sanitize_command_body_for_skill` (`build-codex-pack.sh:133-160`). The fix is to point that lane at
 skill directories too, which is ADR 0011.
 
-**The unknown underneath all of it.** A substitution dictionary translates *vocabulary*. It cannot
-translate a working directory. `SKILL.md` writes its output to project-relative paths — eight of
-them, including the synthesis file the skill exists to produce. If a Codex skill run really has the
-skill directory as its working directory, every one of those writes lands inside
-`~/.agents/skills/my-mental-model/` instead of the repo, silently. But roughly thirty shipped
-command-derived Codex skills already write relative `.project/…` paths
-(`dist/codex/skills/my-spec/SKILL.md:63` among them), and they are not known to be broken — so
-either the probe's reading does not generalize to normal skill runs, or there is a much larger
-pre-existing defect. This is unresolved and it gates the shape of the work. See Open Questions.
+**The working-directory premise was false.** A controlled relative-write probe launched the same
+Codex skill with two different `-C` roots. Each write landed in the selected launch root, and neither
+landed in the skill directory. Skill activation does not change cwd. Codex supplies the selected
+skill's absolute `SKILL.md` path in its skills inventory, which is how the skill reaches siblings
+without coupling them to project-relative paths. The eight project-relative output paths therefore
+remain correct, and the roughly thirty command-derived skills have no shared cwd defect. Evidence:
+`.project/active/directory-skill-build-pattern/cwd-spike-findings.md`.
 
 **The leftovers.** Epic Item 2 deleted the two v1 authored files; three references remain in the
 tree: the path rewrite at `build-codex-pack.sh:138`, the shared-spec copy at `:426`, and the
@@ -91,6 +95,13 @@ working Codex skill while Claude registers nothing — the same one-sided silent
       `design_synthesis.md`, `visualize.md`, and both `feedback/` bodies, spawns a context-inheriting
       agent under carried policy, resumes that agent for the render, and **writes its run artifacts
       into the project** rather than into the installed skill directory
+  - **[INFERRED] Resolved mechanism, 2026-08-20:** the live collaboration surface's
+    `spawn_agent` accepts `fork_turns: "all"`; a digest-controlled probe confirmed that it carries
+    completed parent conversation turns, while `fork_turns: "none"` does not. Material produced
+    during the parent's still-running turn was not carried in this probe. Use the collaboration
+    spawn for the synthesis agent. `codex exec resume` is a same-thread continuation after the
+    active writer exits, not a concurrent worker. See `fork-spike-findings.md` and
+    `fork-spike/evidence/`.
 - [ ] The Codex comparison reports the missing per-agent token count honestly rather than estimating
       it (epic Item 1 found no supported source)
 - [ ] `/_my_mental_model` on Claude does what it did before this item: locates its directory, the
@@ -124,7 +135,9 @@ working Codex skill while Claude registers nothing — the same one-sided silent
 - **[OWNER]** **The project directory is the correct working directory for a skill run.** Owner:
   *"it SHOULD be this — moving to the skill directory would be really dumb. so yes, we need to run a
   small probe to figure out why it would be changing directories and how to prevent it."* The intent
-  is to fix the cause, not to adapt the skill to it. The probe is an Open Question below.
+  is to fix the cause, not to adapt the skill to it. The probe found no runtime change to prevent:
+  the earlier command had selected the skill directory, while normal skill activation preserves the
+  project/session root. See `cwd-spike-findings.md`.
 - **[OWNER-VERBATIM]** *"if the build fails, the build fails"* / *"if the build doesn't fail, I find
   out when the skill fails."* Meaning: no tolerance is built for failure, and **no new failure
   conditions are added**. `NATIVE_SKILL_ALLOWLIST` stays opt-in and silent. Owner, on the inference
@@ -148,7 +161,7 @@ working Codex skill while Claude registers nothing — the same one-sided silent
   as a dated record, and every append-only `product-lens.md` block keep their 0010 references.
 
 **Forced by the runtimes** (probes of 2026-08-20 —
-`.project/active/directory-skill-build-pattern/spike-findings.md`)
+`.project/active/directory-skill-build-pattern/spike-findings.md` and `cwd-spike-findings.md`)
 
 - **[HARD]** Codex registers the frontmatter `name` and does not answer to the directory name (B3).
   Claude displays the directory name and accepts both (A4). So the Codex entry point must be
@@ -156,9 +169,11 @@ working Codex skill while Claude registers nothing — the same one-sided silent
 - **[HARD]** Claude runs a skill with the project directory as the working directory and prepends
   `Base directory for this skill: <abs path>` (A8). No relative path containing the skill's own
   directory name resolves on either runtime.
-- **[INFERRED]** *Codex* runs a skill with the skill's own directory as the working directory. `pwd`
-  returned that in two probes (B5), but the probe never wrote a relative file, and ~30 shipped
-  command skills would be broken if this generalized. Held as inferred, not hard, pending the probe.
+- **[HARD]** Codex skill activation preserves the session working root. A relative write lands in
+  the directory selected at launch; `-C/--cd` is the supported CLI control. Codex includes the
+  skill's absolute `SKILL.md` path in its available-skills inventory, so siblings are resolved from
+  that locator rather than cwd. Two controlled runs and their raw JSONL are in
+  `cwd-spike-findings.md` and `cwd-spike/evidence/`. This corrects the earlier B5 inference.
 - **[HARD]** Codex silently refuses to register a skill whose `SKILL.md` is a symlink (B2). It does
   load a symlinked skill *directory* (B1) — which makes `build-codex-pack.sh:521` and `CLAUDE.md:53`
   ("Codex reads copies, not symlinks") false.
@@ -186,9 +201,10 @@ splits into two classes that need different answers:
   Item 4 handed over its own list at `.project/active/render-switch-feedback/harness-phrases.md`.
   These are what a dictionary is for.
 - **Project-relative paths** — eight of them, `SKILL.md:51`, `:54`, `:66`, `:132`, `:134`, `:148`,
-  `:231`, `:233`. **A dictionary cannot fix these**, because there is no string to swap: a
-  Codex-side skill has no way to name the project root from inside its own directory. They are the
-  reason the working-directory probe gates this item.
+  `:231`, `:233`. They already resolve under the Codex session's project working root and need no
+  adaptation. Sibling-file references are separate: Codex supplies the selected `SKILL.md` path,
+  and the adapted instruction must resolve `design_synthesis.md`, `visualize.md`, and `feedback/`
+  from that directory.
 
 Both lists are stale the moment the skill is edited again, which is why the criterion above requires
 re-deriving them at execution time, as literal strings.
@@ -222,25 +238,17 @@ re-deriving them at execution time, as literal strings.
   `claude-pack/scripts/`. Deferred by ADR 0009's scope note.
 - Widening the adapter to `claude-pack/rules/` or agents. `sanitize_rule_body_for_codex` already
   exists and is untouched here.
-- Fixing the ~30 command-derived Codex skills, if the probe finds they have the same
-  working-directory problem. That is a separate work item; this spec's job is to say which half it is
-  taking (see Open Questions).
 
 ## Open Questions / Deferred to design
 
-**The blocking one, and it needs code rather than a decision:**
+**Resolved by `/_my_spike`, 2026-08-20:**
 
-- **Why does a Codex skill run report a working directory other than the project directory, and how
-  is that prevented?** Run as `/_my_spike` before design commits to a shape. Three questions, not
-  one — the third exists because taking the skill-directory working directory away removes the only
-  way a Codex skill currently locates its own files, since Codex supplies no base-directory line:
-  1. Where does a *relative write* actually land during a Codex skill run? The existing probe read
-     `pwd` and never wrote a file, which is the operation that breaks.
-  2. Is the working directory controllable — a setting, a frontmatter field, an invocation flag?
-  3. If it is forced to the project directory, how does the skill then reach its own siblings?
-
-  Dependent on the answer: whether the eight project-relative paths are rewritten in the skill or
-  fixed underneath, and whether the ~30 command skills share the defect.
+- **A Codex skill run does not change the working directory.** The controlled probe answered all
+  three questions: (1) a relative write lands in the `-C` launch root; (2) `-C/--cd` controls the
+  session root, while supported skill metadata exposes no cwd field; and (3) Codex supplies the
+  selected skill's absolute `SKILL.md` path, so the skill resolves siblings from its containing
+  directory. The eight project-relative paths remain unchanged. No follow-up item is needed for the
+  command-derived skills. See `cwd-spike-findings.md` and its raw `cwd-spike/evidence/`.
 
 **The rest:**
 
@@ -275,6 +283,8 @@ re-deriving them at execution time, as literal strings.
   findings L1-1…L5-1 with owner resolutions; this revision incorporates it
 - **Required Reading:**
   - `.project/active/directory-skill-build-pattern/spike-findings.md` — the packaging probes
+  - `.project/active/directory-skill-build-pattern/cwd-spike-findings.md` — confirms Codex preserves
+    the project working root and resolves sibling files from the supplied skill path
   - `.project/active/render-switch-feedback/harness-phrases.md` — Item 4's dictionary handoff
   - `.project/active/codex-resume-spike/spike-findings.md` — epic Item 1
   - `.project/concepts/mental-alignment-skill-design.md` — Distribution lane, Appendix
@@ -288,4 +298,4 @@ re-deriving them at execution time, as literal strings.
 
 ---
 
-**Next Steps:** Run the working-directory spike, fold its result in, then `/_my_design`.
+**Next Steps:** Revise `design.md` from this spec, then continue with `/_my_design`.

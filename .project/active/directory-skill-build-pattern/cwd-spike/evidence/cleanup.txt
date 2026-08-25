@@ -1,0 +1,1 @@
+DISCOVERY_LINK_REMOVED_BY_EXIT_TRAP=/home/rwestwood/agentic-project-init/.agents/skills/codex-cwd-probe
