@@ -166,7 +166,7 @@ high-quality, auditable work for the risk in front of you.
   `concept_design`, `spec_review` after `spec`, and `design_review` after `design`. For minor,
   objectively verifiable fixes, record the verification and continue instead of rerunning a
   reviewer just to replace an old verdict.
-- Small, scoped changes can skip the pipeline via `$my-quick-edit`.
+- When the owner explicitly invokes `$my-quick-edit`, a small, scoped code change can skip the pipeline. Do not use it for routine documentation or `.project` artifact edits.
 
 **For the full flow and when/how to use each stage, run `$my-pipeline`** (or read
 `$HOME/.agents/skills/my-pipeline/SKILL.md`).

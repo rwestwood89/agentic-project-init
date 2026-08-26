@@ -1,6 +1,6 @@
 ---
 name: my-quick-edit
-description: Handle a small focused change without the full spec-design-plan flow. Use when the task is scoped and implementation-ready.
+description: Implement a small, scoped code change when the user explicitly invokes this skill to bypass the full spec/design/plan process. Do not use for routine documentation or .project artifact edits.
 ---
 
 Generated from `claude-pack/commands/_my_quick_edit.md`. This is a command-derived Codex skill. Rebuild it instead of editing it by hand.

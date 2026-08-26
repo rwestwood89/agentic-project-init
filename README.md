@@ -119,7 +119,7 @@ One line per command; each command's own doc in `claude-pack/commands/` has the 
 
 | Command | Description |
 |---------|-------------|
-| `/_my_quick_edit` | Small, scoped changes that skip the pipeline |
+| `/_my_quick_edit` | Owner-invoked shortcut for small, scoped code changes that skip the pipeline |
 | `/_my_ponytail` | Lazy-senior-dev mode: force the simplest solution that works |
 | `/_my_slop` | Reset writing style for the rest of the session |
 | `/_my_ask_me` | Ask questions the right way: one at a time, with context, options, and a recommendation |
@@ -130,7 +130,7 @@ One line per command; each command's own doc in `claude-pack/commands/` has the 
 |---------|-------------|
 | `/_my_status` | Project orientation, gap analysis, next steps |
 | `/_my_project_find` | Quick lookups of project context |
-| `/_my_git_manage` | Git workflow, worktrees, conflict resolution |
+| `/_my_git_manage` | Owner-invoked lifecycle management for parallel worktrees and isolated project state |
 | `/_my_wrap_up` | End-of-session context persistence |
 | `/_my_handoff` | Write a handoff doc so a fresh agent can continue mid-task |
 

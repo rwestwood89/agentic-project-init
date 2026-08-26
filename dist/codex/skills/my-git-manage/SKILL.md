@@ -1,6 +1,6 @@
 ---
 name: my-git-manage
-description: Handle git workflow tasks such as worktrees, merges, and conflict resolution. Use when you need structured git help.
+description: Manage parallel Git worktrees with this project's .project state-isolation workflow. Use only when the user explicitly invokes this skill for worktree creation, preparation, merging, reconciliation, listing, or removal. Do not use for ordinary branches, commits, pushes, or pull requests.
 ---
 
 Generated from `claude-pack/commands/_my_git_manage.md`. This is a command-derived Codex skill. Rebuild it instead of editing it by hand.

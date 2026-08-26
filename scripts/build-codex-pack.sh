@@ -429,6 +429,14 @@ while IFS= read -r file; do
         } > "$output_file"
     fi
 
+    if contains "$semantic_name" "${EXPLICIT_ONLY_COMMAND_SKILLS[@]}"; then
+        mkdir -p "$skill_dir/agents"
+        {
+            printf "policy:\n"
+            printf "  allow_implicit_invocation: false\n"
+        } > "$skill_dir/agents/openai.yaml"
+    fi
+
     included_command_skills+=("$skill_name")
 done < <(find "$CLAUDE_PACK/commands" -maxdepth 1 -type f -name '*.md' | sort)
 
