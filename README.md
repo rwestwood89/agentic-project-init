@@ -25,6 +25,7 @@ Copied to `.project/` in target projects:
 - **completed/** - Finished work
 - **adr/** - Append-only decision records with a generated index
 - **product/** - Append-only ledger of implemented product promises, with a generated index
+- **feedback/** - Append-only log of agent learnings, tagged by pack target, for the owner to act on
 - **memories/** - Conversation summaries and learnings
 - **research/** - Research notes and findings
 - **reports/** - Generated reports
@@ -286,6 +287,7 @@ your-project/
 │   ├── adr/
 │   ├── backlog/
 │   ├── completed/
+│   ├── feedback/
 │   ├── memories/
 │   ├── product/
 │   ├── research/

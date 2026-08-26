@@ -43,7 +43,8 @@ while [[ $# -gt 0 ]]; do
             echo "Note: --no-track and --include-claude cannot be used together."
             echo ""
             echo "The --force option updates documentation and templates but never touches:"
-            echo "  CURRENT_WORK.md, backlog/BACKLOG.md, completed/CHANGELOG.md, memories/index.json"
+            echo "  CURRENT_WORK.md, backlog/BACKLOG.md, completed/CHANGELOG.md,"
+            echo "  memories/index.json, feedback/ENTRIES.md"
             exit 0
             ;;
         *) echo -e "${RED}Unknown option: $1${NC}"; exit 1 ;;
@@ -119,6 +120,7 @@ USER_DATA_FILES=(
     "backlog/BACKLOG.md"
     "completed/CHANGELOG.md"
     "memories/index.json"
+    "feedback/ENTRIES.md"
 )
 
 # Check if a file is user data (protected from --force)
@@ -186,7 +188,7 @@ copy_project_pack() {
         done < <(find "$PROJECT_PACK" -type f -print0)
 
         # Ensure required subdirectories exist
-        for dir in research reports memories active completed backlog scripts adr product; do
+        for dir in research reports memories active completed backlog scripts adr product feedback; do
             if [ ! -d ".project/$dir" ]; then
                 if [ "$DRY_RUN" = true ]; then
                     echo -e "${BLUE}[DRY RUN] Would create: .project/$dir/${NC}"
@@ -201,7 +203,7 @@ copy_project_pack() {
             echo -e "${BLUE}[DRY RUN] Would copy project-pack/ to .project/${NC}"
         else
             cp -r "$PROJECT_PACK" .project
-            mkdir -p .project/research .project/reports .project/memories .project/scripts .project/adr .project/product
+            mkdir -p .project/research .project/reports .project/memories .project/scripts .project/adr .project/product .project/feedback
             echo -e "${GREEN}  ✓ Created .project/${NC}"
         fi
     fi

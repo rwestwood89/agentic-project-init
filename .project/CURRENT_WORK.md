@@ -1,6 +1,6 @@
 # Current Work
 
-**Last Updated**: 2026-08-20
+**Last Updated**: 2026-08-26
 
 ---
 
@@ -107,6 +107,11 @@
 ---
 
 ## Recently Completed
+
+### 2026-08-26: feedback-capture-file — record agent learnings where the owner can act on them
+- Added `.project/feedback/README.md` instructions and an append-only `ENTRIES.md` so agents can record corrections while the context is fresh.
+- Protected accumulated entries from `init-project.sh --force` while allowing updated recording instructions to propagate, with focused init coverage.
+- Archived the standalone item to `.project/completed/20260826_feedback-capture-file/`.
 
 ### 2026-08-08: docs-overhaul — question-driven guide, single command catalog, pre_pr after close (committed `43bca3c`)
 - **Minimum doc set with one owner per fact:** `docs/guide.md` absorbed and replaced `docs/working-with-claude.md`; README owns the complete command catalog (31 commands, legacy marked); project-pack README/EPIC_GUIDE defer to `/_my_pipeline` instead of restating the flow; `.project/` template instances re-synced.
