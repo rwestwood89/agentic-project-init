@@ -361,6 +361,8 @@ contains "$AGENTS" 'record the verification'
 contains "$AGENTS" 'fork_turns: "all"'
 contains "$AGENTS" 'Do not combine'
 contains "$AGENTS" 'fork_turns.*defaults to.*"all"'
+contains "$AGENTS" 'owner explicitly invokes.*\$my-quick-edit'
+contains "$AGENTS" 'Do not use it for routine documentation or `.project` artifact edits'
 does_not_contain "$AGENTS" '~/.claude/commands/_my_pipeline.md'
 does_not_contain "$AGENTS" '/_my_'
 does_not_contain "$AGENTS" 'auto-memory'
@@ -378,6 +380,20 @@ contains "$ROOT/dist/codex/skills/my-design/SKILL.md" 'fresh-context `explorer` 
 contains "$ROOT/dist/codex/skills/my-spec/SKILL.md" 'fresh-context `default` subagent'
 contains "$ROOT/dist/codex/skills/my-design-review/SKILL.md" 'fresh-context `default` subagent'
 pass "Codex AGENTS guidance"
+
+QUICK_EDIT_SKILL="$ROOT/dist/codex/skills/my-quick-edit"
+contains "$QUICK_EDIT_SKILL/SKILL.md" 'small, scoped code change'
+contains "$QUICK_EDIT_SKILL/SKILL.md" 'user explicitly invokes this skill'
+contains "$QUICK_EDIT_SKILL/SKILL.md" 'Do not use for routine documentation or .project artifact edits'
+contains "$QUICK_EDIT_SKILL/agents/openai.yaml" 'allow_implicit_invocation: false'
+pass "quick-edit is code-only and explicit-only"
+
+GIT_MANAGE_SKILL="$ROOT/dist/codex/skills/my-git-manage"
+contains "$GIT_MANAGE_SKILL/SKILL.md" 'parallel Git worktrees'
+contains "$GIT_MANAGE_SKILL/SKILL.md" 'user explicitly invokes this skill'
+contains "$GIT_MANAGE_SKILL/SKILL.md" 'Do not use for ordinary branches, commits, pushes, or pull requests'
+contains "$GIT_MANAGE_SKILL/agents/openai.yaml" 'allow_implicit_invocation: false'
+pass "git-manage is worktree-specific and explicit-only"
 
 setup_out="$(bash "$ROOT/scripts/setup-codex.sh" --dry-run)"
 echo "$setup_out" | grep -q '.codex/scripts' || fail "setup dry-run did not mention .codex/scripts"
@@ -408,6 +424,10 @@ mkdir -p "$mirror_home"
 HOME="$mirror_home" bash "$ROOT/scripts/setup-codex.sh" --copy >/dev/null
 [ -f "$skills_home/my-mental-model/feedback/html.md" ] || fail "nested sibling not installed"
 [ -f "$skills_home/my-mental-model/visualize.md" ] || fail "flat sibling not installed"
+[ -f "$skills_home/my-git-manage/agents/openai.yaml" ] || fail "git-manage invocation policy not installed"
+contains "$skills_home/my-git-manage/agents/openai.yaml" 'allow_implicit_invocation: false'
+[ -f "$skills_home/my-quick-edit/agents/openai.yaml" ] || fail "quick-edit invocation policy not installed"
+contains "$skills_home/my-quick-edit/agents/openai.yaml" 'allow_implicit_invocation: false'
 
 # A sibling carries no `Generated from` marker, so the old per-file guard skipped it from the
 # second install onward. The directory-level check is what makes it update.

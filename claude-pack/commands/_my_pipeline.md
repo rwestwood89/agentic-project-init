@@ -18,8 +18,7 @@ This is not a strict pipeline — it is a set of patterns and flows adapted to t
 problem. Which stages to run follows from a few questions:
 
 - **"How well do you understand the problem you're trying to solve?"**
-  - *Well* — skip shaping. A single, clear item starts at `spec`; a small, scoped,
-    implementation-ready change skips the pipeline entirely via `/_my_quick_edit`.
+  - *Well* — skip shaping. A single, clear item starts at `spec`; when the owner explicitly invokes `/_my_quick_edit`, a small, scoped code change skips the pipeline entirely. Do not use it for routine documentation or `.project` artifact edits.
   - *Not that well* — start at `concept` to work out the problem, success criteria, and scope.
     Then ask the three questions below.
 - **"Is there a clear user experience we need to understand?"** If yes, run `product_design`.

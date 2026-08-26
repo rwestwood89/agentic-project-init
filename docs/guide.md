@@ -14,7 +14,7 @@ Claude Code is excellent at writing code, but multi-day features fall apart for 
 
 > **How well do you understand the problem you are trying to solve?**
 
-**If the answer is "well"** — you know what the work is and roughly what done looks like — skip shaping entirely and go straight to [the work-item flow](#the-work-item-flow) below. (And if the change is small and scoped, skip that too: `/_my_quick_edit`.)
+**If the answer is "well"** — you know what the work is and roughly what done looks like — skip shaping entirely and go straight to [the work-item flow](#the-work-item-flow) below. For a small, scoped code change, you can explicitly invoke `/_my_quick_edit` to skip that flow too; routine documentation and `.project` artifact edits do not use this shortcut.
 
 **If the answer is "not that well"**, start with **`/_my_concept`**: a research partner that helps you work out what problem matters, what success looks like, and what's deliberately out of scope. You drive; the agent explores the codebase and asks questions. Then ask three follow-up questions:
 

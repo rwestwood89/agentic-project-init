@@ -19,7 +19,7 @@ high-quality, auditable work for the risk in front of you.
   `concept_design`, `spec_review` after `spec`, and `design_review` after `design`. For minor,
   objectively verifiable fixes, record the verification and continue instead of rerunning a
   reviewer just to replace an old verdict.
-- Small, scoped changes can skip the pipeline via `/_my_quick_edit`.
+- When the owner explicitly invokes `/_my_quick_edit`, a small, scoped code change can skip the pipeline. Do not use it for routine documentation or `.project` artifact edits.
 
 **For the full flow and when/how to use each stage, run `/_my_pipeline`** (or read
 `~/.claude/commands/_my_pipeline.md`).
