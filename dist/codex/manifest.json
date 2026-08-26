@@ -1,13 +1,13 @@
 {
-  "generated_at": "2026-08-17T18:54:17Z",
-  "source_revision": "bcb2a4a",
+  "generated_at": "2026-08-26T15:57:17Z",
+  "source_revision": "463366e",
   "source_root": "/home/rwestwood/agentic-project-init",
   "included": {
-    "command_skills": ["my-ask-me", "my-audit", "my-close", "my-concept", "my-concept-design", "my-concept-design-review", "my-design", "my-design-review", "my-epic-plan", "my-example-command", "my-git-manage", "my-handoff", "my-implement", "my-learning-test", "my-mental-model", "my-orchestrate", "my-pipeline", "my-plan", "my-ponytail", "my-pre-pr", "my-product-design", "my-project-find", "my-quick-edit", "my-research", "my-slop", "my-spec", "my-spec-review", "my-spike", "my-status", "my-wrap-up"],
-    "skills": ["example-skill", "show-me"],
+    "command_skills": ["my-ask-me", "my-audit", "my-close", "my-concept", "my-concept-design", "my-concept-design-review", "my-design", "my-design-review", "my-epic-plan", "my-example-command", "my-git-manage", "my-handoff", "my-implement", "my-learning-test", "my-orchestrate", "my-pipeline", "my-plan", "my-ponytail", "my-pre-pr", "my-product-design", "my-project-find", "my-quick-edit", "my-research", "my-slop", "my-spec", "my-spec-review", "my-spike", "my-status", "my-wrap-up"],
+    "skills": ["my-mental-model", "show-me"],
     "agents": ["example-agent"],
     "hooks": [],
-    "scripts": ["orchestrate-preamble-codex.md", "orchestrate-stage-codex.sh", "product-lens.md", "mental-model-builder.md"],
+    "scripts": ["orchestrate-preamble-codex.md", "orchestrate-stage-codex.sh", "product-lens.md"],
     "command_skill_replacements": ["my-orchestrate"]
   },
   "excluded": {

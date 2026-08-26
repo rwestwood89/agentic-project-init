@@ -34,7 +34,6 @@ declare -A COMMAND_SKILL_DESCRIPTIONS=(
   ["handoff"]="Write a handoff document to the OS temp directory so a fresh agent can continue the work. Use when ending a session and the next agent needs focus, context references, key discoveries, and suggested skills."
   ["implement"]="Execute an approved implementation plan with validation. Use when plan work should be carried through in the codebase."
   ["learning-test"]="Write real, kept tests to discover how an unfamiliar surface behaves, then feed the learning back into the pipeline. Use when the goal is fuzzy and you are mapping a surface to understand it."
-  ["mental-model"]="Rebuild the owner's understanding of a system around one question: a dated HTML checkpoint connecting product intent, proposed structure, and code reality, built by a dedicated subagent. Use on the owner's direct request or when they accept a stage's checkpoint offer; never during headless orchestration."
   ["pipeline"]="The canonical map of the project workflow: stage order, branches, and when/how to use each stage. Use to see the current pipeline or check which stage comes next; other docs point here instead of restating the flow."
   ["plan"]="Create a phased implementation plan from a spec and design. Use when work needs sequencing, validation, and file-level execution steps."
   ["ponytail"]="Adopt lazy-senior-dev mode: force the simplest, shortest solution that works via a YAGNI/stdlib-first ladder, at lite/full/ultra intensity. Use on any coding task, or when the user says 'ponytail', 'be lazy', or complains about over-engineering."
@@ -55,7 +54,9 @@ declare -A AGENT_DESCRIPTIONS=(
   ["example-agent"]="Example custom Codex agent generated from the Claude agent template."
 )
 
+# Keyed on the pack-side directory name (build-codex-pack.sh tests the source basename). A
+# directory absent from this list is excluded from the Codex build with no error.
 NATIVE_SKILL_ALLOWLIST=(
-  "example-skill"
+  "_my_mental_model"
   "show-me"
 )

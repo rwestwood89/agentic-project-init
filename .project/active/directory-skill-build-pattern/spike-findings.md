@@ -1,6 +1,6 @@
 # Spike Findings: How Claude Code and Codex load directory skills
 
-**Status:** Complete. 16 of 18 assumptions answered; the 2 open ones are reassigned, not pending.
+**Status:** Complete. B5's interpretation was corrected by `cwd-spike-findings.md` on 2026-08-20.
 **Owner:** Reid W
 **Date:** 2026-08-20
 **Branch:** anchor-on-the-point
@@ -29,12 +29,12 @@ Two findings change the design.
    directory name; Codex registers the frontmatter `name` and does not answer to the directory
    name. Neither warns on a mismatch. This kills the renamed-symlink simplification and promotes
    design decision D1 — regenerate the Codex entry point — from convenience to requirement.
-2. **Relative paths resolve differently, so there is exactly one portable way to reference a
-   sibling.** Claude prepends a `Base directory for this skill:` line and runs with the *project*
-   directory as cwd, so every relative form fails. Codex runs with the *skill* directory as cwd, so
-   bare relative works. A path containing the skill's own directory name fails on both. The rule:
-   bare filename in prose. This is a new authoring convention that ADR 0010 does not state and a
-   future author gets wrong by default.
+2. **Both runtimes preserve the session working directory; each supplies the skill location
+   differently.** Claude prepends `Base directory for this skill: <abs path>`. Codex includes the
+   absolute `SKILL.md` path in its available-skills inventory. A skill must resolve siblings from
+   that supplied locator rather than cwd. The original B5 run reported the skill directory from
+   `pwd`, but a later controlled relative-write probe showed that the agent had chosen that command
+   directory; skill activation had not changed it. See `cwd-spike-findings.md`.
 
 Two smaller corrections. A dangling symlink is inert, so D4 is hygiene rather than a hazard. And
 two claims in the repo are false — Codex loads symlinked skill directories fine
@@ -60,7 +60,7 @@ two claims in the repo are false — Codex loads symlinked skill directories fin
 | B2 | Codex loads a skill whose `SKILL.md` is a symlink | **FALSE** | `probe-eta` never registered |
 | B3 | Codex tolerates a mismatched frontmatter `name`, and which one invokes | **FALSE as hoped — frontmatter wins** | `probe-delta-renamed` works, `probe-delta` does not |
 | B4 | Codex reads siblings, flat and nested | **CONFIRMED** | Flat, two nested dirs, and a non-markdown file |
-| B5 | How a Codex skill refers to its own directory | **ANSWERED — cwd is the skill dir** | Opposite of Claude. Bare relative works; `<dirname>/notes.md` fails. |
+| B5 | How a Codex skill refers to its own directory | **CORRECTED — supplied `SKILL.md` path** | Skill activation preserves the project cwd. Resolve siblings from the absolute path in the skills inventory. See `cwd-spike-findings.md`. |
 | B6 | Codex accepts underscores, including a leading one | **CONFIRMED** | `$_my_probe_alpha` loaded and ran |
 | B7 | How a native skill is invoked on Codex | **CONFIRMED** | `$<skill-name>`; underscore makes no syntactic difference; a plain-text mention also triggers selection |
 | B8 | Codex tolerates extra files and subdirectories | **CONFIRMED** | `stray.txt` plus two subdirectories, `no load warnings` |
@@ -91,29 +91,30 @@ nothing answers to.
 So the Codex lane **must** generate a modified entry point. That is design decision D1, and the
 spike promotes it from a convenience to a requirement. It also makes D2 sharper: deriving the Codex
 name from the pack directory name is right, and the derived name must be **written into the
-generated frontmatter**, because that is the only field Codex reads. The build already does this
-(`scripts/build-codex-pack.sh:386`), so no code change follows — but the reason it matters is now
-evidence, not assumption.
+generated frontmatter**, because that is the only field Codex reads.
 
-### 2. Relative paths resolve differently, so sibling references must be written a specific way
+**Corrected 2026-08-20.** This section originally said the build already writes the derived name, so
+no code change followed. That was wrong. `build-codex-pack.sh:375` reads the name from the source
+frontmatter and `:386` writes that value out, so at HEAD `_my_mental_model` ships to Codex as
+`_my_mental_model`. The build writes *a* name into the generated frontmatter; it does not derive one.
+D2 is code to write.
+
+### 2. Sibling references resolve from the supplied skill locator, not cwd
 
 | | Claude | Codex |
 |---|---|---|
-| `pwd` during a skill run | the project directory | the skill's own directory |
-| `cat notes.md` | **fails** | succeeds |
-| `cat <skill-dir-name>/notes.md` | **fails** | **fails** |
-| `cat <abs-skill-dir>/notes.md` | succeeds | succeeds |
-| How the abs path is known | prepended `Base directory for this skill:` line | it is the cwd |
+| Working directory during a skill run | project directory | project/session launch directory |
+| How the skill location is known | prepended `Base directory for this skill:` line | absolute `SKILL.md` path in the skills inventory |
+| Reliable sibling access | join the supplied base directory | join the directory containing the supplied `SKILL.md` path |
 
-Neither harness resolves a path containing the skill's own directory name. Exactly one written form
-is portable: **name the sibling by bare filename in prose and let the agent join it to the
-directory it was given.** That is how Anthropic's own skills do it — the `pdf` skill says "see
-REFERENCE.md", the `xlsx` skill says `python scripts/recalc.py`.
+A bare filename in prose remains readable and lets each runtime perform that join, but it is a
+writing preference rather than cwd magic. Executable commands must use the resolved absolute path.
+The controlled correction and raw command events are in `cwd-spike-findings.md` and
+`cwd-spike/evidence/`.
 
 This does **not** break ADR 0010's no-rewriting rule, but it adds a writing convention that rule
-does not currently state, and that a future author will get wrong by default. Concretely: an
-instruction file that says `cat feedback/improve.md` works on Codex and silently fails on Claude —
-the same one-sided silent failure this whole work item exists to remove, mirrored again.
+does not currently state. An executable `cat feedback/improve.md` is cwd-dependent on both
+runtimes; the reliable command joins `feedback/improve.md` to the supplied skill locator.
 
 ---
 
@@ -338,8 +339,11 @@ and, at the end of the whole run, `no load warnings`.
 - **B4 is confirmed.** Flat sibling, two distinct nested directories, and a non-markdown file all
   read. Design bet B3 holds, so Codex parity for the split-instruction shape does not require
   inlining.
-- **B5 is answered, and diverges from Claude.** `pwd` was the skill's own directory — the resolved
-  target, not the symlink. Bare relative reads therefore work on Codex and fail on Claude.
+- **B5's raw observation was real, but its interpretation was false.** `pwd` printed the resolved
+  skill target because the diagnostic command was run from there. A later controlled probe held the
+  skill constant, changed only `-C`, and observed both `pwd` and a relative write follow `-C` while
+  sibling access continued through the supplied `SKILL.md` path. Skill activation does not change
+  cwd. See `cwd-spike-findings.md`.
 - **B8 is confirmed.** `stray.txt` and two subdirectories produced no warning and no parse failure.
   The install does not have to filter what it copies.
 
@@ -435,9 +439,9 @@ Step 4   pwd → /home/rwestwood/.agents/skills/_my_probe_alpha
 - **B7 is confirmed.** `$<skill-name>`, no special handling for a leading underscore. Note the
   extra detail Codex volunteered: a plain-text mention of the exact name also triggers selection,
   which is a mild argument for distinctive skill names.
-- **Step 2.3 is the useful negative.** `_my_probe_alpha/notes.md` failed on Codex too, because the
-  cwd is already inside that directory. Combined with A8, no path containing the skill's own
-  directory name works anywhere.
+- **Step 2.3 is the useful negative.** `_my_probe_alpha/notes.md` failed because it was not resolved
+  from the supplied skill locator. A path containing the skill's directory name is not a reliable
+  sibling reference on either runtime.
 
 ---
 
@@ -503,8 +507,9 @@ decisions that need revisiting, named by their labels.
   kills it.
 - **D2** (derive the Codex name from the pack directory name) — confirmed, with the reason
   sharpened: the derived name must be written into the generated frontmatter because that is the
-  only field Codex reads. `scripts/build-codex-pack.sh:386` already does this. Do not "simplify" it
-  away.
+  only field Codex reads. **Corrected 2026-08-20:** the build does not derive it today. It writes the
+  source frontmatter name (`build-codex-pack.sh:375` reads, `:386` writes), which for the real skill
+  is `_my_mental_model`. D2 is unimplemented work.
 - **D6** (delete the flat native-skill lane) — independently corroborated. The flat
   `~/.claude/skills/example-skill.md` symlink is installed right now and does **not** appear in this
   session's skill listing, while `dist/codex/skills/example-skill/SKILL.md` exists and builds clean.
@@ -533,9 +538,9 @@ decisions that need revisiting, named by their labels.
 **New, not covered by any current decision — needs to land somewhere:**
 
 - **A sibling-reference writing convention.** Reference a sibling by **bare filename in prose**, and
-  never write a path containing the skill's own directory name. Justification is the A8/B5 table
-  above: `cat notes.md` works on Codex and fails on Claude; `cat <dirname>/notes.md` fails on both;
-  only the absolute join works, and each harness supplies the absolute prefix differently. This is
+  never write a path containing the skill's own directory name. At execution, join that name to the
+  runtime-supplied skill locator: Claude's prepended base directory or Codex's absolute `SKILL.md`
+  path from the skills inventory. This is
   compatible with ADR 0010's no-rewriting rule — it is a rule about how to *write* sibling files,
   not a transformation applied to them — but ADR 0010 does not state it, and a future author will
   get it wrong by default. `claude-pack/skills/example-skill/` (D7) is the natural place to

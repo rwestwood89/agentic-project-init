@@ -13,6 +13,7 @@ HELPER="$ROOT/dist/codex/scripts/orchestrate-stage-codex.sh"
 ORCH="$ROOT/dist/codex/skills/my-orchestrate/SKILL.md"
 AGENTS="$ROOT/dist/codex/AGENTS.md"
 MANIFEST="$ROOT/dist/codex/manifest.json"
+SKILL_DIST="$ROOT/dist/codex/skills/my-mental-model"
 
 fail() { echo -e "${RED}FAIL: $1${NC}"; exit 1; }
 pass() { echo -e "${GREEN}PASS: $1${NC}"; }
@@ -322,6 +323,37 @@ does_not_contain "$ORCH" 'claude -p'
 does_not_contain "$ORCH" '/_my_'
 pass "Codex orchestrator replacement"
 
+# Directory skills ship as a unit: the whole pack tree reaches dist under the derived Codex name.
+[ -d "$SKILL_DIST" ] || fail "derived skill dir missing: $SKILL_DIST"
+if [ -d "$ROOT/dist/codex/skills/_my_mental_model" ]; then
+  fail "pack-side name leaked into dist"
+fi
+for f in SKILL.md design_synthesis.md visualize.md feedback/synthesis.md feedback/html.md; do
+  [ -f "$SKILL_DIST/$f" ] || fail "sibling missing from dist: $f"
+done
+contains "$SKILL_DIST/SKILL.md" 'name: my-mental-model'
+jq -e '.included.skills == ["my-mental-model", "show-me"]' "$MANIFEST" >/dev/null \
+  || fail "manifest skills array is not exactly [my-mental-model, show-me]"
+does_not_contain "$MANIFEST" 'example-skill'
+# The flat single-file skill lane is gone (D6), so a flat .md produces no skill on either runtime.
+does_not_contain "$ROOT/scripts/build-codex-pack.sh" 'skills" -maxdepth 1 -type f'
+pass "directory skill tree and derived name"
+
+# The adapter ran: no marker survives, and the Codex vocabulary replaced the Claude vocabulary.
+if grep -rn 'harness-block' "$SKILL_DIST"; then
+  fail "unsubstituted harness-block reached dist"
+fi
+contains "$SKILL_DIST/SKILL.md" 'fork_turns'
+does_not_contain "$SKILL_DIST/SKILL.md" 'subagent_type'
+does_not_contain "$SKILL_DIST/SKILL.md" 'SendMessage'
+# A non-inheriting spawn must name fork_turns: "none" explicitly — the Codex default is "all".
+contains "$SKILL_DIST/SKILL.md" 'fork_turns: "none"'
+# The adapter reached a sibling, not only the entry point.
+contains "$SKILL_DIST/design_synthesis.md" 'fork_turns'
+# The command lane's slash rule stays off skill bodies: this real path must survive intact (D8).
+contains "$SKILL_DIST/SKILL.md" 'claude-pack/skills/_my_mental_model'
+pass "harness blocks substituted across the tree"
+
 contains "$AGENTS" '\$my-pipeline'
 contains "$AGENTS" '$HOME/.agents/skills/my-pipeline/SKILL.md'
 contains "$AGENTS" 'Stages are quality tools, not mandatory ceremony'
@@ -333,8 +365,13 @@ does_not_contain "$AGENTS" '~/.claude/commands/_my_pipeline.md'
 does_not_contain "$AGENTS" '/_my_'
 does_not_contain "$AGENTS" 'auto-memory'
 
-if rg -n 'subagent_type=|`Task` tool|`Agent` tool|general-purpose (subagent|agent)|Task subagents|Explore subagent|Explore agent' \
-  "$ROOT/dist/codex/skills" -g 'SKILL.md'; then
+# Narrowed job: confirm the adapter ran over every generated skill file. Not a phrase detector —
+# a phrase you can list is one that belongs in the dictionary. Uses grep, not rg: rg is not on PATH
+# inside this script, so the rg form never executed and this check silently passed for free.
+# Scoped to every .md under dist skills, because ADR 0011 makes all of them adapter output.
+if grep -rnE --include='*.md' \
+  'subagent_type|`Task` tool|`Agent` tool|general-purpose (subagent|agent)|Task subagents|Explore subagent|Explore agent' \
+  "$ROOT/dist/codex/skills"; then
   fail "generated Codex skills retained Claude-specific delegation terminology"
 fi
 contains "$ROOT/dist/codex/skills/my-design/SKILL.md" 'fresh-context `explorer` subagent'
@@ -362,6 +399,44 @@ grep -q 'agentic-project-init codex rules begin' "$custom_home/.codex/AGENTS.md"
 grep -q 'Stages are quality tools, not mandatory ceremony' "$custom_home/.codex/AGENTS.md" || fail "managed AGENTS.md block missing pipeline rule"
 grep -q 'fork_turns: "all"' "$custom_home/.codex/AGENTS.md" || fail "managed AGENTS.md block missing collaboration rule"
 pass "installer dry-run includes scripts and user-level rules"
+
+# The skills install is a directory mirror (D3): whole tree in, stale files out, and the
+# managed decision is made once per directory by asking its entry point.
+mirror_home="$tmpdir/mirror-home"
+skills_home="$mirror_home/.agents/skills"
+mkdir -p "$mirror_home"
+HOME="$mirror_home" bash "$ROOT/scripts/setup-codex.sh" --copy >/dev/null
+[ -f "$skills_home/my-mental-model/feedback/html.md" ] || fail "nested sibling not installed"
+[ -f "$skills_home/my-mental-model/visualize.md" ] || fail "flat sibling not installed"
+
+# A sibling carries no `Generated from` marker, so the old per-file guard skipped it from the
+# second install onward. The directory-level check is what makes it update.
+printf 'hand edit\n' > "$skills_home/my-mental-model/visualize.md"
+touch "$skills_home/my-mental-model/stale.md"
+HOME="$mirror_home" bash "$ROOT/scripts/setup-codex.sh" --copy >/dev/null
+does_not_contain "$skills_home/my-mental-model/visualize.md" 'hand edit'
+if [ -f "$skills_home/my-mental-model/stale.md" ]; then
+  fail "mirror did not remove a file absent from dist"
+fi
+
+# An entry point without our marker means the directory is someone else's: leave all of it.
+printf '# my own skill\n' > "$skills_home/show-me/SKILL.md"
+touch "$skills_home/show-me/mine.md"
+HOME="$mirror_home" bash "$ROOT/scripts/setup-codex.sh" --copy >/dev/null
+contains "$skills_home/show-me/SKILL.md" '# my own skill'
+[ -f "$skills_home/show-me/mine.md" ] || fail "mirror removed a file from an unmanaged skill dir"
+pass "install mirror converges"
+
+# No v1 mental-model surface remains, and nothing repeats the false symlink claim.
+does_not_contain "$ROOT/scripts/build-codex-pack.sh" 'mental-model-builder'
+does_not_contain "$ROOT/codex-overrides/config.sh" 'mental-model'
+does_not_contain "$ROOT/README.md" 'mental_model'
+# Scoped to the surfaces that make the claim. `.project/` records quote it as dated evidence and
+# keep it on purpose. `-s` because CLAUDE.md is gitignored here and absent from a fresh clone.
+if grep -rns --exclude='test_*.sh' 'Codex reads copies, not symlinks' "$ROOT/scripts" "$ROOT/CLAUDE.md"; then
+  fail "false symlink claim still present"
+fi
+pass "v1 surfaces retired"
 
 echo ""
 echo -e "${GREEN}Codex orchestrator pack checks passed.${NC}"

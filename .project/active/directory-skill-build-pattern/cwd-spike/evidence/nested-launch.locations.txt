@@ -1,0 +1,2 @@
+EXPECTED_WRITE=/home/rwestwood/agentic-project-init/.project/active/directory-skill-build-pattern/cwd-spike/nested-launch/codex-cwd-relative-write.txt
+/home/rwestwood/agentic-project-init/.project/active/directory-skill-build-pattern/cwd-spike/nested-launch/codex-cwd-relative-write.txt

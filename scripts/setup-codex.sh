@@ -196,6 +196,91 @@ install_global_agents() {
     managed_installed=$((managed_installed + 1))
 }
 
+# Does an installed skill directory belong to us? The entry point answers for the whole tree
+# (D3): missing, carrying the `Generated from` marker, or still a symlink into the dist we manage.
+# One answer governs every file, which is what makes verbatim-copied siblings re-installable — the
+# per-file marker check classifies them user-authored from the second install onward.
+skill_dir_is_managed() {
+    local entry_point="$1"
+
+    [ -e "$entry_point" ] || return 0
+    if [ -L "$entry_point" ]; then
+        case "$(readlink "$entry_point")" in
+            "$DIST_DIR"/*) return 0 ;;
+        esac
+    fi
+    is_managed_file "$entry_point"
+}
+
+# Put one file of an approved skill directory in place. No per-file guard runs here: the
+# directory-level decision was already made. Always a copy, never a symlink — Codex silently
+# refuses to register a skill whose SKILL.md is a symlink.
+install_skill_file() {
+    local source="$1"
+    local target="$2"
+
+    if [ -f "$target" ] && [ ! -L "$target" ] && cmp -s "$source" "$target"; then
+        echo "  = Already current: $target"
+        managed_skipped=$((managed_skipped + 1))
+        return 0
+    fi
+
+    if [ "$DRY_RUN" = true ]; then
+        echo "[DRY RUN] Would copy: $target <= $source"
+        managed_installed=$((managed_installed + 1))
+        return 0
+    fi
+
+    mkdir -p "$(dirname "$target")"
+    rm -f "$target"
+    cp "$source" "$target"
+    echo "  + Installed: $target"
+    managed_installed=$((managed_installed + 1))
+}
+
+remove_stale_skill_file() {
+    local target="$1"
+
+    if [ "$DRY_RUN" = true ]; then
+        echo "[DRY RUN] Would remove file no longer in dist: $target"
+    else
+        rm -f "$target"
+        echo "  - Removed file no longer in dist: $target"
+    fi
+    managed_removed=$((managed_removed + 1))
+}
+
+# Mirror one dist skill directory onto its target: add, overwrite, and remove files so a re-install
+# converges instead of accumulating. An entry point that exists without our marker means someone
+# authored it, and the whole directory is left alone.
+mirror_skill_dir() {
+    local source_dir="$1"
+    local target_dir="$2"
+    local rel
+
+    if [ "$FORCE" != true ] && ! skill_dir_is_managed "$target_dir/SKILL.md"; then
+        echo "  ! Skipping user-authored skill directory (use --force to overwrite): $target_dir"
+        managed_skipped=$((managed_skipped + 1))
+        return 0
+    fi
+
+    ensure_dir "$target_dir"
+
+    while IFS= read -r rel; do
+        rel="${rel#./}"
+        install_skill_file "$source_dir/$rel" "$target_dir/$rel"
+    done < <(cd "$source_dir" && find . -type f | sort)
+
+    [ -d "$target_dir" ] || return 0
+
+    while IFS= read -r rel; do
+        rel="${rel#./}"
+        if [ ! -f "$source_dir/$rel" ]; then
+            remove_stale_skill_file "$target_dir/$rel"
+        fi
+    done < <(cd "$target_dir" && find . \( -type f -o -type l \) | sort)
+}
+
 remove_path_if_managed() {
     local target="$1"
     local expected_prefix="$2"
@@ -260,11 +345,9 @@ done < <(find "$DIST_DIR/agents" -maxdepth 1 -type f -name '*.toml' | sort)
 
 echo ""
 echo "Skills..."
-while IFS= read -r file; do
-    skill_name="$(basename "$(dirname "$file")")"
-    ensure_dir "$USER_SKILLS_DIR/$skill_name"
-    install_path "$file" "$USER_SKILLS_DIR/$skill_name/SKILL.md" "copy"
-done < <(find "$DIST_DIR/skills" -mindepth 2 -maxdepth 2 -type f -name 'SKILL.md' | sort)
+while IFS= read -r source_dir; do
+    mirror_skill_dir "$source_dir" "$USER_SKILLS_DIR/$(basename "$source_dir")"
+done < <(find "$DIST_DIR/skills" -mindepth 1 -maxdepth 1 -type d | sort)
 
 if [ -f "$DIST_DIR/AGENTS.md" ]; then
     echo ""

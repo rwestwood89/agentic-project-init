@@ -104,12 +104,9 @@ if [ "$HAS_VENDORED" = true ]; then
         done
     fi
 
-    # Remove known skill files
+    # Remove known skill directories
     if [ -d ".claude/skills" ]; then
-        for f in example-skill.md; do
-            [ -f ".claude/skills/$f" ] && rm ".claude/skills/$f" && echo -e "${GREEN}  ✓ Removed: skills/$f${NC}"
-        done
-        for d in show-me; do
+        for d in _my_mental_model show-me; do
             [ -d ".claude/skills/$d" ] && rm -rf ".claude/skills/$d" && echo -e "${GREEN}  ✓ Removed: skills/$d${NC}"
         done
     fi

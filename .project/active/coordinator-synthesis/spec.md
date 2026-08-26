@@ -150,8 +150,10 @@ important things first. Judgment stays visibly separate from evidence claims.
 - **[INHERITED: epic MENTAL-ALIGN-V2 Item 3 In Scope; evidence spike-findings A8, B5]** Every
   sibling reference in authored files is written as a bare filename in prose —
   `design_synthesis.md`, `feedback/synthesis.md` — never as a path containing the skill's own
-  directory name. This is the forward-compatibility obligation that keeps Item 5 from needing a
-  rewrite pass it is forbidden to have (ADR 0010).
+  directory name. Originally justified by ADR 0010's no-rewrite rule; 0010 was reversed on
+  2026-08-20 and superseded by 0011, so Item 5 does run a rewrite pass. The bare-filename form still
+  holds for a different reason: Codex resolves siblings from the absolute `SKILL.md` path it
+  supplies, and a path carrying the skill's own directory name resolves on neither runtime.
 
 ### The pause
 

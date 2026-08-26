@@ -1,0 +1,2 @@
+EXPECTED_WRITE=/home/rwestwood/agentic-project-init/codex-cwd-relative-write.txt
+/home/rwestwood/agentic-project-init/codex-cwd-relative-write.txt
