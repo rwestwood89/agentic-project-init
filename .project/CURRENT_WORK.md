@@ -1,15 +1,10 @@
 # Current Work
 
-**Last Updated**: 2026-08-25
+**Last Updated**: 2026-08-26
 
 ---
 
 ## Active Work
-
-### feedback-capture-file — record agent learnings where the owner can act on them
-- Spec drafted 2026-08-25 (`.project/active/feedback-capture-file/spec.md`), standalone item, no epic. Product lens not run.
-- Two files in `project-pack/`: an instructions file the agent reads (updates on `--force`) and an append-only entries file (goes on `USER_DATA_FILES` so `--force` can't wipe it). Entries tagged with the bare pack-target name (`_my_spec`, `working-voice`), one tag each.
-- Deliberate non-goal: commands do **not** read the feedback. The format must make adding a filter script later a no-rework change.
 
 ### product-intent-ledger — ADR-like ledger of implemented product promises
 - **Audit remediated (2026-08-12) per owner dispositions, uncommitted on `anchor-on-the-point`; pending re-audit.** Owner calls: pointer-entry title restates the promise one-liner with a citation-only body (audit-F1 BLOCK → resolved, README cross-seam reworked); no withdrawal/retire status — supersession covers disappearance, D3 unchanged (audit-F2 INTENDED-CHANGE); audit-F3 disposed citing D2's recorded duplication acceptance. Ledger gate CLEAR pending re-audit confirmation.
@@ -112,6 +107,11 @@
 ---
 
 ## Recently Completed
+
+### 2026-08-26: feedback-capture-file — record agent learnings where the owner can act on them
+- Added `.project/feedback/README.md` instructions and an append-only `ENTRIES.md` so agents can record corrections while the context is fresh.
+- Protected accumulated entries from `init-project.sh --force` while allowing updated recording instructions to propagate, with focused init coverage.
+- Archived the standalone item to `.project/completed/20260826_feedback-capture-file/`.
 
 ### 2026-08-08: docs-overhaul — question-driven guide, single command catalog, pre_pr after close (committed `43bca3c`)
 - **Minimum doc set with one owner per fact:** `docs/guide.md` absorbed and replaced `docs/working-with-claude.md`; README owns the complete command catalog (31 commands, legacy marked); project-pack README/EPIC_GUIDE defer to `/_my_pipeline` instead of restating the flow; `.project/` template instances re-synced.

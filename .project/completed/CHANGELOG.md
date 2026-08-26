@@ -4,6 +4,26 @@ Historical record of completed work.
 
 ---
 
+## [2026-08-26] - feedback-capture-file
+
+**Type**: Item
+**Duration**: 1 day (2026-08-25 to 2026-08-26)
+
+### Summary
+Added a project-level feedback capture surface so agents can record corrections while they still hold the context and reasoning. The instructions and accumulated entries are separated so recording requires one small read and existing feedback survives project re-initialization.
+
+### Deliverables
+- **Feedback templates:** `project-pack/feedback/README.md` and append-only `project-pack/feedback/ENTRIES.md`
+- **Project initialization:** feedback-directory creation plus protected user-data handling in `scripts/init-project.sh`
+- **Validation:** focused seeding, refresh, and preservation coverage in `scripts/test_init_project.sh`
+- **Documentation:** feedback surface documented in the root and project-pack READMEs
+- **Artifacts:** `spec.md` and `change.md`, archived under `.project/completed/20260826_feedback-capture-file/`
+
+### Lessons Learned
+- Separate refreshable instructions from append-only user data when `--force` updates templates, and test both behaviors in the same run.
+
+---
+
 ## [2026-07-06] - spike-and-learning-test-commands
 
 **Type**: Item
