@@ -224,4 +224,44 @@ else
 fi
 echo ""
 
+# Test 8: --force protects accumulated feedback
+# feedback/ENTRIES.md accumulates agent learnings across many sessions and is never
+# regenerated. If it drops out of USER_DATA_FILES, --force silently replaces months of
+# entries with the empty template.
+echo "Test 8: --force protects feedback entries..."
+TEST_DIR="$TEST_BASE/test8"
+mkdir -p "$TEST_DIR"
+cd "$TEST_DIR"
+git init -q
+
+"$INIT_SCRIPT" --source "$SOURCE_DIR"
+
+if [ ! -f ".project/feedback/ENTRIES.md" ] || [ ! -f ".project/feedback/README.md" ]; then
+    echo -e "${RED}FAIL: feedback files not seeded on init${NC}"
+    exit 1
+fi
+
+# Accumulate an entry, and stale out the instructions file
+echo "## [_my_spec] 2026-08-25" >> .project/feedback/ENTRIES.md
+echo "stale instructions" > .project/feedback/README.md
+
+"$INIT_SCRIPT" --source "$SOURCE_DIR" --force
+
+if grep -qF "## [_my_spec] 2026-08-25" .project/feedback/ENTRIES.md; then
+    echo -e "${GREEN}PASS: --force preserved accumulated feedback entries${NC}"
+else
+    echo -e "${RED}FAIL: --force destroyed accumulated feedback entries${NC}"
+    echo -e "${RED}      feedback/ENTRIES.md must be listed in USER_DATA_FILES in init-project.sh${NC}"
+    exit 1
+fi
+
+if grep -q "How to Record Feedback" .project/feedback/README.md; then
+    echo -e "${GREEN}PASS: --force refreshed the feedback instructions${NC}"
+else
+    echo -e "${RED}FAIL: --force did not update feedback/README.md${NC}"
+    echo -e "${RED}      the instructions file must NOT be user data${NC}"
+    exit 1
+fi
+echo ""
+
 echo -e "${GREEN}All tests passed!${NC}"
