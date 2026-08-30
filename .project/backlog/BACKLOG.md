@@ -587,6 +587,54 @@ positives, because a noisy scan gets ignored.
 - Raised 2026-08-20 while deciding checks for `/_my_mental_model`. That command's generated HTML is low risk
   on its own, so the value is the general case, not that one skill.
 
+### [BL-010] Setup scripts leave stale symlinks behind after a rename
+
+**Priority:** P1
+**Status:** Backlog
+**Estimate:** S
+**Category:** Tooling / Setup
+**Affected Files:** `scripts/setup-global.sh`, `scripts/setup-codex.sh`
+
+#### Problem
+
+`setup-global.sh` creates and replaces symlinks, but never removes ones whose source has been
+deleted from the pack. When a command or skill is renamed or moved in `claude-pack/`, the old
+symlink survives in `~/.claude/` as a dangling link. Re-running setup does not clean it up.
+
+Two failures follow:
+
+1. **The new thing is missing.** Setup only runs when the owner remembers to run it, so a move
+   silently leaves the new location unlinked.
+2. **The old thing shadows silently.** A dangling `commands/<name>.md` still appears in `ls` and
+   still occupies the name, but reading it fails. Claude Code skips it without an error, so the
+   command simply vanishes from the skill list with no diagnostic.
+
+Observed 2026-08-23: commit `aeb969d` moved `_my_mental_model` from `claude-pack/commands/` to the
+directory skill `claude-pack/skills/_my_mental_model/`. `~/.claude/commands/_my_mental_model.md`
+went dangling and `~/.claude/skills/_my_mental_model` was never created, so `/_my_mental_model`
+disappeared from the skill list. `~/.claude/scripts/mental-model-builder.md` was dangling from the
+same commit. Both were fixed by hand.
+
+#### Proposed Solution
+
+Add a prune pass to the setup scripts, before linking: walk each managed target directory
+(`commands`, `agents`, `hooks`, `skills`, `rules`, `scripts`) and remove any symlink whose target
+does not resolve. Only touch symlinks — never real files, and never links pointing outside the
+pack.
+
+Worth considering alongside: a `--check` mode that reports drift between pack and installed tree
+without changing anything, so the state can be verified cheaply after a pack change.
+
+#### Acceptance Criteria
+
+- [ ] `setup-global.sh` removes dangling symlinks under managed dirs before linking
+- [ ] `setup-codex.sh` gets the same treatment
+- [ ] Real files and links outside the pack are left untouched
+- [ ] Test in `scripts/test_global_setup.sh`: rename a pack entry, re-run setup, assert the old
+      link is gone and the new one exists
+
+---
+
 ## P2 - Medium Priority
 
 ### [BL-005] Document workflow types and command mappings
