@@ -622,6 +622,42 @@ positives, because a noisy scan gets ignored.
 - Raised 2026-08-20 while deciding checks for `/_my_mental_model`. That command's generated HTML is low risk
   on its own, so the value is the general case, not that one skill.
 
+### [BL-010] Codex setup leaves removed managed skill directories installed
+
+**Priority:** P1
+**Status:** Backlog
+**Estimate:** S
+**Category:** Tooling / Setup
+**Affected Files:** `scripts/setup-codex.sh`, `scripts/test_codex_orchestrator_pack.sh`
+
+#### Problem
+
+`setup-codex.sh` mirrors files inside every skill directory that still exists in `dist/codex/skills/`,
+but it never visits a previously managed top-level skill directory after that skill disappears from
+the distribution. Re-running setup therefore leaves the removed skill installed under
+`~/.agents/skills/`.
+
+Observed 2026-08-30: `dist/codex/skills/example-skill/` is absent, but
+`~/.agents/skills/example-skill/SKILL.md` remains from an earlier managed install. A setup rerun
+reported zero removals and left that directory in place.
+
+#### Proposed Solution
+
+After installing current skills, inspect top-level directories under `~/.agents/skills/`. Remove a
+directory when it is absent from `dist/codex/skills/` and its `SKILL.md` identifies it as a managed
+generated skill. Leave user-authored skill directories untouched.
+
+#### Acceptance Criteria
+
+- [ ] Re-running `setup-codex.sh` removes a managed top-level skill directory that is absent from
+      `dist/codex/skills/`
+- [ ] User-authored skill directories are left untouched
+- [ ] `--dry-run` reports the removal without changing the installed directory
+- [ ] `scripts/test_codex_orchestrator_pack.sh` installs a managed fixture skill, removes it from
+      the fixture distribution, reruns setup, and asserts the installed directory is gone
+
+---
+
 ## P2 - Medium Priority
 
 ### [BL-005] Document workflow types and command mappings

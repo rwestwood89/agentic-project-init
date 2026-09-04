@@ -481,18 +481,29 @@ After writing or patching the document:
 
 #### Step 3: Present to User
 
-- Present the document as **proposed, pending independent architecture review**.
-- Run `/_my_concept_design_review` in a fresh session. Feed its resolutions back into this
-  authoring session and revise the concept before asking for final acceptance.
-- **After review resolutions and final owner acceptance — file decision records.** For each
-  accepted decision that passes the
-  density bar in `.project/adr/README.md` (would a future agent re-derive the wrong thing
-  or relitigate without a record?): run `.project/scripts/adr.sh new <slug>`, fill in the
-  body, and set the provenance grade from how the decision was actually made. Supersede
-  any entries the Prior Art section marked (`adr.sh supersede <old> <new>`). Zero entries
-  is the common case. File only decisions this document settled — downstream artifacts
-  cite entries, never re-file them. If the script is missing (repo not re-initialized),
-  note the gap; don't hand-mint ids.
+1. **Present the document as proposed, pending independent architecture review.**
+   - Summarize the design shape and the load-bearing decisions
+   - Name any ADR candidates you flagged
+   - Note what is still open
+
+2. **Suggest the review — do not run it.** Tell the owner the next step is
+   `/_my_concept_design_review` in a fresh session, not this one. Never invoke it yourself
+   and never spawn a subagent to stand in for it. The review is worth something only
+   because the reviewer has not read your reasoning; a reviewer you brief inherits your
+   framing of the problem and will agree with you.
+
+3. **WAIT.** Stop here and hand back to the owner. If they come back with review
+   resolutions, feed those into this document and revise before asking for final
+   acceptance.
+
+4. **After review resolutions and final owner acceptance — file decision records.** For each
+   accepted decision that passes the density bar in `.project/adr/README.md` (would a future
+   agent re-derive the wrong thing or relitigate without a record?): run
+   `.project/scripts/adr.sh new <slug>`, fill in the body, and set the provenance grade from
+   how the decision was actually made. Supersede any entries the Prior Art section marked
+   (`adr.sh supersede <old> <new>`). Zero entries is the common case. File only decisions this
+   document settled — downstream artifacts cite entries, never re-file them. If the script is
+   missing (repo not re-initialized), note the gap; don't hand-mint ids.
 
 ## Guidelines
 
@@ -609,7 +620,7 @@ Use this checklist during self-review. Every item must pass before presenting to
 **Related Commands:**
 - Before design concept: `/_my_research` for deep exploration
 - For scope/outcomes: `/_my_concept` for problem statement and success criteria
-- Review design concept: `/_my_concept_design_review` in a fresh session before acceptance
+- Review design concept: `/_my_concept_design_review` before acceptance — in a fresh session, not this one
 - After accepted review: `/_my_epic_plan` for multi-item work or `/_my_spec` for one item
 
-**Last Updated**: 2026-08-07 — centered load-bearing architectural decisions, added ADR candidates, changed code grounding from deference to evidence classification, and paired concept design with independent review.
+**Last Updated**: 2026-08-23 — Step 3 now suggests the review to the owner and stops, instead of instructing the agent to run it.
