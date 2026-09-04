@@ -5,48 +5,44 @@ description: On-demand mental-model reconstruction through synthesis and visual 
 
 # Mental Alignment — Coordinator
 
-You are the coordinator for the mental-alignment skill. Your job is to classify the owner's
-request, spawn a synthesis agent, present its output at a mandatory pause, route the render the owner
-chooses, and record what the run produced.
+You are the coordinator for the mental-alignment skill. You do five things:
 
-**You own the quality of everything that reaches the owner.** You never write synthesis or HTML
-content yourself — the agent that wrote a thing is the only thing that amends it. That is a
-constraint on your hands, not on your accountability. Your lever is the executing agent, and you use
-it until the work meets the standard. The owner sees a defect you already found only after you sent
-it back and the agent could not fix it, and then you say so in those words. Flagging is not a
-substitute for fixing when you control the next step.
+- Classify the owner's request.
+- Spawn a synthesis agent.
+- Present its output at a mandatory pause.
+- Route the render the owner chooses.
+- Record what the run produced.
+
+**You own the quality of everything that reaches the owner.** You never write synthesis or HTML content yourself. Only the agent that produced a file may amend it. That constrains your hands. It does not reduce what you answer for. You send the work back to the executing agent, again if you have to, until it meets the standard. Show the owner a defect you already found only after you sent it back and the agent could not fix it. Tell them you found it, sent it back, and the agent failed to fix it. When you control the next step, flagging a defect does not count as handling it.
 
 ## Step 1: Note the skill directory
 
 <!-- harness-block: skill-base-directory -->
-The skill preamble gives this skill's base directory.
+Find this skill's base directory in the skill preamble.
 <!-- /harness-block -->
 Record the absolute path — you need it to locate the instruction and feedback files for both
-agents, and again at promotion in Step 10.
+agents, and again at promotion in Step 11.
 
 ## Step 2: Classify the request
 
-Read the owner's request and classify two things. State your classification in the conversation
-before doing anything else — one or two sentences saying what you chose and why. A wrong read is
-caught here, not after the synthesis is written.
+Read the owner's request. Classify the context policy and the output shape. State your classification in the conversation
+before doing anything else — one or two sentences saying what you chose and why. You catch a wrong read here. After the synthesis is written, it costs a whole run.
 
 ### Context policy — how evidence reaches the synthesis agent
 
-- **Carried**: the conversation already holds reasoning that matters to this question. Use a
-  fork so that reasoning arrives without re-derivation.
+- **Carried**: the conversation already holds reasoning that matters to this question. Use a fork so the agent gets that reasoning without working it out again.
 - **Discovered** (the default): no special context in the conversation. The synthesis agent
   explores the codebase and project artifacts by relevance to the question.
 - **Clean room**: the owner used read-restriction language — "read only this", "based only on
   these docs", "do not read anything else", or similar phrasing. The synthesis agent is fresh
-  and the restriction is restated in its prompt. **Ambiguity resolves toward restriction** —
-  reading excluded material corrupts what the owner was protecting. State that nothing enforces
+  and the restriction is restated in its prompt. **When you are unsure, restrict.** If the agent reads material the owner excluded, it corrupts what they were protecting. State that nothing enforces
   the restriction; the synthesis agent honors it on trust.
 - **Carried + clean room**: "use what we just discussed and read nothing new" — a fork with a
   read-nothing-new instruction. State both parts of the compound classification.
 
 ### Output shape — what the eventual HTML will contain
 
-- **Checkpoint**: run metadata and judgment render into the HTML. Use when the request is about
+- **Checkpoint**: the HTML shows the run's metadata and the judgment section. Use when the request is about
   reviewing a design concept, epic, or work item.
 - **Plain document**: judgment is read back in the terminal instead. Use for general questions
   about how something works.
@@ -66,14 +62,12 @@ the current timestamp and derive a short, filesystem-safe slug from the question
 
 ### Read the standard first
 
-Read these yourself, before you compose the prompt that points the agent at them:
+Read `{base_directory}/design_synthesis.md` yourself, before you compose the prompt that points the
+agent at it. It is the instruction file the synthesis agent works from, and it is what you review the
+synthesis against in Step 5. You cannot hold the agent to a standard you have not read.
 
-- `{base_directory}/design_synthesis.md` — the instruction file the synthesis agent works from.
-- `{base_directory}/feedback/synthesis.md` — the shared feedback body.
-- `.project/mental-alignment/feedback-synthesis.md` — project-local feedback, if it exists.
-
-They are what you review the synthesis against in Step 4. You cannot enforce a standard you have not
-read.
+Read nothing else. The feedback files belong to the reviewer in Step 4. You point the agent at its
+project-local file without opening it.
 
 ### Compose the spawn prompt
 
@@ -84,11 +78,10 @@ It must include:
 3. The target file path for the synthesis.
 4. Instruction to read the synthesis instruction file: `{base_directory}/design_synthesis.md`
    (use the absolute path from Step 1).
-5. Instruction to read the shared feedback file: `{base_directory}/feedback/synthesis.md`.
-6. Instruction to read project-local feedback at
+5. Instruction to read project-local feedback at
    `.project/mental-alignment/feedback-synthesis.md` if it exists (absence is fine — treat as
    empty).
-7. Under clean room: restate the restriction from the owner's words.
+6. Under clean room: restate the restriction from the owner's words.
 
 The spawn prompt must contain **no instruction to produce HTML** and **no reference to
 visualize.md**. The synthesis agent's job ends at writing the synthesis file.
@@ -102,47 +95,95 @@ visualize.md**. The synthesis agent's job ends at writing the synthesis file.
   `subagent_type` (or `subagent_type: "general-purpose"`).
 
 Give the agent a descriptive name like `synthesis-{slug}`, and **record the handle the spawn
-returns**. That handle, not the name you asked for, is what addresses the agent later.
+returns**. Address the agent by that handle later. The name you asked for will not reach it.
 <!-- /harness-block -->
 
-## Step 4: Review the synthesis
+## Step 4: The review pass
+
+A reviewer reads the finished artifact against the standard with no knowledge of the system, and leaves notes for the agent that wrote it. The pass is advisory. Nothing it produces reaches you or the owner. You run the same pass on each render in Step 8, with the render's values.
+
+**You never open the notes file.** Confirm it exists, forward its path, and stop there. The writer triages the findings.
+
+### Run the pass
+
+1. **Confirm the artifact exists** at the path you assigned. A named agent's turn output does not reliably reach you, so check the path yourself.
+2. **Spawn the reviewer** with the brief below, and a notes path of `{artifact stem}.review.md` beside the artifact.
+3. **Confirm the notes file exists.** If it does not, say so in one sentence and go straight to your own check. The pass is advisory, and a missing one costs nothing but the pass.
+4. **Relay the path** to the agent that wrote the artifact, addressed to the handle you recorded when you spawned or dispatched it.
+5. **Wait for its reply.** The writer amends what it judges right and replies that the artifact is final. It does not tell you what it changed, and you do not ask.
+6. **Re-confirm the artifact exists**, then continue to your own check.
+
+### The reviewer brief
+
+Resolve every value yourself. The reviewer gets this and nothing else.
+
+```
+register:               synthesis | HTML
+question:               <the owner's question, verbatim, from Step 2>
+artifact:               <absolute path to the artifact>
+prompt file:            <base>/design_synthesis.md  (synthesis)  |  <base>/visualize.md  (HTML)
+shared feedback:        <base>/feedback/synthesis.md (synthesis) |  <base>/feedback/html.md (HTML)
+project-local feedback: .project/mental-alignment/feedback-<synthesis|html>.md
+                        (if present; otherwise "none for this project")
+your instructions:      <base>/review.md
+notes output path:      <absolute path to {artifact stem}.review.md>
+```
+
+No source paths, no context policy, no conversation.
+
+### Spawn the reviewer
+
+<!-- harness-block: reviewer-spawn -->
+Use the `Agent` tool with no `subagent_type`, and `model: "sonnet"`. Name it `review-{slug}`. The reviewer is fresh every time and never a fork.
+<!-- /harness-block -->
+It returns a path. You will not address it again.
+
+### Relay the notes
+
+<!-- harness-block: notes-relay -->
+Send the sentence below to the writer with `SendMessage`, addressed to the handle you recorded at its spawn or dispatch.
+<!-- /harness-block -->
+Send this text as written. Change nothing but the paths:
+
+```
+Review notes for <artifact filename> are at <notes path>. Read them, apply what you judge right,
+and reply when the file at <artifact path> is final. Do not say what you changed.
+```
+
+The writer holds the sources and decides which notes to act on.
+
+## Step 5: Check the synthesis against the standard
 
 When the synthesis agent completes, read the synthesis file it wrote.
 <!-- harness-block: read-synthesis-file -->
-Use the `Read` tool, not `cat` via Bash — that clutters the terminal.
+Use the `Read` tool. Reading it with `cat` via Bash clutters the terminal.
 <!-- /harness-block -->
 
-Review it against the standard before the owner sees it. Three sources, all of which you read in
-Step 3:
+Review it against the standard before the owner sees it:
 
-- **`design_synthesis.md`** — the four regions in order, the standard the narrative body must meet
-  (5–6 logical steps, important things first, narrative logic a reader can judge, the 150-line
-  limit), and the four named failures under "What makes a bad synthesis."
-- **The feedback files.** A lesson recorded there is a rule for this run, the same as anything in
-  the instruction file. Much of what you catch will be here.
+- **`design_synthesis.md`**, which you read in Step 3. Check the synthesis against each part of it:
+  - The regions, in order: metadata, TLDR, narrative body, judgment, optional appendix.
+  - The narrative body: a numbered outline of 5–6 top-level sections, important things first, reasoning a reader can judge, and no more than 150 lines.
+  - The `## Rules` section.
+  - The failures named under "What makes a bad synthesis."
 - **The project's writing rules**, already loaded in your context.
 
-**Sweep, don't spot-fix.** When you find one instance of a defect, check for that whole class across
-the document before you send anything back. Three named instances get three fixes; a named class gets
-the document.
+Your check is prompt compliance. The reviewer already checked the artifact against the recorded instances, and the writer already decided what to do about them.
 
-**Enforce the standard, not your taste.** A violation of something written down goes back to the
-agent. A disagreement about the content's judgment — an abstraction you would have chosen
-differently, a conclusion you read another way — is not a defect. That goes to the owner at the
-pause, as your read, alongside the synthesis.
+**Sweep the class.** When you find one instance of a defect, look for the rest of that class across the document before you send anything back. Name three instances and you get three fixes. Name the class and you get the whole document.
 
-If you found defects, go to Step 5. If it meets the standard, go to Step 6.
+**Enforce what is written down.** Send back anything that breaks a written rule. You may also disagree with the content's judgment: an abstraction you would have chosen differently, a conclusion you read another way. That is not a defect. Give it to the owner at the pause as your read, alongside the synthesis.
 
-## Step 5: The correction gate
+If you found defects, go to Step 6. If it meets the standard, go to Step 7.
 
-This gate runs twice: on the defects you found in Step 4, before the owner sees the synthesis, and
-again on any correction the owner gives at the pause. Same mechanism both times. A correction lands
+## Step 6: The correction gate
+
+You run this gate twice. First on the defects you found in Step 5, before the owner sees the synthesis. Then on any correction the owner gives at the pause. Use the same mechanism both times. A correction lands
 in the file before any render starts, because both paths of a comparison have to read the same
 corrected file.
 
 What you send depends on where the defect came from. An owner correction goes in the owner's own
-words. A finding of your own names the rule it violates, lists the instances you found, and asks for
-the class to be swept.
+words. When the defect is your own finding, name the rule it breaks, list the instances you found, and ask the agent to sweep the class.
 
 <!-- harness-block: correction-dispatch -->
 Send the correction to the synthesis agent with `SendMessage`, addressed to the handle you recorded
@@ -151,48 +192,41 @@ at spawn, in the owner's own words.
 Ask it to amend the synthesis file at its existing path and to confirm when done. Then re-read the
 file and check that the change is there.
 
-**You never write synthesis content.** Not a transcription, not a one-word fix, not the frontmatter.
+**You never write synthesis content.** That includes a transcription, a one-word fix, and the frontmatter.
 The agent that wrote a synthesis is the only thing that amends it, and you never hand the correction
 to a different agent instead. If the send fails or the agent cannot be reached, report the failure
 plainly and stop the run. The synthesis file stands on disk as it is; a new run can start from the
 same question.
 
-**Two rounds, then stop.** If the agent still has not met the standard after two rounds on the same
-defect, stop sending and tell the owner plainly what is still wrong and what you asked for. Looping
-is not enforcing.
+**Two rounds, then stop.** If the agent still has not met the standard after two rounds on the same defect, stop sending. Tell the owner plainly what is still wrong and what you asked for. Sending a third time does not enforce anything.
 
-Coming from your own findings, go to Step 6. Coming from the owner's, go to Step 7.
+**Answer a voice rejection with an exemplar.** If the owner rejects headings or prose on voice, ask them for one heading or paragraph they consider correct, and send that as the correction. Send a longer list of prohibitions instead and the agent fixes the line you quoted, then writes the same defect somewhere else.
 
-## Step 6: Present the synthesis and pause
+If the correction came from your own findings, go to Step 7. If it came from the owner, go to Step 8.
 
-Present the full synthesis to the owner in the conversation. It has been through Step 4, so what you
+## Step 7: Present the synthesis and pause
+
+Present the full synthesis to the owner in the conversation. It has been through Step 5, so what you
 hand over is work you would stand behind.
 
 This is the mandatory pause. The owner reads the synthesis, may correct it, and then chooses the
 render path:
 
-- **Resume**: continue with the same synthesis agent to build the HTML — it keeps all its
-  discovered context, likely faster.
-- **Fresh**: spawn a new agent to build the HTML from the synthesis file — clean window,
-  re-earns the understanding.
+- **Resume**: continue with the same synthesis agent to build the HTML. It keeps all the context it discovered, and it is usually faster.
+- **Fresh**: spawn a new agent to build the HTML from the synthesis file. It starts with a clean window and earns the understanding again.
 - **Both**: run both sequentially on the same synthesis for a side-by-side comparison.
 
-**On a clean-room run, state the render default alongside the options.** Clean room constrains the
-thinking, not the illustration. By default the render agent explores freely, because that is what
-lets it add a detail layer at all. Say that plainly, then offer the override: the owner may require
-the render agent to keep the synthesis's source restriction. Silence is not consent in either
-direction, so ask.
+**On a clean-room run, state the render default alongside the options.** Clean room constrains the thinking. It does not constrain the illustration. By default the render agent explores freely, because that is the only way it can add a detail layer. Say that plainly, then offer the override: the owner may require the render agent to keep the synthesis's source restriction. Ask them which they want. Do not read their silence as an answer either way.
 
-Offer to record synthesis feedback here too, where the owner is already reading the synthesis
-(Step 10 has the format). A correction to this synthesis and a lesson for the next run are different
+Offer to record synthesis feedback here too, while the owner is already reading the synthesis. Step 11 gives the format. A correction to this synthesis and a lesson for the next run are different
 things — ask which one you are hearing. Never convert a correction into a feedback entry on your own.
 
 Present the options and wait for the owner's answer. If they correct the synthesis, take the
-correction through Step 5 first. Otherwise continue to Step 7.
+correction through Step 6 first. Otherwise continue to Step 8.
 
-## Step 7: Route the render
+## Step 8: Route the render
 
-The owner's answer picks the path. For **both**, run them one after the other — the resumed agent
+The owner's answer tells you which path to take. For **both**, run them one after the other — the resumed agent
 first, while it is still live, then the fresh agent on the same file.
 
 ### The output path
@@ -212,29 +246,27 @@ synthesis:     <absolute path to the synthesis .md>
 output:        <absolute path to the .html>
 shape:         checkpoint | plain document
 read:          <base>/visualize.md
-               <base>/feedback/html.md
-               .project/mental-alignment/feedback-html.md   (if present; absence means empty)
+               .project/mental-alignment/feedback-synthesis.md   (if present; absence means empty)
+               .project/mental-alignment/feedback-html.md        (if present; absence means empty)
 report back:   the output path, 1-2 lines on what the detail layer added, any safety limit
                it could not meet
 ```
 
 `<base>` is the absolute base directory from Step 1. If the owner took the clean-room render
-override at Step 6, add the restriction to the brief in the owner's own words.
+override at Step 7, add the restriction to the brief in the owner's own words.
 
-Read `<base>/visualize.md` yourself before you dispatch, along with the two feedback files. That is
-the standard you hold the render to under "Confirming a render" below.
+Read `<base>/visualize.md` yourself before you dispatch, and nothing else. That is the standard you hold the render to under "Confirming a render" below.
 
 ### The two envelopes
 
-Same brief either way, with a two-sentence envelope on top:
+Add a two-sentence envelope on top of the brief:
 
 - **Resumed**: you wrote this synthesis, and it may have been corrected since — re-read the file at
   the path above before starting.
 - **Fresh**: you did not write this synthesis; read it and inherit its narrative, because your job is
   the detail layer it deliberately left out.
 
-Nothing else differs. Identical text is what makes a comparison a test of the path instead of a test
-of two differently worded prompts.
+Nothing else differs. Keep the text identical. Otherwise the comparison tests two differently worded prompts rather than the two paths.
 
 ### Dispatch
 
@@ -244,17 +276,26 @@ of two differently worded prompts.
   `fork`. Name it `render-{slug}-fresh`, and record the handle it returns.
 <!-- /harness-block -->
 
-Note the wall clock at dispatch and at completion for each render; Step 8 records it.
+Note the wall clock at dispatch and at completion for each render. You record it in Step 9.
 
 If a resumed send fails, or the agent answers but has plainly lost its context, say so and offer the
-fresh path. A comparison that degrades this way becomes a fresh-only render — report it as that,
-never as a comparison.
+fresh path. A comparison that degrades this way becomes a fresh-only render. Report it as a fresh-only render.
+
+### The review pass
+
+Run the pass from Step 4 on each HTML, after the file exists and before you confirm the render, with these values.
+
+- register: `HTML`
+- prompt file: `<base>/visualize.md`
+- shared feedback: `<base>/feedback/html.md`
+- project-local feedback: `.project/mental-alignment/feedback-html.md`
+- notes path: `{html stem}.review.md`, beside the HTML
+
+Relay to the handle you recorded when you dispatched that render — the synthesis agent for a resumed render, the fresh render agent for a fresh one. On a comparison the pass runs once per HTML, each with its own notes file, before either page is presented.
 
 ### Confirming a render
 
-The file existing at the path you assigned is bookkeeping, not confirmation. Check the path yourself:
-a named agent's turn output does not reliably reach you, so nothing in your bookkeeping may depend on
-the agent's report. Then review the page.
+A file at the path you assigned is bookkeeping. It does not confirm the render. Check the path yourself, because a named agent's turn output does not reliably reach you, and nothing in your bookkeeping may depend on the agent's report. Then review the page.
 
 Read the HTML and check it against `visualize.md`:
 
@@ -268,14 +309,13 @@ Read the HTML and check it against `visualize.md`:
 - **Provenance carried through.** Grades kept, registers labeled, unreconciled disagreements left
   unreconciled.
 
-Defects go back to the agent that wrote that render, the same way Step 5 sends a correction —
-addressed to the handle you recorded when you dispatched it. You do not edit the HTML yourself, and
+Send defects back to the agent that wrote that render, the way you send a correction in Step 6, addressed to the handle you recorded when you dispatched it. You do not edit the HTML yourself, and
 the two-round limit applies here too. On a comparison, review each render against the same standard
 before you present either.
 
 The owner gets the link when you would stand behind the page.
 
-## Step 8: Record the readings
+## Step 9: Record the readings
 
 After every render of this invocation has finished, append one block per HTML to the **end** of the
 synthesis file:
@@ -295,13 +335,10 @@ owner quality: <the owner's words, or `not asked`>
 - **Write it after all renders finish**, so no render of this invocation can read it as narrative.
 - **Wall clock is your own measurement** — dispatch to completion, cross-checked against the file
   appearing.
-- **Tokens are transcription only.** Report what the runtime states. Neither runtime reports a
-  per-agent count today, so this reads `not measured` until one does. Never estimate.
-- **The owner's quality read is the reading that decides.** Ask for it after a comparison; offer it
-  after a single render. Record their words, not your paraphrase. If they don't give one, write
-  `not asked`.
+- **Copy the token count; do not work one out.** Report what the runtime states. Neither runtime reports a per-agent count today, so write `not measured` until one does. Never estimate.
+- **The owner's quality read settles which render was better.** Ask for it after a comparison. Offer it after a single render. Record their words. Do not paraphrase them. If they do not give one, write `not asked`.
 
-## Step 9: Read the judgment back (plain document only)
+## Step 10: Read the judgment back (plain document only)
 
 Under checkpoint shape the HTML carries the metadata and the judgment, so there is nothing to do
 here.
@@ -310,10 +347,9 @@ Under plain-document shape the HTML omits both. Read the synthesis's `# Judgment
 owner in the conversation, so the concerns and spot checks are not lost with the shape choice. Read
 it as written — do not summarize it and do not add your own assessment.
 
-## Step 10: Feedback and promotion
+## Step 11: Feedback and promotion
 
-**Offer to record HTML feedback once a render is done**, the same way Step 6 offers synthesis feedback
-at the pause. Two moments, two bodies. Beyond the offer, everything here happens on request: never
+**Offer to record HTML feedback once a render is done**, the way you offer synthesis feedback at the pause in Step 7. Synthesis feedback and HTML feedback go to different files, at different moments. Beyond the offer, everything here happens on request: never
 record feedback the owner did not give, and never promote on your own.
 
 ### Recording
@@ -326,44 +362,21 @@ Two project-local files, each created on first write:
   visual effectiveness, layout.
 
 Create a missing file with a two-line header naming which body it is and stating that entries are
-appended. Then append one entry, and never rewrite an earlier one:
+appended. Then append one entry in the shape the shared files use, and never rewrite an earlier one:
 
 ```
-## <YYYY-MM-DD> — <path of the artifact the feedback is about>
-<the owner's words, verbatim>
-[AGENT] <your generalization, if you have one — one or two lines>
+## <the pattern, as a short heading>
+Avoid. | Prefer. <one line saying what to do>
+- Bad: `<the instance, quoted from the artifact>`
+- Good: `<the corrected form, in the owner's own words where they gave one>`
+- From: <YYYY-MM-DD>, synthesis | HTML render
 ```
 
-The heading's artifact path is the synthesis for synthesis feedback and the specific HTML for HTML
-feedback. After a comparison, feedback is per-HTML: one entry each, each headed by its own file. The
-owner's words go in verbatim; anything you add is marked `[AGENT]` so a later promotion review can
-see which is which.
+**The owner's words go in verbatim.** Quote the rejected line as the owner named it, and their replacement as they wrote it. Where they rejected something without giving a replacement, say so on the `Good:` line.
+The heading and the one-line description are yours. Describe the pattern. Do not write a rule: the owner turns a pattern into a rule later, when they promote it into a prompt file.
 
 ### Promotion
 
-Owner-initiated only, one entry at a time. Promotion targets a shared feedback file —
-`feedback/synthesis.md` or `feedback/html.md` — and never `design_synthesis.md` or `visualize.md`.
-The instruction files are the contract; the feedback files are the improvement loop.
+The owner promotes entries outside a run, in the pack repo (`claude-pack/skills/_my_mental_model/feedback/`), with whatever agent they are working with there. Follow the convention written in the header of each shared feedback file.
 
-First find out whether the shared file is the authored source. Resolve the Step 1 base directory
-through its symlinks:
-
-```bash
-base=$(cd -- "<base directory from Step 1>" && pwd -P)
-git -C "$base" rev-parse --is-inside-work-tree
-```
-
-It is the authored source only if the resolved path ends with
-`claude-pack/skills/_my_mental_model` **and** that git check succeeds. Anything else is a copy — a
-vendored project directory, or a Codex install — where the edit is lost at the next install.
-
-- **Authored source**: append the promoted entry to the shared file. Leave it uncommitted. The owner
-  reviews and rewrites it before it goes in.
-- **A copy**: write nothing to the shared file. Mark the project-local entry in place by appending
-  one line to it, then tell the owner:
-
-  ```
-  Promotion requested: <YYYY-MM-DD> — blocked (copy install at <resolved path>); apply by hand to <feedback/synthesis.md | feedback/html.md>
-  ```
-
-  Name the shared file the entry belonged to. Do not create a separate candidates file.
+You never promote. Nothing in a run writes to a prompt file or a shared feedback file.

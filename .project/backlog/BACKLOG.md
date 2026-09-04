@@ -98,6 +98,41 @@ Use `{keyword}` pattern where possible to enable script-based customization.
 
 ---
 
+## P1 - Writing for a human reader
+
+### [VOICE-001] Spread the reader-first explanation across the other artifacts
+
+**Priority:** P1
+**Status:** Not started
+**Estimate:** M
+**Category:** Rules and prompts
+
+#### Problem
+
+Agents here write prose a person cannot read on one pass. The failure repeats in every kind of output: the artifact, the rules meant to guide the artifact, and the artifacts written to improve those rules. Four fresh reviewers checked the mental-model skill against `claude-pack/rules/working-voice.md` on 2026-09-03 and found the same patterns in all of them, including inside the feedback file whose own entries name those patterns.
+
+The cause sits under the rules rather than in them. An agent pays nothing to read a dense sentence, so packing meaning into fewer words feels to it like better work, and nothing warns it. Rules about shape do not fix this, because the agent breaks them while holding them.
+
+`design_synthesis.md` and `visualize.md` now open with an explanation of how a person actually reads, why the agent cannot feel the cost, and a test that can fail: take a sentence away from its context and say what it means in different words.
+
+#### Work
+
+- Decide where the explanation belongs so it is written once. Candidates: `claude-pack/rules/working-voice.md` as a new opening section, or a short rule file the other rules point at.
+- Put it in front of every agent that writes prose a person reads. The `_my_*` commands that produce specs, designs, plans, research, reviews, and handoffs all qualify.
+- Add the take-it-out-of-context test to the places that already have a pre-delivery check, so the check can fail rather than only counting shapes.
+- Sweep `SKILL.md` for the mental-model skill. The 2026-09-03 review found roughly forty instances across pre-existing text, most of them "X, not Y" constructions and steps that act as their own subject ("Step 9 records it").
+- Re-run a fresh reviewer against `working-voice.md` after each pass. The writing agent cannot check its own work here, which is the whole point.
+
+#### Acceptance Criteria
+
+- [ ] The explanation lives in exactly one place, and every prose-writing command reaches it.
+- [ ] A fresh reviewer, given only `working-voice.md` and a sampled artifact, finds no instance of the named patterns.
+- [ ] The pre-delivery checks include a test a writer can fail, not only shape counts.
+
+#### Notes
+
+Evidence from 2026-09-03 sits in the session transcript and in `.project/active/mental-model-reviewer/`. The owner's framing: value does not mean packing the most information into the fewest words. Make it intelligible first.
+
 ## Completed / Archived
 
 ### ~~[EPIC-001] Project Initialization Strategy~~ ✅

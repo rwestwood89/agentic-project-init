@@ -224,6 +224,22 @@ CODEX_SKILL_HARNESS_BLOCKS[render-dispatch]="$(cat <<'HARNESS_BLOCK'
 HARNESS_BLOCK
 )"
 
+CODEX_SKILL_HARNESS_BLOCKS[reviewer-spawn]="$(cat <<'HARNESS_BLOCK'
+Call `spawn_agent` with `fork_turns: "none"`, stated explicitly — the reviewer is fresh every time,
+and the default `"all"` would hand it the conversation this pass depends on it never having seen.
+Set `model` to a mid-size model rather than the smallest available: a small model matches the rules
+stated in the prompt file but does not reliably match the recorded examples, which is most of what
+this pass is for. Pass a `task_name` like `review_{slug}` — lowercase letters, digits, and
+underscores only.
+HARNESS_BLOCK
+)"
+
+CODEX_SKILL_HARNESS_BLOCKS[notes-relay]="$(cat <<'HARNESS_BLOCK'
+Send the sentence below to the writer as a follow-up task (`followup_task`), addressed to the agent
+identity you recorded at its spawn or dispatch.
+HARNESS_BLOCK
+)"
+
 CODEX_SKILL_HARNESS_BLOCKS[carried-fork]="$(cat <<'HARNESS_BLOCK'
 **Carried**: you were spawned with `fork_turns: "all"`, so the conversation's completed turns came
 with you. What the coordinator produced during the turn that spawned you did not, so treat the spawn

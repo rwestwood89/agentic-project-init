@@ -1,10 +1,19 @@
 # Current Work
 
-**Last Updated**: 2026-08-26
+**Last Updated**: 2026-09-02
 
 ---
 
 ## Active Work
+
+### mental-model-reviewer — reviewer subagent + prompt-versus-feedback split
+- Epic MENTAL-ALIGN-V2, Item 6. **Phases 1-3 of 4 implemented 2026-09-02, uncommitted on `main`. Phase 4 (install + live run) is all that remains.** Spec revised after spec-review; product-lens CLEAR; ADR 0012 filed and amended; design approved. `.project/active/mental-model-reviewer/{spec,spec-review,product-lens,design,plan}.md`.
+- **Built.** `review.md` (new sibling, the reviewer's instruction file with a three-pass reading method). The split: ten rules into `design_synthesis.md`, nine into `visualize.md`, both with `## Before delivering`; the two shared feedback files rewritten as 8 and 5 entries in the D9 shape, every one carrying a `From:` line traced to a real echo-workspace run. `SKILL.md` 370→420 lines: new Step 4 (the review pass), old 4-10 renumbered 5-11 with all nineteen cross-references updated, read set narrowed to the prompt, promotion reduced to a pointer. Two harness blocks (`reviewer-spawn`, `notes-relay`) registered in `build-codex-pack.sh`; dist `review.md` assertion added; `harness-phrases.md` has both rows.
+- **Owner decision, 2026-09-02: the reviewer runs on sonnet, not haiku.** Amends the spec `[NEED]` ("a small model"), design D6, and ADR 0012, all three recorded with the owner's original verbatim quote left intact. Reason: the isolation that requirement protected — no sources, no conversation — comes from the reviewer's brief, not the model size.
+- **The evidence behind it.** Six planted-fixture runs, all kept in the work-item folder (`fixture-planted-synthesis.md`, `fixture-expected-notes.md` with the run log, six `*.review.md`). Haiku never cited an example entry in any run and the split made it worse; sonnet cites entries by name, finds both plants, and found true defects nobody planted. Bet B1 true at sonnet, false at haiku; B2 holds (every Appendix A row passed the placement test). `review.md` was adjusted twice during Phase 1 and never after; the fixture was never adjusted.
+- **Voice pass 2026-09-03:** the owner rejected the prose across every artifact. Fresh reviewers checked all six skill files against `working-voice.md` in three rounds: ~125 findings, then 7, then 0. About 130 sentences rewritten. Both prompt files now open with an explanation of how a person reads. `[VOICE-001]` in the backlog covers the same sweep for `.project` artifacts and the other commands.
+- **Green:** Phase 2 stencil (11), Phase 3 stencil (11), `test_codex_orchestrator_pack.sh`, `test_docs.sh`, `git diff --check`.
+- **Installed on both runtimes 2026-09-03.** Claude runs from the directory symlink; Codex copy refreshed at `~/.agents/skills/my-mental-model/`. Acceptance fixture passes (`fixture-run-final2.review.md`, both plants, all notes cited). **Next: the owner's live `/_my_mental_model` run in `~/echo-workspace`**, watching that the coordinator opens no feedback file and no `.review.md`, and that a notes file lands beside the synthesis and beside each HTML. Then `/_my_audit`.
 
 ### product-intent-ledger — ADR-like ledger of implemented product promises
 - **Audit remediated (2026-08-12) per owner dispositions, uncommitted on `anchor-on-the-point`; pending re-audit.** Owner calls: pointer-entry title restates the promise one-liner with a citation-only body (audit-F1 BLOCK → resolved, README cross-seam reworked); no withdrawal/retire status — supersession covers disappearance, D3 unchanged (audit-F2 INTENDED-CHANGE); audit-F3 disposed citing D2's recorded duplication acceptance. Ledger gate CLEAR pending re-audit confirmation.

@@ -8,6 +8,7 @@
 - 0008 · Product-ledger touch-point map: reads at session start + lens SOURCES, write at close · seams: claude-pack, project-pack, product-lens
 - 0009 · Pack capabilities ship as directory skills, not commands with shared scripts · seams: claude-pack, scripts/setup-global.sh, codex-overrides, future capabilities
 - 0011 · Skill directories go through the Codex adapter, same as commands · seams: scripts/build-codex-pack.sh, scripts/setup-codex.sh, codex-overrides/config.sh, claude-pack/skills, future native skills
+- 0012 · Mental-model skill: prompt holds the rules, feedback holds examples, an advisory reviewer pass runs inside each step · seams: claude-pack/skills/_my_mental_model, scripts/build-codex-pack.sh, project-pack .project/mental-alignment feedback tiers
 
 - 0002 · Decision-record touch points: read at concept-design and design, write at acceptance and close · seams: claude-pack/commands · amended
 - 0003 · Product-lens adds product-truth touch points and can file decision records · seams: claude-pack/commands, project-pack · superseded → 0004
