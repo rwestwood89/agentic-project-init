@@ -99,39 +99,22 @@ These bind every page.
 9. A long page has persistent navigation the reader can reach from anywhere.
 10. Your headings, dropdown summary lines, and prose follow the writing rules in the `## Rules` section of `design_synthesis.md`, beside this file. Read it.
 
-## Carry the register and the provenance through
+## Leave provenance in the synthesis
 
-The synthesis grades its claims. Carry the grades; do not launder them.
+The synthesis's provenance grades are internal traceability. Do not carry them into the HTML in any form. Do not display the tags, translate them into audience-facing authority labels, or mention owner-versus-agent provenance. The HTML is an explainer for its audience, not a rendering of the project's capture system.
 
-- **Label the register.** Where current, intended, and proposed behavior sit side by side, say which
-  is which. A design's intended invariant and the code's current behavior are different facts.
-- **Preserve provenance and force.** An `[OWNER]` decision, an `[AGENT]` inference, an `[EXAMPLE]`,
-  a `[REFERENT]` — each keeps its grade and its weight (vocabulary:
-  `claude-pack/rules/capture-fidelity.md`). An agent inference must never read as settled truth.
-- **Keep unreconciled disagreements unreconciled.** Where the synthesis showed a conflict between
-  sources and parked the conclusion that depended on it, show the same conflict and park the same
-  conclusion.
+Keep substantive distinctions the audience needs to understand the subject. Current, intended, and proposed behavior remain different facts. Real uncertainty and unresolved disagreements remain visible. Present those distinctions directly, without explaining where their authority grade came from.
 
 ## Output shape
 
 The brief says `checkpoint` or `plain document`.
 
-- **Checkpoint**: render the synthesis's metadata block and its `# Judgment` section into the HTML.
-  Keep the judgment visibly separate from everything else — agent judgment must never look like
-  system truth. The metadata is what lets a later reader see the snapshot is stale.
+- **Checkpoint**: render only the question and date from the synthesis metadata, plus its `# Judgment` section. Keep judgment visibly separate from the explanatory body. Omit the context policy, evidence list, code-inspection record, limits, provenance grades, and source paths.
 - **Plain document**: omit both. Do not summarize them, do not fold them into the narrative, do not
   tuck them in a footer. The coordinator reads the judgment back in the terminal instead.
 
 Under either shape the HTML holds no second copy of anything. You render that content once, or not
 at all.
-
-## Name your sources
-
-Somewhere the reader can find it, list the sources your detail layer actually drew on, by path. The
-owner needs to see how far you reached.
-
-If the brief restricted what you could read, say so on the face of the document: what you were
-restricted to, and that the detail layer is bounded by those sources. A reader who does not know you were restricted will take a missing topic as evidence that it does not exist.
 
 ## Ignore the `# Renders` section
 

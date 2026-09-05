@@ -79,6 +79,30 @@ Avoid. Delete the sentence on sight. Do not rewrite it into a better version of 
 - Good: delete both sentences. The box is visible.
 - From: 2026-08-25, HTML render
 
+## Opening with no reason to care
+
+Prefer. Establish why the subject exists and why the reader should care. Facts should support that motivation, not replace it.
+
+- Bad: `A hardware engineer describes a plant once, in a model, and gets a runnable calculator out of it. The model holds the components, their attributes, and the formulas between them. The generated Python computes outcomes from design parameters: cost, net power, and the levelised cost of electricity (LCOE).` — the owner: "this is SO DRY. ... its purely descriptive: <fact>. <fact>. <fact>." and "in this first section, the only thing that touches on WHY (/ why is this intersting) is the comparison to 1costinFE"
+- Good: no replacement prose was given. The owner asked: "START WITH WHY. What is the motivating problem? Why is this important? Why does this exist? Why is the problem solved the way it is? Why is our solution a good one? Why should anyone care?" They also warned: "let's not overindex on this and clutter the whole write-up."
+- From: 2026-09-05, synthesis
+
+## Structure presented as an inventory
+
+Prefer. When a component split or other structure matters to understanding, explain why that structure exists before listing its members. Do not manufacture a why for every fact.
+
+- Bad: `The model holds the components, their attributes, and the formulas between them.` — this says what is present without explaining why the system needs that structure.
+- Good: no replacement prose was given. The owner wanted the explanation to answer: "Why is this needed? (design iterations in a hardware-centric modeling language, but we need a way to evaluate the model; our goal is "studies": varying engineering design decisions are parameters to observe the effects; therefore, we decided we wanted standalone python to be the target) What are the core problems to be solved? (parsing and interpreting the model; wiring the models (definitions versus instances); symbolic conversions; supporting functional blocks not represented in SysMLv2. e.g. in the future, could substitute a numerical package. (the hand calcs))"
+- From: 2026-09-05, synthesis
+
+## Repetitive sentence structure
+
+Avoid. A run of same-shaped sentences makes the writing repetitive and bland. Vary sentence structure to make it more interesting to read.
+
+- Bad: the opening quoted above — the owner: "there is zero variance to the writing. it's like every sentence has the same pattern and rythm"
+- Good: no replacement prose was given. The owner asked: "writing becomes too repetitive and bland. try to vary sentence structure to make it more interesting to read"
+- From: 2026-09-05, synthesis
+
 ## Clause the reader already has
 
 Avoid. Cut it. The reader already has it if an earlier sentence said it, or if the layout shows it.

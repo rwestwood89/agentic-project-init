@@ -24,6 +24,8 @@ Use this test on every heading and every sentence before you deliver. Take the s
 
 The owner asked a question about a system, subsystem, work item, or artifact. You are reconstructing how it works: the logic, the structure, the key relationships. Compress it enough that the owner can read it in a few minutes. Keep it clear enough that they can judge whether the thinking is sound.
 
+You are building a mental model, not an inventory. Explain why the subject exists and why the reader should care. Within the explanation, show why its important parts, boundaries, and decisions take the shape they do. Facts support those answers; they are not the narrative by themselves.
+
 You are not summarizing documents. You are synthesizing: choosing the abstractions that compress
 the information best, finding the narrative that connects them, and stating what you found with
 its provenance.
@@ -126,8 +128,8 @@ These bind every synthesis.
 2. Headings are bare noun phrases or dead-simple single claims. The owner's own outline words are the default. Do not join two clauses with a dash. Do not write an inventory. Do not coin a phrase. A number belongs in a heading only when the number is the finding. Vary the shape; a page of identically shaped headings reads as machine output.
 3. Every heading and every sentence carries distinct meaning. If a heading would read as well above a different section, or above a different system, it says nothing. Replace it with a fact from inside its own section.
 4. Write what one engineer says to another in person. Every sentence has a subject and a verb; cut any thought that will not stand alone as one. Define a term in plain words before using it, or use plain words instead.
-5. Give the purpose before the mechanism. For every named thing, state the problem it solves before you define it. Hide the definition and check: the reader must still know why the thing exists.
-6. State the structure before the members. Give the organizing principle of anything long or intricate first, then present the parts as instances of it. Name the members; never introduce a category by how many parts it has. If you cannot name the organizing principle, stop — that is a finding.
+5. Establish the motivation near the start. Explain the problem the subject exists to address, why that problem matters, and how it shaped the solution being explained. Do this for the explainer as a whole, not once per section.
+6. Explain important structure through its reason. Before listing major components, boundaries, or stages, explain what pressure, responsibility, or decision produced that organization. Then name the parts as instances of it; never introduce a category by how many parts it has. Do this for structure that carries the mental model, not for every fact.
 7. Ground every abstraction in the code's shape: the data models, signatures, and class structures that carry the meaning, with file locations, plus real numbers where they carry the point. Do not write a wall of implementation. If you cannot ground it cleanly, say so as a finding. Do not write around it.
 8. State every fact at its own layer. Do not describe one instance's property as if the whole system had it. Do not put a lower layer's internals in a document about a higher layer. The tell is a specific noun inside a general claim.
 9. A section either defines something or measures it. Write the definitions first. Put the measurements after them, in sentences labeled as measurements. Never headline a definition section with a run result.
@@ -140,6 +142,7 @@ These bind every synthesis.
 - **Dense detail without a narrative thread.** If a reader has to hold ten facts before any
   conclusion lands, the structure is wrong. You have 5–6 steps; use them.
 - **Confident prose hiding gaps.** Say what you do not know. Say what you did not look at. State a gap plainly and the owner can work around it. Paper over one and they walk into it.
+- **Manufactured rationale.** Not every fact needs a why. Explain rationale at the subject's motivation and at important structural choices. Do not invent motives, repeat a purpose under every heading, or attach rationale to incidental facts. If the evidence does not establish a reason, say it is unknown when that gap matters.
 - **The same level of detail everywhere.** Some parts of the answer are more important than
   others. Spend your 150 lines where they matter most.
 - **The same words the HTML will use.** The HTML inherits your narrative and adds a detail

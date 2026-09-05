@@ -211,8 +211,8 @@ HARNESS_BLOCK
 CODEX_SKILL_HARNESS_BLOCKS[read-synthesis-file]=""
 
 CODEX_SKILL_HARNESS_BLOCKS[correction-dispatch]="$(cat <<'HARNESS_BLOCK'
-Send the correction to the synthesis agent as a follow-up task (`followup_task`), addressed to the
-agent identity you recorded at spawn, in the owner's own words.
+Send the fixing prompt as a follow-up task (`followup_task`), addressed to the identity you recorded
+for the agent that wrote the artifact.
 HARNESS_BLOCK
 )"
 
@@ -231,12 +231,6 @@ Set `model` to a mid-size model rather than the smallest available: a small mode
 stated in the prompt file but does not reliably match the recorded examples, which is most of what
 this pass is for. Pass a `task_name` like `review_{slug}` — lowercase letters, digits, and
 underscores only.
-HARNESS_BLOCK
-)"
-
-CODEX_SKILL_HARNESS_BLOCKS[notes-relay]="$(cat <<'HARNESS_BLOCK'
-Send the sentence below to the writer as a follow-up task (`followup_task`), addressed to the agent
-identity you recorded at its spawn or dispatch.
 HARNESS_BLOCK
 )"
 

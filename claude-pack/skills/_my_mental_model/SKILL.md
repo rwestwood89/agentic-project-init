@@ -43,7 +43,7 @@ before doing anything else — one or two sentences saying what you chose and wh
 
 ### Output shape — what the eventual HTML will contain
 
-- **Checkpoint**: the HTML shows the run's metadata and the judgment section. Use when the request is about
+- **Checkpoint**: the HTML shows the question, date, and judgment section. Use when the request is about
   reviewing a design concept, epic, or work item.
 - **Plain document**: judgment is read back in the terminal instead. Use for general questions
   about how something works.
@@ -251,13 +251,12 @@ Read the HTML and check it against `visualize.md`:
 
 - **The one failure that matters**, applied section by section: name what this HTML has that the
   synthesis does not. A section that is the same words laid out nicer has failed.
-- **The output shape.** Checkpoint renders the metadata block and the `# Judgment` section; plain
+- **The output shape.** Checkpoint renders only the question and date from metadata plus the `# Judgment` section; plain
   document omits both, and does not summarize them, fold them into the narrative, or tuck them in a
   footer.
 - **The hard safety limits.** No `<script>`, no event handlers, no forms, no `iframe`, `object`, or
   `embed`, no remote URLs. No source text pasted wholesale, no credential-like material.
-- **Provenance carried through.** Grades kept, registers labeled, unreconciled disagreements left
-  unreconciled.
+- **No provenance in the HTML.** The render neither displays nor translates provenance grades, tags, or owner-versus-agent authority. It keeps only substantive distinctions the audience needs, such as current versus proposed behavior, uncertainty, and unresolved disagreements.
 
 If this check gives you reason to believe another cycle would improve the render, return to Step 6 and then run a fresh review through Step 4. Otherwise give the owner the link when you would stand behind the page.
 
@@ -286,7 +285,7 @@ owner quality: <the owner's words, or `not asked`>
 
 ## Step 10: Read the judgment back (plain document only)
 
-Under checkpoint shape the HTML carries the metadata and the judgment, so there is nothing to do
+Under checkpoint shape the HTML carries the audience-facing snapshot context and the judgment, so there is nothing to do
 here.
 
 Under plain-document shape the HTML omits both. Read the synthesis's `# Judgment` section back to the
