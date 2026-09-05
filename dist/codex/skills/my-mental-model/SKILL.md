@@ -8,10 +8,11 @@ Generated from `claude-pack/skills/_my_mental_model/SKILL.md`. Rebuild this file
 
 # Mental Alignment — Coordinator
 
-You are the coordinator for the mental-alignment skill. You do five things:
+You are the coordinator for the mental-alignment skill. You do six things:
 
 - Classify the owner's request.
 - Spawn a synthesis agent.
+- Run the writer-and-reviewer loop.
 - Present its output at a mandatory pause.
 - Route the render the owner chooses.
 - Record what the run produced.
@@ -101,20 +102,17 @@ Pass a `task_name` like `synthesis_{slug}` — lowercase letters, digits, and un
 **record the agent identity the spawn returns**. It comes back in the form `/root/synthesis_{slug}`,
 and that value, not the name you asked for, is what addresses the agent later.
 
-## Step 4: The review pass
+## Step 4: Produce a review
 
-A reviewer reads the finished artifact against the standard with no knowledge of the system, and leaves notes for the agent that wrote it. The pass is advisory. Nothing it produces reaches you or the owner. You run the same pass on each render in Step 8, with the render's values.
-
-**You never open the notes file.** Confirm it exists, forward its path, and stop there. The writer triages the findings.
+A fresh reviewer reads the finished artifact against the writer's prompt and feedback with no knowledge of the system. It owns producing a useful review that identifies every issue and violation it finds so the original writer can address them. You run this step for the synthesis and for each render in Step 8.
 
 ### Run the pass
 
 1. **Confirm the artifact exists** at the path you assigned. A named agent's turn output does not reliably reach you, so check the path yourself.
-2. **Spawn the reviewer** with the brief below, and a notes path of `{artifact stem}.review.md` beside the artifact.
-3. **Confirm the notes file exists.** If it does not, say so in one sentence and go straight to your own check. The pass is advisory, and a missing one costs nothing but the pass.
-4. **Relay the path** to the agent that wrote the artifact, addressed to the handle you recorded when you spawned or dispatched it.
-5. **Wait for its reply.** The writer amends what it judges right and replies that the artifact is final. It does not tell you what it changed, and you do not ask.
-6. **Re-confirm the artifact exists**, then continue to your own check.
+2. **Choose the review path.** The first review is `{artifact stem}.review.md`; later reviews are `{artifact stem}.review-2.md`, then `-3`, and so on. Never overwrite an earlier review.
+3. **Spawn the reviewer** with the brief below and the chosen review path.
+4. **Confirm the review file exists.** If it does not, report the failure and continue to Step 5 with the artifact and the failed review attempt as context.
+5. **Continue to Step 5.**
 
 ### The reviewer brief
 
@@ -129,7 +127,7 @@ shared feedback:        <base>/feedback/synthesis.md (synthesis) |  <base>/feedb
 project-local feedback: .project/mental-alignment/feedback-<synthesis|html>.md
                         (if present; otherwise "none for this project")
 your instructions:      <base>/review.md
-notes output path:      <absolute path to {artifact stem}.review.md>
+review output path:     <absolute path chosen for this review cycle>
 ```
 
 No source paths, no context policy, no conversation.
@@ -144,70 +142,25 @@ this pass is for. Pass a `task_name` like `review_{slug}` — lowercase letters,
 underscores only.
 It returns a path. You will not address it again.
 
-### Relay the notes
+## Step 5: Decide whether another cycle would improve the artifact
 
-Send the sentence below to the writer as a follow-up task (`followup_task`), addressed to the agent
-identity you recorded at its spawn or dispatch.
-Send this text as written. Change nothing but the paths:
+Read the artifact and, when the review succeeded, the review file. For a failed review attempt, use the failure as context.
 
-```
-Review notes for <artifact filename> are at <notes path>. Read them, apply what you judge right,
-and reply when the file at <artifact path> is final. Do not say what you changed.
-```
+You remain accountable for the artifact's quality. Decide from the artifact, the review, and the context you already have whether another writer-and-reviewer cycle would improve it. The review is evidence, not a gate: you may continue after a favorable review, and you may stop with findings when another cycle would not improve the artifact. Do not ask the reviewer to make the stopping decision.
 
-The writer holds the sources and decides which notes to act on.
+If another cycle would improve the artifact, go to Step 6. If the loop stops on a synthesis, go to Step 7. If it stops on HTML, continue with "Confirming a render" in Step 8.
 
-## Step 5: Check the synthesis against the standard
+## Step 6: Send the artifact back to its writer
 
-When the synthesis agent completes, read the synthesis file it wrote.
+Compose the fixing prompt yourself from the context you already have. It must reference the current review, tell the original writer to revise the artifact at its existing path, and state the outcome you want from this cycle. The skill does not prescribe the rest of the prompt.
 
-Review it against the standard before the owner sees it:
-
-- **`design_synthesis.md`**, which you read in Step 3. Check the synthesis against each part of it:
-  - The regions, in order: metadata, TLDR, narrative body, judgment, optional appendix.
-  - The narrative body: a numbered outline of 5–6 top-level sections, important things first, reasoning a reader can judge, and no more than 150 lines.
-  - The `## Rules` section.
-  - The failures named under "What makes a bad synthesis."
-- **The project's writing rules**, already loaded in your context.
-
-Your check is prompt compliance. The reviewer already checked the artifact against the recorded instances, and the writer already decided what to do about them.
-
-**Sweep the class.** When you find one instance of a defect, look for the rest of that class across the document before you send anything back. Name three instances and you get three fixes. Name the class and you get the whole document.
-
-**Enforce what is written down.** Send back anything that breaks a written rule. You may also disagree with the content's judgment: an abstraction you would have chosen differently, a conclusion you read another way. That is not a defect. Give it to the owner at the pause as your read, alongside the synthesis.
-
-If you found defects, go to Step 6. If it meets the standard, go to Step 7.
-
-## Step 6: The correction gate
-
-You run this gate twice. First on the defects you found in Step 5, before the owner sees the synthesis. Then on any correction the owner gives at the pause. Use the same mechanism both times. A correction lands
-in the file before any render starts, because both paths of a comparison have to read the same
-corrected file.
-
-What you send depends on where the defect came from. An owner correction goes in the owner's own
-words. When the defect is your own finding, name the rule it breaks, list the instances you found, and ask the agent to sweep the class.
-
-Send the correction to the synthesis agent as a follow-up task (`followup_task`), addressed to the
-agent identity you recorded at spawn, in the owner's own words.
-Ask it to amend the synthesis file at its existing path and to confirm when done. Then re-read the
-file and check that the change is there.
-
-**You never write synthesis content.** That includes a transcription, a one-word fix, and the frontmatter.
-The agent that wrote a synthesis is the only thing that amends it, and you never hand the correction
-to a different agent instead. If the send fails or the agent cannot be reached, report the failure
-plainly and stop the run. The synthesis file stands on disk as it is; a new run can start from the
-same question.
-
-**Two rounds, then stop.** If the agent still has not met the standard after two rounds on the same defect, stop sending. Tell the owner plainly what is still wrong and what you asked for. Sending a third time does not enforce anything.
-
-**Answer a voice rejection with an exemplar.** If the owner rejects headings or prose on voice, ask them for one heading or paragraph they consider correct, and send that as the correction. Send a longer list of prohibitions instead and the agent fixes the line you quoted, then writes the same defect somewhere else.
-
-If the correction came from your own findings, go to Step 7. If it came from the owner, go to Step 8.
+Send the fixing prompt as a follow-up task (`followup_task`), addressed to the identity you recorded
+for the agent that wrote the artifact.
+The writer owns the artifact and is the only agent that may revise it. If the send fails or the original writer cannot be reached, report the failure plainly and stop the run. When the writer replies, confirm the artifact still exists, then return to Step 4 for a fresh review at the next available review path.
 
 ## Step 7: Present the synthesis and pause
 
-Present the full synthesis to the owner in the conversation. It has been through Step 5, so what you
-hand over is work you would stand behind.
+Present the full synthesis to the owner in the conversation. It has completed the review loop, so what you hand over is work you would stand behind.
 
 This is the mandatory pause. The owner reads the synthesis, may correct it, and then chooses the
 render path:
@@ -221,8 +174,7 @@ render path:
 Offer to record synthesis feedback here too, while the owner is already reading the synthesis. Step 11 gives the format. A correction to this synthesis and a lesson for the next run are different
 things — ask which one you are hearing. Never convert a correction into a feedback entry on your own.
 
-Present the options and wait for the owner's answer. If they correct the synthesis, take the
-correction through Step 6 first. Otherwise continue to Step 8.
+Present the options and wait for the owner's answer. If they correct the synthesis, send that correction through Step 6 in their own words; the fixing prompt still references the latest review. Otherwise continue to Step 8.
 
 ## Step 8: Route the render
 
@@ -280,17 +232,17 @@ Note the wall clock at dispatch and at completion for each render. You record it
 If a resumed send fails, or the agent answers but has plainly lost its context, say so and offer the
 fresh path. A comparison that degrades this way becomes a fresh-only render. Report it as a fresh-only render.
 
-### The review pass
+### The review loop
 
-Run the pass from Step 4 on each HTML, after the file exists and before you confirm the render, with these values.
+Run Steps 4–6 on each HTML after the file exists and before you confirm the render, with these values.
 
 - register: `HTML`
 - prompt file: `<base>/visualize.md`
 - shared feedback: `<base>/feedback/html.md`
 - project-local feedback: `.project/mental-alignment/feedback-html.md`
-- notes path: `{html stem}.review.md`, beside the HTML
+- first review path: `{html stem}.review.md`, beside the HTML; later cycles use the numbered paths from Step 4
 
-Relay to the handle you recorded when you dispatched that render — the synthesis agent for a resumed render, the fresh render agent for a fresh one. On a comparison the pass runs once per HTML, each with its own notes file, before either page is presented.
+The original writer is the handle you recorded when you dispatched that render: the synthesis agent for a resumed render, or the fresh render agent for a fresh one. On a comparison, complete the loop for each HTML before either page is presented.
 
 ### Confirming a render
 
@@ -308,11 +260,7 @@ Read the HTML and check it against `visualize.md`:
 - **Provenance carried through.** Grades kept, registers labeled, unreconciled disagreements left
   unreconciled.
 
-Send defects back to the agent that wrote that render, the way you send a correction in Step 6, addressed to the handle you recorded when you dispatched it. You do not edit the HTML yourself, and
-the two-round limit applies here too. On a comparison, review each render against the same standard
-before you present either.
-
-The owner gets the link when you would stand behind the page.
+If this check gives you reason to believe another cycle would improve the render, return to Step 6 and then run a fresh review through Step 4. Otherwise give the owner the link when you would stand behind the page.
 
 ## Step 9: Record the readings
 
