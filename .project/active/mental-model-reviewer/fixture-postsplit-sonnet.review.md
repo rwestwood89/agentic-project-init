@@ -1,0 +1,18 @@
+# Review notes — fixture-planted-synthesis.md
+
+artifact: /home/rwestwood/agentic-project-init/.project/active/mental-model-reviewer/fixture-planted-synthesis.md
+question: "How does Cutwater decide to reject a request?"
+reviewed against: design_synthesis.md, feedback/synthesis.md
+
+## Things to reconsider
+
+1. Section 2.3 ("The allowance drains and refills") decomposes the four-step refill computation in place, inside the section that raised it, instead of giving it its own numbered section — (cites: design_synthesis.md, narrative body rules, "A concept whose backing is itself multi-step reasoning gets its own numbered section further down. Point to it from the step that raised it; do not decompose it in place."). The same passage also introduces the steps by their count ("computed in four steps. First... Second... Third... Fourth...") rather than naming what the steps are, and packs a four-step sequential process into one prose paragraph rather than a list or table — (cites: feedback/synthesis.md, "A category introduced by its count"; design_synthesis.md Rule 5, "never introduce a category by how many parts it has"; Rule 10, "If something cannot be explained in three or four short phrases, prose is the wrong medium. Use a table, a list, or a diagram.").
+2. Section 2's topic sentence, "The remaining budget decides whether the call goes through," gives an abstraction (the remaining budget) a verb that belongs to a person or mechanism — (cites: feedback/synthesis.md, "An abstraction performing a verb," bad example "stored energy decides the check").
+3. Section 3's heading, "A rejection tells the caller when to come back," has the same shape: an abstraction (a rejection) as the subject of a verb (tells) that belongs to a person — (cites: feedback/synthesis.md, "An abstraction performing a verb," which names headings as the most common location for this pattern).
+4. Two sentences add a negative clause for cadence rather than because the absence is the finding: section 2.1's "The tenant id selects a row in the budget store and nothing else," and section 4's "admit.py forwards the request and records nothing" — (cites: feedback/synthesis.md, "A negative clause added for rhythm," bad examples "and nothing else" / "records nothing"; the entry's own good example shows the fix is to attach the consequence and make the absence the whole sentence, which neither instance does).
+5. The TLDR uses the bare term `429` with no plain-language gloss, while the rest of the same bullet already renders the mechanism in plain words ("a header saying how many seconds to wait") — (cites: design_synthesis.md, TLDR section, "in plain, simple English: no loaded terms, no term the reader has not already been given").
+6. Section 4 states the mechanism ("admit.py forwards the request and records nothing") before the purpose ("an outage in the limiter should not become an outage in the product") — (cites: design_synthesis.md Rule 4, "Purpose before mechanism. For every named thing, the problem it solves comes before its definition.").
+
+## Techniques worth considering
+
+7. Section 2.3's aside on why a high-error tenant is scaled down ("the argument in the design document is that a failing tenant is usually retrying, and retries are the cheapest traffic to shed") is exactly the kind of few-sentence answer to a less-familiar reader's question that the prompt asks to mark as a dropdown, and it is left as plain inline prose instead — (cites: design_synthesis.md, narrative body rules, "Where a less-familiar reader would ask a question that answers in a few sentences, write the answer inline and mark it as a dropdown. The render agent places it there.").

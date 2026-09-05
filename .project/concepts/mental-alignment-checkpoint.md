@@ -287,6 +287,13 @@ point, since agent-written feedback usually needs that rewrite to be general eno
 - "The owner selects context policy and output mode as inputs" → classification from the request; and "a
   command in `claude-pack/commands/`" → a skill directory.
 
+**Superseded (2026-09-02, owner-directed; ADR 0012):**
+
+- "A run reads both" feedback tiers → the writer reads the prompt and the project-local tier and never the shared tier; a small-model reviewer with no domain context reads the prompt and both tiers and returns advisory notes to the writer inside each step.
+- Promotion "targeting the shared feedback file" only → promotion sorts an entry: a generalized rule goes into the instruction file, rewritten by the owner; an example goes into the shared feedback file; the entry leaves the project-local file. The instruction files are the rules; the feedback files are examples.
+- "No automated checks of any kind" → narrowed to mechanical checks and fixtures. The reviewer pass is advisory, the writer decides what to apply, and nothing from it reaches the owner or the coordinator. The coordinator's own send-back gates (2026-08-26) are recorded under the same narrowing.
+- "Sequencing beyond two steps" stays out of scope; the reviewer pass runs inside the existing synthesis and render steps.
+
 **Needs spec next:**
 
 - Each step's inputs, outputs, boundaries, and what the synthesis contains per section.

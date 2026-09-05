@@ -350,6 +350,8 @@ does_not_contain "$SKILL_DIST/SKILL.md" 'SendMessage'
 contains "$SKILL_DIST/SKILL.md" 'fork_turns: "none"'
 # The adapter reached a sibling, not only the entry point.
 contains "$SKILL_DIST/design_synthesis.md" 'fork_turns'
+# The reviewer's instruction file is a sibling too, and the review pass is dead without it.
+[ -f "$SKILL_DIST/review.md" ] || fail "review.md did not reach dist"
 # The command lane's slash rule stays off skill bodies: this real path must survive intact (D8).
 contains "$SKILL_DIST/SKILL.md" 'claude-pack/skills/_my_mental_model'
 pass "harness blocks substituted across the tree"

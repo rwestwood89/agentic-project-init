@@ -35,6 +35,19 @@ line 87 replaced text line-for-line, so those seven line numbers are still corre
 | `SKILL.md:183` | "a named agent's turn output does not reliably reach you" | A runtime fact about Claude (design Appendix A). Item 1 found the same on Codex, so the claim holds on both — but the phrasing is Claude's. |
 | `SKILL.md:197, 206` | "what the runtime stated" / "Neither runtime reports a per-agent count today" | Already runtime-aware and true on both. Listed so the adapter leaves it alone rather than rewriting it into a Codex-only claim. |
 
+## Reviewer-loop phrases
+
+Item 6 added the reviewer spawn. The later review-loop change reuses the existing correction dispatch for coordinator-authored fixing prompts. Both spans are registered in `CODEX_SKILL_HARNESS_BLOCKS` (`scripts/build-codex-pack.sh`). They substitute rather than ship Claude wording, so the table records what each span means rather than what needs translating later.
+
+| Where | Phrase | What it means, for translation |
+|---|---|---|
+| `SKILL.md` Step 4, `harness-block: reviewer-spawn` | "the `Agent` tool with no `subagent_type` … and `model: \"sonnet\"`" | Spawn a fresh agent on a chosen model. Codex's equivalent is `spawn_agent` with `fork_turns: "none"` plus `model`, which is valid only alongside `"none"` or a turn count. The size is load-bearing, not incidental: the Phase 1 fixture runs showed a small model matches stated rules and does not match recorded examples, so the Codex text says "a mid-size model" rather than "the smallest available". |
+| `SKILL.md` Step 6, `harness-block: correction-dispatch` | "Send the fixing prompt with `SendMessage`, addressed to the handle you recorded for the agent that wrote the artifact" | Send a coordinator-authored follow-up turn to the original writer. The prompt references the current review and asks that same agent to revise its artifact. |
+
+`review.md` needs no entries. Like `visualize.md`, the reviewer's instruction file names no tool and
+no agent mechanic — it is about what to read, what to look for, and what to write — so it reads the
+same on either runtime.
+
 ## `visualize.md` needs no entries
 
 The render agent's instruction file names no tool and no agent mechanic. It is about what to read,

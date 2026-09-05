@@ -354,6 +354,7 @@ comparison mechanism, and the feedback system — completing the full end-to-end
 
 **Non-Goals / Out of Scope**:
 - Automated quality checks on the output — owner judges, feedback is the loop
+  — *narrowed 2026-09-02 by Item 6 (ADR 0012): an advisory reviewer pass runs inside each step; mechanical checks and fixtures stay out*
 - Moving HTML into `docs/` — that's the owner's manual act
 - Migrating the old single feedback file — deprecated in place, new runs use the new system
 - Wiring the Codex resumed-render path — Item 5. Item 1 proved it works; the wiring waits for the lane.
@@ -367,6 +368,7 @@ comparison mechanism, and the feedback system — completing the full end-to-end
 - [ ] New feedback lands project-local, attributed to run and HTML version; shared starters ship with the skill
   — starters ship; recording untested
 - [ ] Promotion targets the shared feedback file; copy-install promotion fails closed
+  — *amended 2026-09-02 by Item 6 (ADR 0012): promotion sorts a rule into the instruction file and an example into the shared feedback file*
 
 **Location**: `.project/active/render-switch-feedback/`
 
@@ -432,6 +434,22 @@ uses.
 
 **Deliverables**:
 - `.project/active/directory-skill-build-pattern/plan.md` (spec, design, product-lens already written)
+
+---
+
+### Item 6: Reviewer Pass + Prompt-versus-Feedback Split (Claude)
+
+**Status**: Spec revised after spec-review 2026-09-02; product-lens CLEAR; ADR 0012 filed. Design next.
+**Type**: Implementation
+**Dependencies**: Items 3 and 4 (amends both); Item 5 for the Codex substitution of the reviewer spawn
+**Required Reading**:
+- `.project/concepts/mental-alignment-checkpoint.md` (decision 7, Non-Goals, and the "Superseded (2026-09-02)" block)
+- `.project/adr/0012-mental-model-prompt-feedback-split-and-reviewer.md`
+- `.project/active/mental-model-quality-ownership/change.md`
+
+**Objective**: The instruction files hold every generalized rule; the feedback files hold examples. A small-model reviewer with no domain context reads each artifact against the prompt and both feedback tiers and returns advisory notes to the writer inside the synthesis and render steps. The writer reads project-local feedback and never the shared tier; the coordinator reads the prompt and the artifact only. Item 3's "reads both synthesis feedback bodies" and Item 4's promotion target are superseded accordingly.
+
+**Location**: `.project/active/mental-model-reviewer/`
 
 ---
 
