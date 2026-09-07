@@ -96,6 +96,17 @@ if [[ ! "$SYMLINK_TARGET" == *"claude-pack/commands/_my_research.md" ]]; then
     exit 1
 fi
 echo -e "${GREEN}PASS: Symlinks point to correct source${NC}"
+
+if [ ! -L "$TEST_HOME/.claude/skills/_my_mental_model_v2" ]; then
+    echo -e "${RED}FAIL: V2 mental-model skill symlink not created${NC}"
+    exit 1
+fi
+V2_SKILL_TARGET=$(readlink "$TEST_HOME/.claude/skills/_my_mental_model_v2")
+if [[ ! "$V2_SKILL_TARGET" == *"claude-pack/skills/_my_mental_model_v2" ]]; then
+    echo -e "${RED}FAIL: V2 mental-model skill points to wrong source: $V2_SKILL_TARGET${NC}"
+    exit 1
+fi
+echo -e "${GREEN}PASS: V2 mental-model command installed separately${NC}"
 echo ""
 
 # Test 3: Idempotent (run again)

@@ -246,7 +246,7 @@ The original writer is the handle you recorded when you dispatched that render: 
 
 ### Confirming a render
 
-A file at the path you assigned is bookkeeping. It does not confirm the render. Check the path yourself, because a named agent's turn output does not reliably reach you, and nothing in your bookkeeping may depend on the agent's report. Then review the page.
+A file at the path you assigned is bookkeeping. It does not confirm the render. Check the path yourself, because a named agent's turn output does not reliably reach you, and nothing in your bookkeeping may depend on the agent's report. Then review the source and the rendered page.
 
 Read the HTML and check it against `visualize.md`:
 
@@ -259,7 +259,9 @@ Read the HTML and check it against `visualize.md`:
   `embed`, no remote URLs. No source text pasted wholesale, no credential-like material.
 - **No provenance in the HTML.** The render neither displays nor translates provenance grades, tags, or owner-versus-agent authority. It keeps only substantive distinctions the audience needs, such as current versus proposed behavior, uncertainty, and unresolved disagreements.
 
-If this check gives you reason to believe another cycle would improve the render, return to Step 6 and then run a fresh review through Step 4. Otherwise give the owner the link when you would stand behind the page.
+#### Visual acceptance gate
+
+Open the local HTML in a real browser and inspect every image and visual component for overlapping text, clipping, missing content, or broken layout. If anything is wrong, send it back to the original writer through Step 6 and inspect the corrected page again; do not give the owner the link until it renders correctly. If you cannot render and inspect the page, say so and do not claim it passed.
 
 ## Step 9: Record the readings
 

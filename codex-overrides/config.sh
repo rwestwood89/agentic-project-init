@@ -65,5 +65,6 @@ declare -A AGENT_DESCRIPTIONS=(
 # directory absent from this list is excluded from the Codex build with no error.
 NATIVE_SKILL_ALLOWLIST=(
   "_my_mental_model"
+  "_my_mental_model_v2"
   "show-me"
 )

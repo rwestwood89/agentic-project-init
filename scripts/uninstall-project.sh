@@ -106,7 +106,7 @@ if [ "$HAS_VENDORED" = true ]; then
 
     # Remove known skill directories
     if [ -d ".claude/skills" ]; then
-        for d in _my_mental_model show-me; do
+        for d in _my_mental_model _my_mental_model_v2 show-me; do
             [ -d ".claude/skills/$d" ] && rm -rf ".claude/skills/$d" && echo -e "${GREEN}  ✓ Removed: skills/$d${NC}"
         done
     fi

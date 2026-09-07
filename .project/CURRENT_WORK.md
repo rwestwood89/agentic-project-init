@@ -1,10 +1,24 @@
 # Current Work
 
-**Last Updated**: 2026-09-05
+**Last Updated**: 2026-09-07
 
 ---
 
 ## Active Work
+
+### mental-model-v2 — owner-informed coordinator gate
+- **Concept drafted 2026-09-06.** Reframes the coordinator as the judge and gate for every artifact iteration while keeping the fresh reviewer as isolated historical-feedback memory. Includes role and prompt coverage, full lifecycle, and a current-versus-v2 keep/transform/cut comparison. Artifact: `.project/concepts/mental-model-v2.md`.
+- **Concept design approved 2026-09-06.** Defines the scope, requirements, and draft bullet prompt for the coordinator, synthesis writer, reviewer, and render writer. It preserves current feedback routing and operational machinery, keeps objective criteria that apply to every artifact in prompts while leaving conditional examples and techniques in feedback, and changes the coordinator's stopping condition to a user-review gate. Artifact: `.project/concepts/mental-model-v2-design.md`.
+- **Implemented 2026-09-06.** V2 ships as the separate `/_my_mental_model_v2` Claude skill and `my-mental-model-v2` Codex skill. Its shortened coordinator, synthesis, reviewer, and render prompts implement the owner-informed readiness gate while preserving the existing role and feedback boundaries. The original command remains unchanged for A/B testing.
+- **[OWNER] Synthesis specificity amended 2026-09-07.** The synthesis itself must name every important thing and say exactly what it is and what is true about it. It states invariants and names the actual data structures that define important types, alongside relevant code shapes, data models, signatures, class structures, and meaningful real numbers. HTML expands those specifics rather than introducing them for the first time.
+- **[OWNER] Outcome qualities restored 2026-09-07.** V2 keeps “important stuff up front,” assumes the reader may stop anywhere, uses forward section references, and preserves the general quality standards from v1 without restoring fixed counts or prescribed thought procedures. The synthesis and render prompts now state those outcomes directly.
+- **[OWNER] Parallel outputs are isolated.** V2 writes runs, reviews, render bookkeeping, and project-local feedback only under `.project/mental-alignment-v2/`; v1 continues using `.project/mental-alignment/`. Shared feedback started as the same copied corpus but lives in the separate v2 skill tree. Owner request: “I want this v2 to be a separate command, and its outputs should not collide with the outputs of the old method -- I want to be able to A/B test them in parallel.”
+- **Green and installed.** Codex pack build, `test_codex_orchestrator_pack.sh`, `test_global_setup.sh`, `test_docs.sh`, and `git diff --check` pass. Both live runtime installs include v2. Next: run the same question through v1 and v2 and compare the paired artifacts.
+- **Decision recorded.** ADR 0013 records the coordinator gate and asymmetric feedback routing.
+
+### mental-model-visual-validation — exhaustive browser render gate
+- **Implemented 2026-09-05; corrected 2026-09-06.** The coordinator opens each HTML in a browser and inspects every image and visual component before sharing the link. Visible defects go back to the original writer. Artifact: `.project/active/mental-model-visual-validation/change.md`.
+- **Green:** Codex pack build, `test_codex_orchestrator_pack.sh`, `test_docs.sh`, generated skill validation, and `git diff --check`. The live Codex install was refreshed after validation; Claude reads the authored directory through its existing symlink.
 
 ### mental-model-review-loop — coordinator-owned iterative review
 - **Implemented 2026-09-05.** The reviewer prompt now states its outcome without a checklist, reading passes, or note quota. The coordinator reads each artifact and review, decides whether another cycle would improve the artifact, and sends a coordinator-authored fixing prompt to the original writer before a fresh review. The same loop covers synthesis and every render. Authored prompt, Codex adapter, generated distribution, and harness phrase inventory are updated; focused tests pass. Spec: `.project/active/mental-model-review-loop/spec.md`.
