@@ -252,6 +252,7 @@ Both loops follow one rule: the coordinator reads the artifact and review, then 
 - **[OWNER] 2026-09-07:** Use references to later sections when a concept appears before its full explanation.
 - **[OWNER] 2026-09-07:** Preserve outcome-quality guidance while removing prescribed thought process and arbitrary form. The outcome includes one-read clarity, claim-bearing headings, inspectable reasoning, correct abstraction layers, definitions separated from measurements, evidence-backed rationale, concrete source-grounded expansion, self-contained visuals, visible main flow, useful navigation, and explicit current-versus-intended distinctions.
 - **[OWNER] 2026-09-07:** Specificity belongs in the synthesis itself. Name every important thing and say exactly what it is and what is true about it, including the invariants and the actual data structures that define important types. Explicit grounding also includes code shapes, data models, signatures, class structures, and meaningful real numbers where relevant. The HTML expands these specifics; it does not introduce them for the first time.
+- **[OWNER] 2026-09-07:** The first v2 A/B run failed because it mirrored the owner's includes list, accumulated detail instead of selecting it, buried the strongest example, and provided no transitions between information dumps. Coverage is not structure. The synthesis must build one central mental model, choose a teaching sequence, use a strong example early, connect sections into a story, and stop adding detail once the point has landed.
 
 ## Handoff
 

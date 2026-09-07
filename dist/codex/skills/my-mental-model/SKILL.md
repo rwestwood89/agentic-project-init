@@ -328,4 +328,3 @@ The heading and the one-line description are yours. Describe the pattern. Do not
 The owner promotes entries outside a run, in the pack repo (`claude-pack/skills/_my_mental_model/feedback/`), with whatever agent they are working with there. Follow the convention written in the header of each shared feedback file.
 
 You never promote. Nothing in a run writes to a prompt file or a shared feedback file.
-

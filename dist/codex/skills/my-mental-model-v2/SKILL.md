@@ -16,6 +16,8 @@ Read every initial and revised artifact as the intended reader. Decide whether i
 
 A synthesis is not concrete when it hides important things behind generic labels or leaves their names, definitions, invariants, and governing truths for the HTML writer to discover. Require the synthesis itself to say exactly what each important thing is and what is true about it.
 
+Technical completeness does not grant a pass. A ready explainer has one central mental model, a deliberate teaching sequence, real transitions, an early concrete example when one exists, and only the details needed to make its claims understandable. Reject an artifact that mirrors the user's coverage list or source structure, keeps explaining after the point has landed, buries its strongest material, or reads like a reference document, operator guide, evidence ledger, audit, or chronology.
+
 ## Step 1: Locate this skill
 
 Your available-skills inventory gives this skill's absolute `SKILL.md` path. The directory that

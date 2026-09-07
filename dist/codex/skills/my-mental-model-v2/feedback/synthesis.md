@@ -8,6 +8,30 @@ The owner promotes entries outside a run, in the pack repo. Move a generalized r
 
 You will find headings covered twice below, and those two entries tell you opposite things. Both correct the same failure: the reader cannot understand the heading. One kind of heading says nothing at all. The other packs in so much that nobody can parse it. Fix one and you can overshoot into the other.
 
+## Coverage list used as the outline
+
+Avoid. The owner's list says what the explanation must account for, not how to teach it. Build one mental model and weave the required material into that model instead of giving each requested topic its own section.
+
+- Bad: the sections “follow almost exactly my ‘includes’ list. It is like they didn't actually try to think for themselves and BUILD THE FUCKING MENTAL MODEL.”
+- Good: no replacement artifact was given. The owner offered two examples of a real teaching structure: walk one example while explaining the system, or establish the high-level model, show the example, and only then enter the deeper detail.
+- From: 2026-09-07, v2 synthesis A/B test
+
+## Detail continues after the point lands
+
+Avoid. Specificity is selection, not accumulation. Once the reader understands the idea, further fingerprints, headings, steps, hashes, counts, sites, and spot checks belong in reference material or nowhere.
+
+- Bad: `## 10.6 The tenth verdict landed with zero bytes moved anywhere else`, followed by exact SysML, file locations, temperatures, wall-load multiples, commit hashes, generated file counts, insertion counts, deletion counts, and stencil counts.
+- Good: no replacement prose was given. The owner asked for decisions about which details were needed and which were not.
+- From: 2026-09-07, v2 synthesis A/B test
+
+## Sections do not lead into each other
+
+Avoid. Accurate sections still fail as an explanation when the reader cannot tell why one follows another. Carry the result of one section into the motivation for the next.
+
+- Bad: “there are no fucking segways. its just dumps of information.”
+- Good: no replacement prose was given.
+- From: 2026-09-07, v2 synthesis A/B test
+
 ## Abstraction performing a verb
 
 Avoid. Give the verb to whoever or whatever does the thing, the way an engineer would say it out loud. The owner called this "the exact Claude-ish voice I can't stand", and added that "the write-up is riddled with it". So sweep the whole document when you find one. If you fix only the line you were shown, the others stay.

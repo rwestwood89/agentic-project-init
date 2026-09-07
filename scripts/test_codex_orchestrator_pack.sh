@@ -339,6 +339,8 @@ for f in SKILL.md design_synthesis.md review.md visualize.md feedback/synthesis.
 done
 contains "$SKILL_DIST/SKILL.md" 'name: my-mental-model'
 contains "$SKILL_V2_DIST/SKILL.md" 'name: my-mental-model-v2'
+last_two_bytes="$(tail -c 2 "$SKILL_V2_DIST/SKILL.md" | od -An -t x1 | tr -d ' \n')"
+[ "$last_two_bytes" != "0a0a" ] || fail "generated native skill entry point has an extra blank line at EOF"
 jq -e '.included.skills == ["my-mental-model", "my-mental-model-v2", "show-me"]' "$MANIFEST" >/dev/null \
   || fail "manifest skills array is not exactly [my-mental-model, my-mental-model-v2, show-me]"
 does_not_contain "$MANIFEST" 'example-skill'
@@ -385,6 +387,11 @@ contains "$SKILL_V2_DIST/design_synthesis.md" 'Use explicit references to later 
 contains "$SKILL_V2_DIST/design_synthesis.md" 'Use the right scope'
 contains "$SKILL_V2_DIST/design_synthesis.md" 'Definitions before measurements'
 contains "$SKILL_V2_DIST/design_synthesis.md" 'No invented rationale'
+contains "$SKILL_V2_DIST/design_synthesis.md" 'One mental model'
+contains "$SKILL_V2_DIST/design_synthesis.md" 'Coverage is not structure'
+contains "$SKILL_V2_DIST/design_synthesis.md" 'Specific does not mean exhaustive'
+contains "$SKILL_V2_DIST/design_synthesis.md" 'Once the point has landed, stop'
+contains "$SKILL_V2_DIST/design_synthesis.md" 'An explainer, not a dossier'
 contains "$SKILL_V2_DIST/visualize.md" 'Do not read shared feedback'
 contains "$SKILL_V2_DIST/visualize.md" 'Important stuff up front'
 contains "$SKILL_V2_DIST/visualize.md" 'Use working references to later sections'
@@ -392,6 +399,9 @@ contains "$SKILL_V2_DIST/visualize.md" 'a data model gets its fields and shapes'
 contains "$SKILL_V2_DIST/visualize.md" 'the HTML must not be the first place they appear'
 contains "$SKILL_V2_DIST/visualize.md" 'Self-contained visuals'
 contains "$SKILL_V2_DIST/visualize.md" 'Restyling the same words does not count'
+contains "$SKILL_V2_DIST/visualize.md" 'One explanatory spine'
+contains "$SKILL_V2_DIST/visualize.md" 'Real transitions'
+contains "$SKILL_V2_DIST/visualize.md" 'Aggressive subtraction'
 # The adapter reached a sibling, not only the entry point.
 contains "$SKILL_DIST/design_synthesis.md" 'fork_turns'
 # The reviewer's instruction file is a sibling too, and the review pass is dead without it.

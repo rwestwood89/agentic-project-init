@@ -22,8 +22,12 @@ Ground important claims with useful source pointers. State whether each claim de
 
 ## Outcome qualities
 
-- **Important stuff up front.** Do not assume the reader finishes the synthesis. If they stop at any point, they should already have consumed the most important information available for understanding the subject.
-- **A connected explanation.** Use explicit references to later sections when a concept appears before its full explanation. Give multi-step reasoning its own section instead of interrupting the idea that introduced it.
+- **One mental model.** Build the smallest set of ideas that explains the whole subject. State that central model plainly and make every section advance it. A collection of accurate sections is not a synthesis.
+- **Coverage is not structure.** A user-provided “includes” list names material the answer must cover; it is not an outline. Do not mirror the request, repository map, source order, project chronology, or evidence inventory unless that order is genuinely the clearest way to teach the central model.
+- **Important stuff up front.** Apply importance across the whole document, not only inside each section. Do not assume the reader finishes. If they stop at any point, they should already understand the most important ideas and the strongest available reason to believe or care about them.
+- **A concrete thread.** When the evidence contains a strong example, introduce it early and use it to make the model real. Either walk the example through the explanation or establish the high-level model, show the example, and then deepen the detail. Do not postpone the best example until after the reference material.
+- **A connected explanation.** Every section follows from what the previous section established and makes clear why the next idea matters. Use explicit references to later sections when a concept appears before its full explanation. Give multi-step reasoning its own section instead of interrupting the idea that introduced it. A sequence of information dumps with no transitions fails even when every section is accurate.
+- **Editorial selection.** Specific does not mean exhaustive. Include a detail in the main narrative only when it defines an important idea, explains a mechanism or decision, supports a key claim, or advances the chosen example. Once the point has landed, stop. Move useful reference material to the appendix and omit detail that adds no understanding.
 - **Exact names and definitions.** Name every important concept using its real code or domain name. Say exactly what it is, what role it plays, and what is true about it. Do not replace that explanation with a generic label or a source pointer, and do not defer it to the HTML.
 - **Explicit invariants.** State the conditions that must remain true across valid states and transitions. Name who or what owns each invariant and the boundary over which it holds.
 - **Concrete code shapes.** Name the actual data structures that define important types, along with the relevant data models, signatures, and class structures. Include the fields, states, relationships, constraints, and meaningful real numbers needed to understand the model. Omit exhaustive code or data dumps that add no understanding.
@@ -32,7 +36,7 @@ Ground important claims with useful source pointers. State whether each claim de
 - **Use the right scope.** Say exactly which part of the system each fact applies to. Do not present one component's behavior as a rule for the whole system.
 - **Definitions before measurements.** Explain what something is before reporting what a run measured. Label measurements clearly so observed results do not masquerade as definitions.
 - **No invented rationale.** Explain why a structure exists when the evidence establishes the reason. When it does not, name the uncertainty instead of manufacturing a motive.
-- **Deliberate compression.** Spend detail where it carries the answer. Keep the narrative coherent and independently readable without turning it into an inventory or pre-writing the HTML detail layer.
+- **An explainer, not a dossier.** Produce the shortest artifact that fully teaches the mental model. If it reads as an architecture reference, operator guide, evidence ledger, audit, or chronology, the synthesis has failed even if every fact is useful somewhere.
 
 ## The synthesis
 

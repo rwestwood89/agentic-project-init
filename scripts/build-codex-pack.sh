@@ -516,7 +516,6 @@ while IFS= read -r skill_src; do
         printf -- "---\n\n"
         printf "Generated from \`claude-pack/skills/%s/SKILL.md\`. Rebuild this file instead of editing it by hand.\n\n" "$base"
         strip_frontmatter "$output_file"
-        printf "\n"
     } > "$staged_entry_point"
     mv "$staged_entry_point" "$output_file"
 
