@@ -9,7 +9,6 @@ A reusable template repository for Claude Code configurations and project manage
 Everything that gets symlinked to `~/.claude/`:
 
 - **commands/** - Custom slash commands (`/_my_research`, `/_my_spec`, `/_my_design`, etc.)
-- **hooks/** - Event hooks (transcript capture, memory management)
 - **agents/** - Autonomous subprocesses for complex tasks
 - **skills/** - Specialized capabilities and domain knowledge
 - **rules/** - Project guidelines and coding standards
@@ -25,8 +24,8 @@ Copied to `.project/` in target projects:
 - **completed/** - Finished work
 - **adr/** - Append-only decision records with a generated index
 - **product/** - Append-only ledger of implemented product promises, with a generated index
-- **feedback/** - Append-only log of agent learnings, tagged by pack target, for the owner to act on
-- **memories/** - Conversation summaries and learnings
+- **feedback/** - Append-only corrections to pack prompts, tagged by target, for the owner to fix upstream
+- **execution/** - Append-only log of how this codebase and environment actually behave, discovered while working
 - **research/** - Research notes and findings
 - **reports/** - Generated reports
 
@@ -53,7 +52,7 @@ cd ~/agentic-project-init
 ./scripts/setup-global.sh
 ```
 
-This creates symlinks in `~/.claude/` pointing to the commands, hooks, agents, skills, rules, and scripts.
+This creates symlinks in `~/.claude/` pointing to the commands, agents, skills, rules, and scripts.
 
 ### Step 3: Initialize Projects (Each Project)
 
@@ -134,17 +133,6 @@ One line per command; each command's own doc in `claude-pack/commands/` has the 
 | `/_my_wrap_up` | End-of-session context persistence |
 | `/_my_handoff` | Write a handoff doc so a fresh agent can continue mid-task |
 
-### Legacy (superseded by `/_my_wrap_up` + auto-memory)
-
-Kept for edge cases (e.g. salvaging content after an unexpected compaction); excluded from the Codex distribution.
-
-| Command | Description |
-|---------|-------------|
-| `/_my_capture` | Mark the conversation for later memorization |
-| `/_my_memorize` | Create a structured memory from a transcript |
-| `/_my_recall` | Search past conversation transcripts |
-| `/_my_review_compact` | Review an autocompact capture |
-
 ## Ralph Loop
 
 The Ralph Wiggum Loop is an autonomous coding pipeline. Given a concept file describing
@@ -219,9 +207,8 @@ One-time installation of commands to `~/.claude/`.
 - `--dry-run` - Show what would be done without making changes
 
 **What it does:**
-- Creates `~/.claude/{commands,agents,hooks,skills,rules,scripts}/` directories
+- Creates `~/.claude/{commands,agents,skills,rules,scripts}/` directories
 - Symlinks all files from `claude-pack/` to `~/.claude/`
-- Configures hooks in `~/.claude/settings.json`
 - Stores source location in `~/.claude/.agentic-pack-source`
 
 ### init-project.sh
@@ -258,7 +245,7 @@ Remove global installation from `~/.claude/`.
 
 **What it does:**
 - Removes symlinks pointing to this repository (preserves user files)
-- Cleans hook configuration from `settings.json`
+- Removes a `PreCompact` hook registration written by earlier versions of the pack
 - Removes metadata files
 
 ### uninstall-project.sh
@@ -287,8 +274,8 @@ your-project/
 │   ├── adr/
 │   ├── backlog/
 │   ├── completed/
+│   ├── execution/
 │   ├── feedback/
-│   ├── memories/
 │   ├── product/
 │   ├── research/
 │   └── reports/
@@ -299,7 +286,6 @@ your-project/
 │   ├── _my_research.md -> /path/to/agentic-project-init/claude-pack/commands/_my_research.md
 │   └── ...
 ├── agents/
-├── hooks/
 ├── skills/
 ├── rules/
 ├── scripts/
@@ -317,6 +303,8 @@ git pull
 ```
 
 Changes are instantly available via symlinks - no need to re-run setup.
+
+**One exception.** After pulling the release that removed the pack's hooks, run `./scripts/setup-global.sh` once to clean a legacy global install. For a project installed with `--include-claude`, rerun `./scripts/init-project.sh --include-claude` from that project. Both paths remove only the retired pack files and registration; user-owned hooks and files are left alone.
 
 ## Vendoring (Self-Contained Projects)
 
@@ -344,7 +332,7 @@ rm -rf .git/modules/claude-templates
 ### Step 2: Remove Old Symlinks
 
 ```bash
-rm -rf .claude/commands .claude/hooks .claude/agents .claude/skills .claude/rules
+rm -rf .claude/commands .claude/agents .claude/skills .claude/rules
 ```
 
 ### Step 3: Run New Setup
@@ -403,27 +391,6 @@ If the source repository was moved:
 ./scripts/uninstall-global.sh
 cd /new/location/agentic-project-init
 ./scripts/setup-global.sh
-```
-
-### Hook Not Running
-
-Check `~/.claude/settings.json` has the PreCompact hook configured:
-```json
-{
-  "hooks": {
-    "PreCompact": [
-      {
-        "matcher": "auto",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/path/to/.claude/hooks/precompact-capture.sh"
-          }
-        ]
-      }
-    ]
-  }
-}
 ```
 
 ## License

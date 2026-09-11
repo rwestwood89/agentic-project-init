@@ -54,10 +54,13 @@ single source, so it can't go stale here.
 
 | File | Purpose |
 |------|---------|
-| `CURRENT_WORK.md` | What's active RIGHT NOW - single source of truth |
+| `CURRENT_WORK.md` | Active Work and Up Next — what is in flight RIGHT NOW, and nothing else |
+| `completed/CHANGELOG.md` | Newest-first record of completed work; session boot reads the newest five entries |
 | `product/INDEX.md` | Generated index of implemented product promises — what the product is for (convention: `product/README.md`) |
 | `adr/INDEX.md` | Generated index of load-bearing decisions (convention: `adr/README.md`) |
-| `feedback/ENTRIES.md` | Append-only log of agent learnings, tagged by pack target (convention: `feedback/README.md`) |
+| `feedback/ENTRIES.md` | Append-only corrections to pack prompts, tagged by target (convention: `feedback/README.md`) |
+| `execution/ENTRIES.md` | Append-only log of how this codebase and environment behave, discovered while working (convention: `execution/README.md`) |
+| `TRIAGE_MEMORIES.md` | One-time instructions for sorting native memory entries into `.project/` homes |
 | `backlog/BACKLOG.md` | Prioritized list of epics |
 | `backlog/epic_*.md` | Individual epic definitions |
 
@@ -68,6 +71,7 @@ single source, so it can't go stale here.
 ```
 .project/
 ├── CURRENT_WORK.md           # Active work tracking
+├── TRIAGE_MEMORIES.md        # One-time: sort native memory entries into .project/ homes
 ├── backlog/
 │   ├── BACKLOG.md            # Prioritized epic list
 │   └── epic_*.md             # Epic definitions
@@ -81,7 +85,8 @@ single source, so it can't go stale here.
 │   └── epic_*.md             # Archived epics
 ├── adr/                      # Decision records (append-only, script-managed)
 ├── product/                  # Product promise ledger (append-only, script-managed)
-├── feedback/                 # Agent learnings for the owner to act on (append-only)
+├── execution/                # Execution facts — how this codebase/environment behaves (append-only)
+├── feedback/                 # Pack-prompt corrections for the owner to fix upstream (append-only)
 ├── scripts/                  # Utility scripts (adr.sh, product.sh, get-metadata.sh)
 ├── research/                 # Deep investigations
 └── reports/                  # Status reports

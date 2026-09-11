@@ -23,6 +23,35 @@ if [ ! -f "$INIT_SCRIPT" ]; then
     exit 1
 fi
 
+# Git is the backup. A tracked script backup is a second shipped implementation.
+TRACKED_BACKUPS=""
+while read -r path; do
+    [ -e "$SOURCE_DIR/$path" ] || continue
+    TRACKED_BACKUPS="${TRACKED_BACKUPS}${path}"$'\n'
+done < <(git -C "$SOURCE_DIR" ls-files 'scripts/*.bak' 'scripts/*.old' 'scripts/*~')
+if [ -n "$TRACKED_BACKUPS" ]; then
+    echo -e "${RED}FAIL: tracked script backups found:${NC}"
+    echo "$TRACKED_BACKUPS"
+    exit 1
+fi
+echo -e "${GREEN}PASS: no tracked script backups${NC}"
+
+# Check every tracked executable, not only the initializer this test invokes.
+RETIRED_PRODUCERS=""
+while read -r mode _ _ path; do
+    [ "$mode" = "100755" ] || continue
+    [ -f "$SOURCE_DIR/$path" ] || continue
+    case "$path" in scripts/test_*.sh) continue ;; esac
+    matches=$(grep -nE 'claude-pack/hooks|create_symlink.*\.claude/hooks|for dir in .*memories|mkdir -p .*\.project/memories' "$SOURCE_DIR/$path" || true)
+    [ -z "$matches" ] || RETIRED_PRODUCERS="${RETIRED_PRODUCERS}${path}:${matches}"$'\n'
+done < <(git -C "$SOURCE_DIR" ls-files -s scripts)
+if [ -n "$RETIRED_PRODUCERS" ]; then
+    echo -e "${RED}FAIL: tracked executables still create retired surfaces:${NC}"
+    printf '%s' "$RETIRED_PRODUCERS"
+    exit 1
+fi
+echo -e "${GREEN}PASS: tracked executables do not create retired surfaces${NC}"
+
 # Create temp directory for tests
 TEST_BASE=$(mktemp -d)
 cleanup() {
@@ -74,7 +103,7 @@ fi
 echo -e "${GREEN}PASS: .project created${NC}"
 
 # Check required subdirectories
-for dir in research reports memories active completed backlog; do
+for dir in research reports active completed backlog; do
     if [ ! -d ".project/$dir" ]; then
         echo -e "${RED}FAIL: .project/$dir not created${NC}"
         exit 1
@@ -146,12 +175,55 @@ if [ ! -f ".claude/.agentic-pack-vendored" ]; then
 fi
 echo -e "${GREEN}PASS: Vendor marker created${NC}"
 
-# Check settings.json created
-if [ ! -f ".claude/settings.json" ]; then
-    echo -e "${RED}FAIL: .claude/settings.json not created${NC}"
+# The pack registers no hooks, so vendoring must not write .claude/settings.json at all
+if [ -f ".claude/settings.json" ]; then
+    echo -e "${RED}FAIL: vendoring created .claude/settings.json${NC}"
+    cat ".claude/settings.json"
     exit 1
 fi
-echo -e "${GREEN}PASS: settings.json created${NC}"
+echo -e "${GREEN}PASS: vendoring leaves settings.json alone${NC}"
+
+# A rerun upgrades the complete old vendored surface from the owner-approved retirement scope.
+RETIRED_VENDORED_PATHS=(
+    "commands/_my_capture.md"
+    "commands/_my_memorize.md"
+    "commands/_my_recall.md"
+    "commands/_my_review_compact.md"
+    "agents/recall.md"
+    "rules/example-rules.md"
+    "hooks/capture.sh"
+    "hooks/precompact-capture.sh"
+    "hooks/parse-transcript.py"
+    "hooks/query-transcript.py"
+)
+for retired_path in "${RETIRED_VENDORED_PATHS[@]}"; do
+    mkdir -p ".claude/$(dirname "$retired_path")"
+    printf '%s\n' 'legacy pack content' > ".claude/$retired_path"
+done
+printf '%s\n' 'user hook' > .claude/hooks/my-own-hook.sh
+printf '%s\n' 'user command' > .claude/commands/_my_custom.md
+cat > .claude/settings.json <<'JSON'
+{"hooks":{"PreCompact":[{"matcher":"auto","hooks":[{"type":"command","command":"/home/u/.claude/hooks/precompact-capture.sh"},{"type":"command","command":"/home/u/.claude/hooks/my-own-precompact.sh"}]}]}}
+JSON
+
+"$INIT_SCRIPT" --source "$SOURCE_DIR" --include-claude > /dev/null
+
+for retired_path in "${RETIRED_VENDORED_PATHS[@]}"; do
+    if [ -e ".claude/$retired_path" ]; then
+        echo -e "${RED}FAIL: vendored upgrade kept retired file: .claude/$retired_path${NC}"
+        exit 1
+    fi
+done
+if [ ! -f .claude/hooks/my-own-hook.sh ] || [ ! -f .claude/commands/_my_custom.md ]; then
+    echo -e "${RED}FAIL: vendored upgrade removed a user file${NC}"
+    exit 1
+fi
+if [ "$(jq -r '.hooks.PreCompact[0].hooks | length' .claude/settings.json)" != "1" ] || \
+   [ "$(jq -r '.hooks.PreCompact[0].hooks[0].command' .claude/settings.json)" != "/home/u/.claude/hooks/my-own-precompact.sh" ]; then
+    echo -e "${RED}FAIL: vendored upgrade did not preserve the mixed-entry user hook${NC}"
+    exit 1
+fi
+echo -e "${GREEN}PASS: vendored upgrade removes retired files and preserves user state${NC}"
 echo ""
 
 # Test 5: Mutual exclusion
@@ -194,8 +266,8 @@ else
     exit 1
 fi
 
-# Check missing directories added
-if [ ! -d ".project/memories" ]; then
+# Check a directory omitted from the partial fixture was added
+if [ ! -d ".project/reports" ]; then
     echo -e "${RED}FAIL: Missing directories not added${NC}"
     exit 1
 fi
@@ -260,6 +332,61 @@ if grep -q "How to Record Feedback" .project/feedback/README.md; then
 else
     echo -e "${RED}FAIL: --force did not update feedback/README.md${NC}"
     echo -e "${RED}      the instructions file must NOT be user data${NC}"
+    exit 1
+fi
+echo ""
+
+# Test 9: --force protects accumulated execution-register entries
+# execution/ENTRIES.md accumulates agent-written execution facts across many sessions
+# and is never regenerated. If it drops out of USER_DATA_FILES, --force silently replaces
+# months of entries with the empty template.
+echo "Test 9: execution register seeds; --force protects the log, refreshes the rules..."
+TEST_DIR="$TEST_BASE/test9"
+mkdir -p "$TEST_DIR"
+cd "$TEST_DIR"
+git init -q
+
+"$INIT_SCRIPT" --source "$SOURCE_DIR"
+
+if [ ! -f ".project/execution/ENTRIES.md" ] || [ ! -f ".project/execution/README.md" ]; then
+    echo -e "${RED}FAIL: execution register not seeded on init${NC}"
+    exit 1
+fi
+
+# Accumulate an entry, and stale out the instructions file
+echo "## [init-project.sh] 2026-09-10" >> .project/execution/ENTRIES.md
+echo "stale rules" > .project/execution/README.md
+
+"$INIT_SCRIPT" --source "$SOURCE_DIR" --force
+
+if grep -qF "## [init-project.sh] 2026-09-10" .project/execution/ENTRIES.md; then
+    echo -e "${GREEN}PASS: --force preserved accumulated execution entries${NC}"
+else
+    echo -e "${RED}FAIL: --force destroyed accumulated execution entries${NC}"
+    echo -e "${RED}      execution/ENTRIES.md must be listed in USER_DATA_FILES in init-project.sh${NC}"
+    exit 1
+fi
+
+if grep -q "density bar" .project/execution/README.md; then
+    echo -e "${GREEN}PASS: --force refreshed the execution register rules${NC}"
+else
+    echo -e "${RED}FAIL: --force did not update execution/README.md${NC}"
+    echo -e "${RED}      the instructions file must NOT be user data${NC}"
+    exit 1
+fi
+
+if [ ! -f ".project/TRIAGE_MEMORIES.md" ]; then
+    echo -e "${RED}FAIL: triage prompt not seeded on init${NC}"
+    exit 1
+fi
+echo -e "${GREEN}PASS: triage prompt seeded on init${NC}"
+
+echo "stale" > .project/TRIAGE_MEMORIES.md
+"$INIT_SCRIPT" --source "$SOURCE_DIR" --force
+if grep -q "execution/README.md" .project/TRIAGE_MEMORIES.md; then
+    echo -e "${GREEN}PASS: --force refreshed the triage prompt${NC}"
+else
+    echo -e "${RED}FAIL: --force did not refresh the triage prompt${NC}"
     exit 1
 fi
 echo ""

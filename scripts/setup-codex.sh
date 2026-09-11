@@ -364,23 +364,6 @@ if [ -d "$DIST_DIR/scripts" ] && find "$DIST_DIR/scripts" -maxdepth 1 -type f | 
     done < <(find "$DIST_DIR/scripts" -maxdepth 1 -type f | sort)
 fi
 
-if [ -d "$DIST_DIR/hooks" ] && find "$DIST_DIR/hooks" -maxdepth 1 -type f | grep -q .; then
-    echo ""
-    echo "Hooks..."
-    ensure_dir "$TARGET_DIR/hooks"
-    while IFS= read -r file; do
-        install_path "$file" "$TARGET_DIR/hooks/$(basename "$file")"
-    done < <(find "$DIST_DIR/hooks" -maxdepth 1 -type f | sort)
-
-    if [ -f "$DIST_DIR/hooks.json" ]; then
-        install_path "$DIST_DIR/hooks.json" "$TARGET_DIR/hooks.json"
-        if [ -f "$TARGET_DIR/config.toml" ] && ! grep -q 'codex_hooks' "$TARGET_DIR/config.toml"; then
-            echo "  ! Hooks installed, but config.toml does not appear to enable codex hooks."
-            echo "    Add the feature flag manually if needed."
-        fi
-    fi
-fi
-
 if [ "$DRY_RUN" = true ]; then
     echo ""
     echo "[DRY RUN] Would record managed source metadata in $TARGET_DIR/.agentic-pack-codex-source"
@@ -396,9 +379,6 @@ for item in "${EXCLUDED_COMMANDS[@]}"; do
 done
 for item in "${EXCLUDED_AGENTS[@]}"; do
     echo "  - agent: $item"
-done
-for item in "${EXCLUDED_HOOKS[@]}"; do
-    echo "  - hook: $item"
 done
 
 echo ""

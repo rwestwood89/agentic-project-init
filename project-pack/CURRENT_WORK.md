@@ -27,27 +27,8 @@
 
 ---
 
-## Recently Completed
-
-### [DATE]: [Item Name]
-- Brief summary of what was accomplished
-- Key deliverables produced
-- Any notable learnings
-
----
-
 ## Up Next
 
 1. [Next priority item from backlog]
 2. [Following item]
 3. [Future consideration]
-
----
-
-## Session Notes
-
-### [DATE]
-- What was worked on
-- Progress made
-- Decisions made
-- Questions or blockers encountered

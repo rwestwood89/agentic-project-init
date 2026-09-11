@@ -2,11 +2,11 @@
 
 ## Before Starting Non-Trivial Work
 
-1. **Read `.project/CURRENT_WORK.md`** — active work context, recent decisions, known issues
+1. **Read `.project/CURRENT_WORK.md`** — what is active right now and what is up next
 2. **Skim `.project/product/INDEX.md` if present** — the product's implemented promises; open
    only the entries relevant to your task. An absent or empty ledger just means none recorded.
-3. **Read the relevant docs** for the area you're working in (check CLAUDE.md for pointers)
-4. **Check auto-memory** (already loaded) for known gotchas before making assumptions
+3. **Read the newest completions in `.project/completed/CHANGELOG.md` if present** — what just shipped, so you know whether the area you are about to touch was just changed. Run the bound rather than reading the file, so the cost is the same at 7 entries and at 70: `awk '/^## \[[0-9]/{n++; p=1} n>5{exit} /^### Deliverables/{p=0} /^---$/{p=0} p' .project/completed/CHANGELOG.md`. It returns the newest 5 entries, heading through `Summary`.
+4. **Read the relevant docs** for the area you're working in (check CLAUDE.md for pointers)
 
 ## After Completing Work
 

@@ -44,7 +44,7 @@ while [[ $# -gt 0 ]]; do
             echo ""
             echo "The --force option updates documentation and templates but never touches:"
             echo "  CURRENT_WORK.md, backlog/BACKLOG.md, completed/CHANGELOG.md,"
-            echo "  memories/index.json, feedback/ENTRIES.md"
+            echo "  feedback/ENTRIES.md, execution/ENTRIES.md"
             exit 0
             ;;
         *) echo -e "${RED}Unknown option: $1${NC}"; exit 1 ;;
@@ -64,6 +64,13 @@ if [ "$NO_TRACK" = true ] && [ "$INCLUDE_CLAUDE" = true ]; then
     exit 1
 fi
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# shellcheck source=lib/settings-hooks.sh
+source "$SCRIPT_DIR/lib/settings-hooks.sh"
+# shellcheck source=lib/legacy-vendored-files.sh
+source "$SCRIPT_DIR/lib/legacy-vendored-files.sh"
+
 # Determine source directory
 if [ -z "$SOURCE_DIR" ]; then
     # Try reading from global setup metadata
@@ -71,7 +78,6 @@ if [ -z "$SOURCE_DIR" ]; then
         SOURCE_DIR=$(cat "$HOME/.claude/.agentic-pack-source")
     else
         # Try script directory
-        SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
         if [ -d "$SCRIPT_DIR/../project-pack" ]; then
             SOURCE_DIR="$(dirname "$SCRIPT_DIR")"
         fi
@@ -119,8 +125,8 @@ USER_DATA_FILES=(
     "CURRENT_WORK.md"
     "backlog/BACKLOG.md"
     "completed/CHANGELOG.md"
-    "memories/index.json"
     "feedback/ENTRIES.md"
+    "execution/ENTRIES.md"
 )
 
 # Check if a file is user data (protected from --force)
@@ -188,7 +194,7 @@ copy_project_pack() {
         done < <(find "$PROJECT_PACK" -type f -print0)
 
         # Ensure required subdirectories exist
-        for dir in research reports memories active completed backlog scripts adr product feedback; do
+        for dir in research reports active completed backlog scripts adr product feedback execution; do
             if [ ! -d ".project/$dir" ]; then
                 if [ "$DRY_RUN" = true ]; then
                     echo -e "${BLUE}[DRY RUN] Would create: .project/$dir/${NC}"
@@ -203,7 +209,7 @@ copy_project_pack() {
             echo -e "${BLUE}[DRY RUN] Would copy project-pack/ to .project/${NC}"
         else
             cp -r "$PROJECT_PACK" .project
-            mkdir -p .project/research .project/reports .project/memories .project/scripts .project/adr .project/product .project/feedback
+            mkdir -p .project/research .project/reports .project/scripts .project/adr .project/product .project/feedback .project/execution
             echo -e "${GREEN}  ✓ Created .project/${NC}"
         fi
     fi
@@ -217,14 +223,33 @@ if [ "$NO_TRACK" = true ]; then
     add_to_gitignore ".project"
 fi
 
+# Strip a PreCompact registration an earlier version of the pack vendored into this
+# project. The script it points at no longer ships. See
+# .project/active/retire-hidden-memories/spec.md.
+echo ""
+echo "Removing legacy hook registration..."
+if [ "$DRY_RUN" = true ]; then
+    echo -e "${BLUE}[DRY RUN] Would remove any pack-written PreCompact hook from .claude/settings.json${NC}"
+else
+    cleanup_legacy_hooks ".claude/settings.json"
+fi
+
 # Handle --include-claude
 if [ "$INCLUDE_CLAUDE" = true ]; then
     echo ""
     echo "Vendoring claude-pack to .claude/..."
 
+    if [ -f ".claude/.agentic-pack-vendored" ]; then
+        if [ "$DRY_RUN" = true ]; then
+            echo -e "${BLUE}[DRY RUN] Would remove retired files from the existing vendored pack${NC}"
+        else
+            cleanup_legacy_vendored_files ".claude"
+        fi
+    fi
+
     copy_claude_pack() {
         # Create directory structure
-        for subdir in commands agents hooks skills rules scripts; do
+        for subdir in commands agents skills rules scripts; do
             if [ "$DRY_RUN" = true ]; then
                 echo -e "${BLUE}[DRY RUN] Would create: .claude/$subdir/${NC}"
             else
@@ -233,7 +258,7 @@ if [ "$INCLUDE_CLAUDE" = true ]; then
         done
 
         # Copy files (skip existing)
-        for subdir in commands agents hooks skills rules scripts; do
+        for subdir in commands agents skills rules scripts; do
             src_dir="$CLAUDE_PACK/$subdir"
             [ -d "$src_dir" ] || continue
 
@@ -259,68 +284,9 @@ if [ "$INCLUDE_CLAUDE" = true ]; then
             done
         done
 
-        # Configure local settings.json
-        local settings_file=".claude/settings.json"
-        local hook_config='{
-  "hooks": {
-    "PreCompact": [
-      {
-        "matcher": "auto",
-        "hooks": [
-          {
-            "type": "command",
-            "command": ".claude/hooks/precompact-capture.sh"
-          }
-        ]
-      }
-    ]
-  }
-}'
-
-        if [ "$DRY_RUN" = true ]; then
-            echo -e "${BLUE}[DRY RUN] Would configure .claude/settings.json${NC}"
-        else
-            if [ -f "$settings_file" ]; then
-                if command -v jq &> /dev/null; then
-                    cp "$settings_file" "$settings_file.bak"
-                    jq -s '.[0] * .[1]' "$settings_file" <(echo "$hook_config") > "$settings_file.tmp"
-                    mv "$settings_file.tmp" "$settings_file"
-                    echo -e "${GREEN}  ✓ Merged hooks into settings.json${NC}"
-                else
-                    echo -e "${YELLOW}  ⚠ jq not found - please manually configure hooks${NC}"
-                fi
-            else
-                echo "$hook_config" > "$settings_file"
-                echo -e "${GREEN}  ✓ Created settings.json${NC}"
-            fi
-        fi
-
         # Write marker file for uninstall detection
         if [ "$DRY_RUN" != true ]; then
             echo "vendored" > ".claude/.agentic-pack-vendored"
-        fi
-
-        # Write hook paths config for vendored installation
-        local hooks_dir
-        hooks_dir="$(pwd)/.claude/hooks"
-
-        if [ "$DRY_RUN" = true ]; then
-            echo -e "${BLUE}[DRY RUN] Would write hook paths to .claude/.hook-paths.json${NC}"
-        else
-            cat > ".claude/.hook-paths.json" << EOF
-{
-  "version": 1,
-  "resolved_at": "$(date -Iseconds)",
-  "source": "vendored",
-  "hooks": {
-    "query-transcript": "$hooks_dir/query-transcript.py",
-    "parse-transcript": "$hooks_dir/parse-transcript.py",
-    "capture": "$hooks_dir/capture.sh",
-    "precompact-capture": "$hooks_dir/precompact-capture.sh"
-  }
-}
-EOF
-            echo -e "${GREEN}  ✓ Created hook paths config${NC}"
         fi
     }
     copy_claude_pack

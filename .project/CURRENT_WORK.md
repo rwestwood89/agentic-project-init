@@ -1,10 +1,17 @@
 # Current Work
 
-**Last Updated**: 2026-09-02
+**Last Updated**: 2026-09-10
 
 ---
 
 ## Active Work
+
+### session-bookkeeping — wrap-up's final shape, CURRENT_WORK cut to now, bounded history read
+- Epic KNOWLEDGE-HOMES, Item 3. **Spec, design and plan drafted 2026-09-10; plan approved, implementation not started.** Spec review returned Revise; all seven findings resolved from the record without a new owner decision (`spec-review.md` Resolutions). Design review returned two BLOCKs: the insertion-position bug was real and is fixed (wrap-up inserts at the top, since the boot read takes the first five of a newest-first file, and newest-first is now a named invariant owned by both writers); the template-placeholder finding was accepted as a defect but its disposition declined — the reader anchors on `## [` plus a digit instead, which also reaches existing projects whose CHANGELOG is protected user data. Both dispositions recorded in `product-lens.md`; gate CLEAR. Five phases, first proof point at the end of Phase 1. Four owner decisions this session: the boot read takes the newest 5 CHANGELOG entries, heading through `Summary`, skipping `Deliverables` ("middle one is good, 5 is reasonable" — resolves epic finding F4); the light CHANGELOG entry is written at the agent's discretion under the guidance "important changes not captured by work items", with owner confirmation; Active Work's item count is not this item's problem ("that is the user's problem", and a shorter doc makes it visible); Active Work entry depth stays as-is, appending a bullet per session ("A keep it like today"). The last two amend concept SC5's justification that no remaining section accumulates.
+- `.project/active/session-bookkeeping/{spec,spec-review,design,design-review,product-lens,plan}.md`.
+- **Phases 1-4 implemented 2026-09-10; Phase 5 outstanding.** The read side is live: `CURRENT_WORK.md` is cut to Active Work and Up Next (241 lines → 125), and `context-loading.md` now runs a bounded `awk` over the newest 5 CHANGELOG entries as read 3, after the ADR 0008 ledger skim. `_my_wrap_up.md` is rewritten to five steps — no `docs/` pass, no unasked commit, both records behind one propose-and-wait. Register READMEs name both triggers, the CHANGELOG template ships no placeholder and states the newest-first contract, and the four stale `CURRENT_WORK.md` descriptions are corrected. The Codex prompt prefix is deleted (the repo now has none) and the pack is rebuilt and installed. Ten new assertions in `test_docs.sh` (4 `check_wired`, 6 inline blocks); all ten test scripts pass.
+- **Phase 5 is half answered.** `/_my_wrap_up` was run on this session 2026-09-10: it proposed rather than wrote, touched no file under `docs/`, and left its one write staged and uncommitted. It produced no record candidates, which is the correct answer — this session's work is a tracked item and reaches the CHANGELOG through `close` — so the confirmation wait was exercised only on its empty path and is still unobserved. **What remains is the cold boot:** a fresh session naming the most recent completed work from the standard reads alone, and telling `close` entries from `wrap_up` entries in the excerpt. That one cannot be answered from inside the implementing session, and bet B2 rests on it.
+- Two guards were strengthened past the plan's stencil after the plan's own commit check passed against the unmodified file; see the plan's Phase 2 and 3 notes. A pack-prompt gap sits behind that and is not yet filed: no command tells an implementer to confirm a new guard fails before the fix lands.
 
 ### mental-model-reviewer — reviewer subagent + prompt-versus-feedback split
 - Epic MENTAL-ALIGN-V2, Item 6. **Phases 1-3 of 4 implemented 2026-09-02, uncommitted on `main`. Phase 4 (install + live run) is all that remains.** Spec revised after spec-review; product-lens CLEAR; ADR 0012 filed and amended; design approved. `.project/active/mental-model-reviewer/{spec,spec-review,product-lens,design,plan}.md`.
@@ -115,113 +122,7 @@
 
 ---
 
-## Recently Completed
-
-### 2026-08-26: feedback-capture-file — record agent learnings where the owner can act on them
-- Added `.project/feedback/README.md` instructions and an append-only `ENTRIES.md` so agents can record corrections while the context is fresh.
-- Protected accumulated entries from `init-project.sh --force` while allowing updated recording instructions to propagate, with focused init coverage.
-- Archived the standalone item to `.project/completed/20260826_feedback-capture-file/`.
-
-### 2026-08-08: docs-overhaul — question-driven guide, single command catalog, pre_pr after close (committed `43bca3c`)
-- **Minimum doc set with one owner per fact:** `docs/guide.md` absorbed and replaced `docs/working-with-claude.md`; README owns the complete command catalog (31 commands, legacy marked); project-pack README/EPIC_GUIDE defer to `/_my_pipeline` instead of restating the flow; `.project/` template instances re-synced.
-- **Owner's mental model now canonical (owner-stated 2026-08-08):** not a strict pipeline — entry follows the questions "how well do you understand the problem?" → UX to understand (`product_design`), impact (`concept_design` + `research` first), size (`epic_plan`). Guide, `/_my_pipeline`, `rules/pipeline.md`, and both orchestrators reframed around it.
-- **`product_design` is dual-tier:** runs off a concept (shaping) or a spec (single item); same function. Command, pipeline, and guide updated.
-- **`pre_pr` is a branch gate after `close`** — per item when shippable alone, once at epic end otherwise (**ADR 0007**, `[OWNER]`). Audit of 12 timing references found 8 wrong (root cause: old shape line `audit → pre_pr → close` + no when-to-run guidance in the command); all fixed, incl. pre_pr's product-lens gate now reading ledgers from `completed/` post-close.
-- **New drift guards in `test_docs.sh`:** README catalog completeness, no retired command names, no stage-sequence restatements outside the canonical pair (guide's flow line exempted by owner decision, comment marks it). Suite 9/9 green; Codex dist rebuilt.
-- Next: guide is ready for the upstream PR (Up Next item 1).
-
-### 2026-07-06: spike-and-learning-test-commands — hands-on de-risking commands (certified, archived)
-- Two new commands: `/_my_spike` (confirm a known assumption, throwaway probe + findings doc) and
-  `/_my_learning_test` (map an unfamiliar surface, findings doc + real kept tests) — write-code-to-learn
-  siblings of read-only `/_my_research`, sharing one discipline (reproducible, living doc,
-  summary-on-top, close the loop).
-- Soft de-risking suggestions wired into `concept_design`/`spec`/`design`/`epic_plan`/`research`;
-  orchestration awareness in `_my_orchestrate`/`_my_pipeline`/`orchestrate-stage.sh`
-  (`bypassPermissions` for headless runs). Codex-exposed; documented in README + CLAUDE.md.
-- Audit verdict Certify (all 9 spec criteria). Archived to
-  `.project/completed/20260706_spike-and-learning-test-commands/`.
-
-### 2026-07: workflow-orchestrator — autonomous pipeline orchestrator (merged, PR #25)
-- High-judgment agent (Fable) drives the v2 pipeline end to end via opus subagents, fully autonomous, Claude-only.
-- Helper `orchestrate-stage.sh` + uniform preamble; command `_my_orchestrate.md`. Merged to `main`.
-
-### 2026-07: pipeline-guide — canonical shipped pipeline overview (merged)
-- Canonical `/_my_pipeline` command + always-on shape rule; other docs point here instead of restating the flow. Merged to `main` (`46020d8`).
-
-
-### 2026-07-01: Epic WORKFLOW-V2 — Workflow v2 Redesign (certified, archived)
-- Pipeline redesign: new bridge command (`epic_plan`), certification step (`audit`), archive command (`close`), consolidated pre-PR gate, Required Reading traceability from concepts through implementation.
-- 9 items: epic template foundation, epic_plan, pipeline Required Reading, audit certification, close, pre_pr, status, design_review rename, cross-reference cleanup + Codex rebuild.
-- All 6 epic success criteria verified. Retired 5 old commands, created 6 new ones, modified 3 pipeline commands.
-
-### 2026-06-25: agent-working-voice rule (merged, PR #21)
-- Global working-voice rule + reader-comprehension checks in spec/design reviewers; 2 surgical prompt fixes.
-- Full pipeline run: spec → design → plan → implement, with user checkpoints on the rule and pilot rewrites.
-- Two feedback memories saved: plain-writing voice, and dislike of the Q&A tool for complex decisions.
-- Merged to `main` via PR #21; Codex dist rebuilt and committed (`aa652a9`).
-
-### 2026-06-25: /_my_handoff command (committed `22e4437`)
-- New command: writes a handoff doc to the OS temp dir for a fresh agent (focus, references to read, key discoveries, suggested skills).
-- Spec at `.project/active/handoff-command/spec.md`; Codex skill + description added; pushed to `main`.
-
-### 2026-04-18: CLAUDE.md created
-- Added CLAUDE.md with architecture overview, key commands, session workflow
-- Documents the meta-project nature (building commands while using them)
-- Highlights that `setup-global.sh` must run after adding new commands
-
-### 2026-02-11: Security Analyzer (branch: `security-analyzer`)
-- Two scripts in `claude-pack/hooks/` for transcript security analysis
-- All 6 checks pass against real data (943 transcripts, 14.6K findings)
-- Not yet PR'd -- iteration-ready on branch
-
-### 2026-02-07: Session context boot sequence (PRs #4, #5, #6)
-- Added `/_my_wrap_up` command — end-of-session context persistence
-- Added `context-loading.md` rule — auto-loaded rule that tells Claude to read CURRENT_WORK.md before starting non-trivial work
-- Added "Session Start" section to `claude-md-checklist.md`
-- Added `docs/working-with-claude.md` — practical guide for working with the toolkit
-- Fixed concurrent session bug — wrap-up now uses conversation context as primary source, git as cross-validation
-- Split original PR #3 into #4 (guide doc) + #5 (boot sequence feature) + #6 (concurrent fix)
-- All merged to upstream `rwestwood89/agentic-project-init`
-
-### 2025-12-30: codebase-organization
-- Established `claude-pack/` and `project-pack/` structure
-- Set up symlinks for development workflow
-
-### 2025-12-30: init-project.sh improvements
-- Added `.project/` merge strategy for existing projects
-- Added CLAUDE.md check with `/init` suggestion
-
----
-
 ## Up Next
 
 1. Finalize production guide and PR to upstream
 2. Iterate on security-analyzer: tune rules, reduce false positives, PR when ready
-
----
-
-## Session Notes
-
-### 2026-06-25
-- Diagnosed the voice problem as two axes: clarity/structure (partly handled) and texture/voice (the real gap). Settled a three-register model; this work owns only the *working voice* (chat + internal artifacts), not external explainers, not a command's task stance, not artifact structure.
-- Core bet: the agent mirrors the register of its own prompts — so the lever was rewriting dense prompts, not just adding a rule. Pilots showed the prompts were already mostly good, which reframed the win toward the rule + review check.
-- Rule grew real teeth from live user examples: a "precision is the work behind the voice" section, and "decompose into points; avoid block text" (a console wall-of-text was the trigger).
-- `dist/codex/` deliberately excluded from the commit — the local rebuild entangled unrelated `handoff` WIP and `my-design` staleness.
-
-### 2026-04-18
-- Created `/_my_concept_design` command based on user feedback about `/_my_concept` being too spec-like for architecture work
-- Good example: `echo-workspace/.project/concepts/20260417_forecast-handling-pattern.md` — clear design principles, invariants, vocabulary
-- Bad example: `echo-workspace/.project/concepts/20260417_dispatch-guidance-restart.md` — too implementation-heavy, obscures decisions
-- Key insight: design concepts should make decisions explicit, not bury them in details
-- Gotcha: new commands need `setup-global.sh` to create symlinks in `~/.claude/commands/`
-
-### 2026-02-16
-- Wrote production codebase guide with collaborator feedback loop
-- Created workflow-accountability rule for auto-loaded process enforcement
-- Cherry-picked guide commit from security-analyzer to clean production-guide branch
-- Accidentally pushed security-analyzer to remote, deleted it, pushed production-guide instead
-
-### 2026-02-07
-- Reviewed PR as upstream maintainer, identified `working-with-claude.md` scope issue
-- Concurrent session safety: git log can't distinguish which session made which commits — conversation context is the right source of truth
-- PR splitting workflow: create base branch from main, cherry-pick feature changes on top

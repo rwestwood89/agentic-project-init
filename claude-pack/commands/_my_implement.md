@@ -149,8 +149,6 @@ The plan and design don't spell out every boundary. Function shape, parameter li
 
 **Depth is a smell.** Three or more levels of nested control flow usually means two functions glued together. Extract.
 
-**Respect auto-memory.** Project-specific feedback on code quality lives in auto-memory (e.g., `feedback_*` entries). Skim before writing non-trivial code. Past rejections repeat.
-
 #### Self-check before marking a phase complete
 
 Re-read each non-trivial function you wrote and answer:

@@ -133,7 +133,7 @@ Adapt the set to the problem. The commands are quality tools; the questions deci
 
 The artifacts exist because sessions die. A few commands manage the boundary:
 
-- **`/_my_wrap_up`** — run at the end of every session. Updates `.project/CURRENT_WORK.md` and auto-memory; the next session boots by reading them (the `context-loading` rule points it there). Thirty seconds now saves ten minutes of archaeology tomorrow.
+- **`/_my_wrap_up`** — run at the end of every session. Updates `.project/CURRENT_WORK.md`, then proposes two records for you to confirm: a light `completed/CHANGELOG.md` entry for important work that never became a tracked item, and an execution fact for `.project/execution/ENTRIES.md`. It stages what it wrote and leaves the commit to you. The next session boots by reading `CURRENT_WORK.md` and the newest CHANGELOG entries (the `context-loading` rule points it at both). Thirty seconds now saves ten minutes of archaeology tomorrow.
 - **`/_my_handoff`** — mid-task transfer: writes a brief so a *fresh* agent can continue right now.
 - **`/_my_status`** — orientation at session start: what's active, what's stale, what's next.
 - **`/_my_project_find`** — quick lookups of project state.

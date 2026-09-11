@@ -89,8 +89,6 @@ Does the code follow the architecture, key decisions, and required invariants? A
 
 For each finding: name `file:line`, say what's wrong, say what should change. Don't draft the fix.
 
-**Check auto-memory** (`feedback_*` entries) for project-specific patterns previously rejected. Respect those as hard constraints.
-
 ### 3. Write audit.md
 
 Write `.project/active/{item}/audit.md`:
