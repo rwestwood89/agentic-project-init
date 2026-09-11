@@ -4,6 +4,33 @@ Historical record of completed work.
 
 ---
 
+## [2026-09-11] - session-bookkeeping
+
+**Type**: Item
+**Duration**: 2 days (2026-09-10 to 2026-09-11)
+
+### Summary
+Cut `CURRENT_WORK.md` to current state only — Active Work and Up Next, 241 lines down to 125 — and moved recent history to a bounded read of the newest five CHANGELOG entries at session boot, so orientation cost no longer grows with the archive. Rewrote `/_my_wrap_up` to write cheap records instead of documents: no `docs/` pass, no unasked commit, both records behind one propose-and-wait.
+
+### Deliverables
+- **Read side:** `claude-pack/rules/context-loading.md` — bounded `awk` over the newest 5 CHANGELOG entries as read 3, after the ADR 0008 ledger skim
+- **Write side:** `claude-pack/commands/_my_wrap_up.md` rewritten to five steps; light CHANGELOG entry for work that skipped `close`; execution-note beat; stage-and-show instead of commit
+- **Shape:** `.project/CURRENT_WORK.md` and `project-pack/CURRENT_WORK.md` cut to two sections; CHANGELOG template ships no placeholder and states the newest-first contract
+- **Codex:** wrap-up prompt prefix deleted, description override reworded, pack rebuilt and installed
+- **Artifacts:** spec.md, spec-review.md, design.md, design-review.md, product-lens.md, plan.md, audit.md
+
+---
+
+## [2026-09-11] - pipeline gates changed from stops to flags
+
+**Type**: Change
+**Duration**: 1 day
+
+### Summary
+Deleted six test assertions that greped command prompt files to prove an instruction was still present, and changed the product-lens `BLOCK` gate in `_my_close`, `_my_pre_pr`, and `_my_audit` from a hard stop to a flag. Both mechanisms treated prompt text as if it were code: a grep over a prompt cannot establish that an agent does the thing, and a stale review note in markdown was locking working code. An item that was finished and correct could not be closed because its audit notes had not been updated after the fixes landed.
+
+---
+
 ## [2026-09-10] - retire-hidden-memories
 
 **Type**: Item

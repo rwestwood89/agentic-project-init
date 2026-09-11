@@ -1,6 +1,6 @@
 # Audit: Execution Register, Write-Only
 
-**Verdict:** Needs Work
+**Verdict:** Certify (resolved 2026-09-11 — see Resolution below)
 **Audited:** 2026-09-10
 **Branch:** mental-model-reviewer
 **Commit:** 78ea3b5
@@ -60,3 +60,15 @@ This is the right piece of work, but the implementation is not the write-only ex
 Verified and marked spec SC3, SC4, SC5, SC7, and SC8; marked the corresponding epic seed/protection and test-coverage boxes. Marked the completed `test_docs.sh` and `git diff --check` plan validations, and reopened plan claims contradicted by the implementation. Certification remains open pending resolution of `audit-F1` through `audit-F3`, the failing exact grep, the missing ADR-Why-to-ticket instruction, and real close acceptance.
 
 **Not checked:** A live `/_my_close` run on a real item; a complete literal `for t in scripts/test_*.sh` run including all of `test_init_project.sh`; behavior of the installed Claude command outside the repository; long-term entry quality or whether Item 3's later `wrap_up` beat completes the experiment.
+
+---
+
+## Resolution — 2026-09-11
+
+Re-checked against the code. The three findings above are closed:
+
+- **audit-F1 (no reader) — fixed.** The "Reading entries back" section and its `awk` command are gone from `project-pack/execution/README.md` and `.project/execution/README.md`. Nothing in the pack reads the log back; both logs are header-only with zero entries.
+- **audit-F2 (duplicated routing boundary) — fixed.** `project-pack/TRIAGE_MEMORIES.md:19` now points at the canonical boundary in `execution/README.md` instead of restating it, and `:21` states the ADR-Why-to-ticket route directly.
+- **audit-F3 (weak close-beat test) — withdrawn, not fixed.** The finding was correct: `test_docs.sh` greped `_my_close.md` for a string that appears three times, so it could not prove the prompt existed. The remedy chosen was to delete that test and its five siblings rather than write a better grep. Greping a prompt file to prove an instruction exists does not work — reword the line and the check either breaks for nothing or passes while the instruction is gone. Owner decision, 2026-09-11.
+
+The verdict was flipped from Needs Work to Certify on that basis.

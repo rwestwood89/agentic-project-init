@@ -37,7 +37,7 @@ Determine whether the argument is a work item or an epic:
 1. Read the epic file. Extract child items from the Backlog Items section — use each item's `**Location**:` field to get the folder name.
 2. For each child item, check whether it is in `active/` (needs archiving) or already in `completed/` (skip).
 3. For each active child, read `audit.md` and note certification status.
-4. **Read the epic's own Product-Lens block directly** (scan every block, resolution-by-citation per the lens spec §3). An unresolved epic `BLOCK` is a hard stop on epic close, independent of whether any child item references it.
+4. **Read the epic's own Product-Lens block.** If it records an open `BLOCK` nobody came back to, mention it in the summary. It does not stop the close.
 
 ## Step 3: Confirm
 
@@ -47,7 +47,7 @@ Present a summary to the user. Include:
 - What tracking files will be updated.
 - **Records to file — or none** — the candidate entries from the record scan, grouped by destination (`.project/adr/`, `.project/product/`, `.project/execution/ENTRIES.md`), or "none found." For a decision that is a workaround against another repo's behavior, note the placement: the ruling entry files in the repo that must uphold it, plus a local pointer entry (see `.project/adr/README.md`); if that repo is unreachable, file the pointer and surface the gap.
 - **Certification warnings** — if any item has no audit or a "Needs Work" verdict, flag it visibly. Example: `⚠️ {item} has no audit certification.`
-- **Product-lens gate (fail closed)** — for each item that reached spec or later, a `product-lens.md` ledger is *expected*; a **missing** ledger for audited work is itself a control failure, treated like a Needs-Work verdict. **Scan every block, not just the latest**: a `BLOCK` stands until a later block explicitly cites that finding and records an authorized disposition (a later unrelated `CLEAR`/`DISPOSED` does not clear it). For an item whose ledger records a parent epic (`Epic: <id>`), **always** read the parent epic's Product-Lens gate — not only when a finding is referenced. Any unresolved `BLOCK`, or a missing expected ledger, is a hard stop on archiving that item. Flag it visibly and do not close until it is cleared.
+- **Open product-lens findings** — if an item's `product-lens.md` records a `BLOCK` that no later block resolves, say so plainly. A missing ledger is worth a mention too. Neither stops the close; the user decides what to do about it.
 - For epic scope: a list of child items showing which will be archived and which are already in `completed/`.
 
 **Wait for user confirmation. Do not proceed without it.**

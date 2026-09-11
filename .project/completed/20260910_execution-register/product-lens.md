@@ -271,3 +271,17 @@ Smells fired:
 Resolution citations: The prior owner disposition authorizes `TRIAGE_MEMORIES.md` as a one-time sweep (`product-lens.md:134-139`; `design.md:101-107`) and does not authorize a standing execution-log reader. The recorded deferral of the `wrap_up` beat (`product-lens.md:111-113`) avoids an omission finding for this item but does not resolve audit-F1.
 
 Gate: BLOCKED (audit-F1); audit-F2 and audit-F3 also require visible disposition.
+
+---
+
+## resolution — 2026-09-11 — rev working tree
+
+Resolves `audit-F1`, `audit-F2`, `audit-F3` from the audit block above (`product-lens.md:253-273`).
+
+- `audit-F1` — fixed in code. The retrieval section is gone from both register READMEs; no reader exists anywhere in the pack.
+- `audit-F2` — fixed in code. `project-pack/TRIAGE_MEMORIES.md:19` references the canonical boundary rather than restating it.
+- `audit-F3` — withdrawn. The prompt-grep test it asked to strengthen was deleted instead, along with its five siblings (owner, 2026-09-11): a grep over prompt text cannot establish that an instruction is present.
+
+Smell 1 and smell 6 are cleared by the same two changes.
+
+Gate: CLEAR
