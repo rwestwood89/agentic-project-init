@@ -18,8 +18,6 @@ included_native_skills=()
 excluded_native_skills=()
 included_agents=()
 excluded_agents=()
-included_hooks=()
-excluded_hooks=()
 included_scripts=()
 included_replacements=()
 
@@ -309,10 +307,6 @@ sanitize_rule_body_for_codex() {
             $n =~ tr/_/-/;
             "\$" . ($ENV{COMMAND_SKILL_PREFIX} // "") . $n;
         }ge;
-        s{\*\*Check auto-memory\*\* \(already loaded\) for known gotchas before making assumptions}{**Check saved project context** for known gotchas before making assumptions}g;
-        s{Check auto-memory \(already loaded\) for known gotchas before making assumptions}{Check saved project context for known gotchas before making assumptions}g;
-        s{This file contains example rules and guidelines that Claude will follow during the conversation\.}{This file contains example rules and guidelines that Codex will follow during the conversation.}g;
-        s{\*\*Note:\*\* The `\.claude/rules/` directory supports symlinks, making it easy to share common rules across projects\.}{**Note:** Codex global instructions are generated from `claude-pack/rules/`; edit the source rules and rebuild.}g;
     '
 }
 
@@ -393,7 +387,7 @@ description_for_native_skill() {
 
 mkdir -p "$DIST_DIR"
 rm -rf "$DIST_DIR"
-mkdir -p "$DIST_DIR/agents" "$DIST_DIR/skills" "$DIST_DIR/hooks" "$DIST_DIR/scripts"
+mkdir -p "$DIST_DIR/agents" "$DIST_DIR/skills" "$DIST_DIR/scripts"
 
 timestamp="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 revision="$(git -C "$ROOT_DIR" rev-parse --short HEAD 2>/dev/null || echo unknown)"
@@ -516,7 +510,6 @@ while IFS= read -r skill_src; do
         printf -- "---\n\n"
         printf "Generated from \`claude-pack/skills/%s/SKILL.md\`. Rebuild this file instead of editing it by hand.\n\n" "$base"
         strip_frontmatter "$output_file"
-        printf "\n"
     } > "$staged_entry_point"
     mv "$staged_entry_point" "$output_file"
 
@@ -559,38 +552,6 @@ for shared_spec in product-lens.md; do
     fi
 done
 
-while IFS= read -r file; do
-    base="$(basename "$file")"
-    if contains "$base" "${EXCLUDED_HOOKS[@]}"; then
-        excluded_hooks+=("$base")
-        continue
-    fi
-
-    cp "$file" "$DIST_DIR/hooks/$base"
-    included_hooks+=("$base")
-done < <(find "$CLAUDE_PACK/hooks" -maxdepth 1 -type f | sort)
-
-if [ "${#included_hooks[@]}" -gt 0 ]; then
-    {
-        printf "{\n"
-        printf "  \"hooks\": [\n"
-        local_index=0
-        for hook_name in "${included_hooks[@]}"; do
-            if [ "$local_index" -gt 0 ]; then
-                printf ",\n"
-            fi
-            printf "    {\n"
-            printf "      \"event\": \"Stop\",\n"
-            printf "      \"matcher\": \"*\",\n"
-            printf "      \"command\": [\"~/.codex/hooks/%s\"]\n" "$hook_name"
-            printf "    }"
-            local_index=$((local_index + 1))
-        done
-        printf "\n  ]\n"
-        printf "}\n"
-    } > "$DIST_DIR/hooks.json"
-fi
-
 {
     printf "{\n"
     printf "  \"generated_at\": "
@@ -612,9 +573,6 @@ fi
     printf "    \"agents\": "
     write_json_array included_agents
     printf ",\n"
-    printf "    \"hooks\": "
-    write_json_array included_hooks
-    printf ",\n"
     printf "    \"scripts\": "
     write_json_array included_scripts
     printf ",\n"
@@ -631,9 +589,6 @@ fi
     printf ",\n"
     printf "    \"agents\": "
     write_json_array excluded_agents
-    printf ",\n"
-    printf "    \"hooks\": "
-    write_json_array excluded_hooks
     printf "\n"
     printf "  }\n"
     printf "}\n"
@@ -643,7 +598,6 @@ echo "Built Codex compatibility layer in $DIST_DIR"
 echo "Command skills: ${#included_command_skills[@]} included, ${#excluded_command_skills[@]} excluded"
 echo "Native skills:  ${#included_native_skills[@]} included, ${#excluded_native_skills[@]} excluded"
 echo "Agents:         ${#included_agents[@]} included, ${#excluded_agents[@]} excluded"
-echo "Hooks:          ${#included_hooks[@]} included, ${#excluded_hooks[@]} excluded"
 echo "Scripts:        ${#included_scripts[@]} included"
 echo "Replacements:   ${#included_replacements[@]} included"
 echo ""

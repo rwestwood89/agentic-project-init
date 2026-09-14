@@ -48,11 +48,10 @@ SOURCES = the repo's durable product statements (`README`, `docs/`, `.project/ad
 `.project/product/` index-first) plus any owner-verbatim in the concept / Required Reading;
 WORK = the implementation and its tests. Derive
 the point independently — do not inherit the spec's or design's framing. Append its verdict block
-(ledger format, product-lens spec §3) to `.project/active/{item}/product-lens.md`. Then scan
-**every** block in the ledger, not just this run (resolution-by-citation per §3): an earlier
-unresolved `BLOCK` stands even if this run is `CLEAR` and forbids Certify. If the ledger records
-`Epic: <id>`, also read that epic's live Product-Lens gate; an unresolved epic `BLOCK` forbids
-Certify. Then answer, holistically and before the four areas below: **is this the right piece of
+(ledger format, product-lens spec §3) to `.project/active/{item}/product-lens.md`. Read the
+earlier blocks too: an open `BLOCK` nobody came back to is worth naming in the audit, but it is
+a flag, not a veto — check whether it is still true in the code before you repeat it.
+Then answer, holistically and before the four areas below: **is this the right piece of
 work?** A lens
 **DON'T**/**DO** finding graded owner/`[HARD]`, or any structural smell that fired in Code
 integrity, controls the verdict even if every rubric area is green. This judgment leads the audit;
@@ -96,8 +95,6 @@ Does the code follow the architecture, key decisions, and required invariants? A
 
 For each finding: name `file:line`, say what's wrong, say what should change. Don't draft the fix.
 
-**Check auto-memory** (`feedback_*` entries) for project-specific patterns previously rejected. Respect those as hard constraints.
-
 ### 3. Write audit.md
 
 Write `.project/active/{item}/audit.md`:
@@ -124,12 +121,9 @@ legibly here, not a pointer. A reader must find the original problem at this cer
 
 ## Product Judgment
 
-[Lead with the holistic answer: **is this the right piece of work?** State the product-lens
-ledger gate (CLEAR / DISPOSED / BLOCKED) and name any structural smell that fired. An unresolved
-owner/`[HARD]` contradiction, or any structural smell that fired and the Product Judgment has not
-explicitly resolved, forbids Certify regardless of the rubric below — escalation raises a smell
-into this judgment, it does not resolve it. A lower-authority or can't-find finding is noted with
-its disposition and does not block certification.]
+[Lead with the holistic answer: **is this the right piece of work?** Name any open product-lens
+finding and any structural smell that fired, and say whether it is still true in the code. A real
+contradiction with what the owner asked for is a Needs Work verdict. Everything else is a note.]
 
 ## Findings
 
@@ -150,9 +144,7 @@ its disposition and does not block certification.]
 
 ## Certification
 
-[List what was checked and what was marked. If partial, explain what's left open. **Certify
-requires the product-lens ledger gate not be BLOCKED** — an unresolved owner/`[HARD]`
-contradiction is Needs Work, not a nitpick.]
+[List what was checked and what was marked. If partial, explain what's left open.]
 
 **Not checked:** [Required. What this pass did not cover — areas, layers, or claims left
 unverified. A certification with unstated limits reads as a blank check.]
@@ -183,9 +175,9 @@ For each backlog item in the epic:
 - Is the verdict "Certify" or "Needs Work"?
 - Flag items without audits or with "needs work" verdicts.
 
-If any items are uncertified, report the gaps and stop. Epic certification requires all items to pass first.
+Report items that are uncertified. That is information for the user, not a stop — an item can be finished and shipped without a clean audit artifact, and the epic can certify around it as long as you say what is unverified.
 
-Also scan each item's `product-lens.md` (every block, resolution-by-citation per the lens spec §3) and any epic finding it references; an unresolved `BLOCK` forbids epic certification the same as a missing item audit.
+Also check each item's `product-lens.md` for an open `BLOCK`. Verify it against the code before repeating it; findings go stale when the fix landed and nobody updated the note.
 
 ### 3. Assess against source documents
 
@@ -193,7 +185,7 @@ Read the Source Documents and answer: does the delivered work fulfill the origin
 
 Flag gaps where the shaping intent was lost, narrowed, or deviated from without justification.
 
-**Run the product-lens over the assembled epic** as an independent aggregate check: spawn a fresh-context `default` subagent on `$HOME/.codex/scripts/product-lens.md` (pack: `claude-pack/scripts/product-lens.md`); SOURCES = the repo's durable product statements (`README`, `docs/`, `.project/adr/`, `.project/product/` index-first) plus the epic's Source Documents; WORK = the delivered items together. It catches a whole-epic contradiction or omission that no single item audit owned (a composition gap). Append its verdict to the epic's **Product-Lens** block; an unresolved owner/`[HARD]` `BLOCK` or a fired-and-unresolved smell forbids epic certification.
+**Run the product-lens over the assembled epic** as an independent aggregate check: spawn a fresh-context `default` subagent on `$HOME/.codex/scripts/product-lens.md` (pack: `claude-pack/scripts/product-lens.md`); SOURCES = the repo's durable product statements (`README`, `docs/`, `.project/adr/`, `.project/product/` index-first) plus the epic's Source Documents; WORK = the delivered items together. It catches a whole-epic contradiction or omission that no single item audit owned (a composition gap). Append its verdict to the epic's **Product-Lens** block. Its findings are input to your judgment, not a veto over it.
 
 ### 4. Certify the epic
 

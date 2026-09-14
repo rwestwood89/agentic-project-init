@@ -12,8 +12,12 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TARGET_DIR="$HOME/.claude"
 SOURCE_FILE="$TARGET_DIR/.agentic-pack-source"
+
+# shellcheck source=lib/settings-hooks.sh
+source "$SCRIPT_DIR/lib/settings-hooks.sh"
 
 # Get source directory
 if [ ! -f "$SOURCE_FILE" ]; then
@@ -34,7 +38,7 @@ remove_symlinks() {
     local dir="$1"
     local subdir="$2"
 
-    [ -d "$dir" ] || return
+    [ -d "$dir" ] || return 0
 
     for file in "$dir"/*; do
         [ -e "$file" ] || [ -L "$file" ] || continue
@@ -59,20 +63,8 @@ done
 echo ""
 echo "Cleaning settings.json..."
 settings_file="$TARGET_DIR/settings.json"
-if [ -f "$settings_file" ] && command -v jq &> /dev/null; then
-    # Check if PreCompact hooks exist
-    if jq -e '.hooks.PreCompact' "$settings_file" > /dev/null 2>&1; then
-        # Create backup
-        cp "$settings_file" "$settings_file.bak"
-        # Remove hook entries that reference our hooks directory
-        jq 'if .hooks.PreCompact then .hooks.PreCompact = [.hooks.PreCompact[] | select(.hooks | all(.command | contains("/.claude/hooks/") | not))] else . end | if .hooks.PreCompact == [] then del(.hooks.PreCompact) else . end | if .hooks == {} then del(.hooks) else . end' "$settings_file" > "$settings_file.tmp"
-        mv "$settings_file.tmp" "$settings_file"
-        echo -e "${GREEN}  ✓ Cleaned hook configuration${NC}"
-    else
-        echo -e "${YELLOW}  ⚠ No PreCompact hooks found${NC}"
-    fi
-elif [ -f "$settings_file" ]; then
-    echo -e "${YELLOW}  ⚠ jq not found - please manually remove hook configuration${NC}"
+if [ -f "$settings_file" ]; then
+    cleanup_legacy_hooks "$settings_file"
 else
     echo -e "${YELLOW}  ⚠ No settings.json found${NC}"
 fi
@@ -80,7 +72,7 @@ fi
 # Remove metadata files
 echo ""
 echo "Removing metadata..."
-for file in .agentic-pack-source .agentic-pack-version .hook-paths.json; do
+for file in .agentic-pack-source .agentic-pack-version; do
     if [ -f "$TARGET_DIR/$file" ]; then
         rm "$TARGET_DIR/$file"
         echo -e "${GREEN}  ✓ Removed: $file${NC}"

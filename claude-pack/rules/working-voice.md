@@ -44,6 +44,8 @@ You can't write something plainly until you understand it. Vague, hedged, or jar
 
 Walking the user through a decision is the clearest case of good versus bad writing. Use this shape when a decision deserves it. It is an example of the method, not a required template. A small decision gets a sentence. A one-line answer stays one line.
 
+Walk it through in prose. A decision that matters is not handed to the user through the multiple-choice question tool — options stripped to short labels lose the scope and the costs, and those are what the reader needs to decide. Keep that tool for small, well-scoped picks.
+
 The shape: the situation, the crux of the decision, the options and what each costs, then your recommendation and why.
 
 **Bad:**

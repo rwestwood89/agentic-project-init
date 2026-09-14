@@ -133,6 +133,31 @@ The cause sits under the rules rather than in them. An agent pays nothing to rea
 
 Evidence from 2026-09-03 sits in the session transcript and in `.project/active/mental-model-reviewer/`. The owner's framing: value does not mean packing the most information into the fewest words. Make it intelligible first.
 
+## P1 - Agent Knowledge Homes
+
+### [KNOWLEDGE-HOMES] Agent Knowledge Homes
+
+**Priority:** P1
+**Status:** Draft
+**Estimate:** 2.5-4 days (3 items)
+**Category:** Rules and prompts
+
+Retire the pack's hidden memory and transcript machinery, give execution facts a single tracked home that ships write-only as a deliberate test, and reshape session bookkeeping so `CURRENT_WORK.md` holds only current state while recent history reaches the agent through a bounded read. Removes four references that misdirect every session, deletes a subsystem that 1M context windows made obsolete, and produces the evidence needed to decide whether an agent-learning loop is worth building at all.
+
+The register ships with instructions and no reader on purpose. Its contents are the deliverable: emptiness, junk, and four good facts are all valid results, and each answers whether a read path is worth building. This is the first slice of `EPIC-003`, which stays open for the loop itself.
+
+**Epic:** `.project/backlog/epic_knowledge_homes.md`
+**Concept:** `.project/concepts/agent-knowledge-and-enforcement.md`
+
+**Items**:
+- [ ] Item 1: Retire dead pack content (1-1.5 days) — delete the memory and transcript subsystem, `example-rules.md`, and every reference to them; the four hidden feedback entries are dispositioned in place rather than migrated, two of them as direct pack edits (`.project/active/retire-hidden-memories/spec.md`, *Why nothing migrates*)
+- [ ] Item 2: Execution register, write-only (0.5-1 day) — the register, its density bar and format, seeding in `project-pack/`, the write beat at `close`, and removal of the `Lessons Learned` field (depends on 1)
+- [ ] Item 3: Session bookkeeping (1-1.5 days) — `wrap_up`'s final shape, `CURRENT_WORK.md` cut to current state, bounded history read at boot (depends on 1, 2)
+
+**Sequencing note:** `AOP-005` runs after this epic, per owner call 2026-09-09. This epic leaves the pack with zero hooks, which is the clean slate AOP-005 starts from.
+
+---
+
 ## Completed / Archived
 
 ### ~~[EPIC-001] Project Initialization Strategy~~ ✅
@@ -374,9 +399,11 @@ TBD — needs its own research/concept pass. Possible directions:
 ### [AOP-005] Force contemplation on outcomes — comprehension pump
 
 **Priority:** P0
-**Status:** Backlog
+**Status:** Backlog — sequenced after `KNOWLEDGE-HOMES` (owner call, 2026-09-09)
 **Estimate:** M
 **Category:** Hook / Enforcement Mechanism
+
+**Scope note (2026-09-09).** This item owns the hook-plus-subagent mechanism for the pack. The fifth thread of `.project/concepts/agent-knowledge-and-enforcement.md` — converting always-on rules into automatic checks — is the same mechanism aimed at a different target, and is tracked here rather than duplicated. Whichever spike runs first answers the other's open question. `KNOWLEDGE-HOMES` removes every hook from the pack, so this item starts from zero hooks and no working precedent for a hook that injects text or spawns a subagent.
 
 #### Problem
 
@@ -777,5 +804,6 @@ Key insight from Robert Nishihara (Anyscale CEO): "Knowledge stored outside the 
 #### Notes
 
 - Start small with one skill, validate before scaling
-- Consider integration with existing `/capture` and `/memorize` commands
+- ~~Consider integration with existing `/capture` and `/memorize` commands~~ — both commands are deleted by `KNOWLEDGE-HOMES` Item 1
 - May inform future improvements to command prompts themselves
+- **First slice is `KNOWLEDGE-HOMES`** (owner call, 2026-09-09). That epic ships the write half — a tracked, write-only register for execution facts — and this epic stays open for the loop itself. Whether the loop is worth building is decided by what agents actually write into that register, so treat its contents as this epic's entry evidence rather than starting from the design ideas below.

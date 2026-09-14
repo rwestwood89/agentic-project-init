@@ -1,24 +1,8 @@
 # Changelog
 
-Historical record of completed work.
+Historical record of completed work, **ordered newest-first**. Both writers insert at the top: `/_my_close` files a completed work item or epic, and `/_my_wrap_up` files an important change that never became a work item. Session boot reads the first five entries, so an entry added at the bottom is invisible to it.
 
----
-
-## [YYYY-MM-DD] - [Epic/Item Name]
-
-**Type**: Epic | Item
-**Duration**: [X days] (estimated: [Y days])
-
-### Summary
-Brief description of what was accomplished.
-
-### Deliverables
-- [Deliverable 1]
-- [Deliverable 2]
-
-### Lessons Learned
-- [What went well]
-- [What could improve]
+An entry's heading is `## [YYYY-MM-DD] - {name}` at line start, and `### Deliverables`, when present, is its last section. The boot read depends on both, so this is a read contract rather than house style.
 
 ---
 

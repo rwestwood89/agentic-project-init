@@ -3,23 +3,9 @@
 # Shared exclusions for the Codex compatibility layer.
 COMMAND_SKILL_PREFIX="my-"
 
-EXCLUDED_COMMANDS=(
-  "_my_capture"
-  "_my_memorize"
-  "_my_recall"
-  "_my_review_compact"
-)
+EXCLUDED_COMMANDS=()
 
-EXCLUDED_AGENTS=(
-  "recall"
-)
-
-EXCLUDED_HOOKS=(
-  "capture.sh"
-  "precompact-capture.sh"
-  "query-transcript.py"
-  "parse-transcript.py"
-)
+EXCLUDED_AGENTS=()
 
 # Command-derived skills are implicitly discoverable unless listed here. Keep user-selected
 # workflow shortcuts explicit when automatic matching would broaden their intended scope.
@@ -54,7 +40,7 @@ declare -A COMMAND_SKILL_DESCRIPTIONS=(
   ["spike"]="Write a throwaway probe to de-risk a known assumption, then feed the finding back into the pipeline. Use when you have a clear goal and one specific thing to confirm by running code."
   ["spec"]="Uncover and capture the problem, success criteria, and known requirements through critical questioning. Use when a feature or change needs its requirements clarified and documented before design."
   ["spec-review"]="Adversarially review a spec before it becomes the design contract. Use when a spec needs a devil's-advocate audit for faithfulness, problem framing, and pipeline risk."
-  ["wrap-up"]="Summarize session work and update project context. Use when closing a session and refreshing .project/CURRENT_WORK.md or related docs."
+  ["wrap-up"]="Update project state at session end and propose cheap records for confirmation. Use when closing a session and refreshing .project/CURRENT_WORK.md, the completion changelog, or the execution register."
 )
 
 declare -A AGENT_DESCRIPTIONS=(
@@ -65,5 +51,6 @@ declare -A AGENT_DESCRIPTIONS=(
 # directory absent from this list is excluded from the Codex build with no error.
 NATIVE_SKILL_ALLOWLIST=(
   "_my_mental_model"
+  "_my_mental_model_v2"
   "show-me"
 )

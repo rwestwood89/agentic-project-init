@@ -73,11 +73,11 @@ resolve it silently, in either direction.
 
 ## Before Starting Non-Trivial Work
 
-1. **Read `.project/CURRENT_WORK.md`** — active work context, recent decisions, known issues
+1. **Read `.project/CURRENT_WORK.md`** — what is active right now and what is up next
 2. **Skim `.project/product/INDEX.md` if present** — the product's implemented promises; open
    only the entries relevant to your task. An absent or empty ledger just means none recorded.
-3. **Read the relevant docs** for the area you're working in (check CLAUDE.md for pointers)
-4. **Check saved project context** for known gotchas before making assumptions
+3. **Read the newest completions in `.project/completed/CHANGELOG.md` if present** — what just shipped, so you know whether the area you are about to touch was just changed. Run the bound rather than reading the file, so the cost is the same at 7 entries and at 70: `awk '/^## \[[0-9]/{n++; p=1} n>5{exit} /^### Deliverables/{p=0} /^---$/{p=0} p' .project/completed/CHANGELOG.md`. It returns the newest 5 entries, heading through `Summary`.
+4. **Read the relevant docs** for the area you're working in (check CLAUDE.md for pointers)
 
 ## After Completing Work
 
@@ -91,41 +91,6 @@ Before exploring the codebase to understand how something works, check:
 - Project docs (often in `docs/`) for existing documentation
 - `.project/research/` for previous deep investigations
 - `.project/CURRENT_WORK.md` for recent work that may already cover the area
-
-
-## From `example-rules.md`
-
-# Example Project Rules
-
-This file contains example rules and guidelines that Codex will follow during the conversation.
-
-## Code Style Guidelines
-
-- Use descriptive variable names
-- Add comments for complex logic
-- Follow existing code patterns in the project
-
-## Testing Requirements
-
-- Write unit tests for new functions
-- Ensure tests pass before committing
-- Aim for meaningful test coverage
-
-## Documentation Standards
-
-- Update README when adding features
-- Document API endpoints
-- Keep inline documentation current
-
-## Security Guidelines
-
-- Never commit secrets or credentials
-- Validate user input
-- Follow OWASP best practices
-
----
-
-**Note:** Codex global instructions are generated from `claude-pack/rules/`; edit the source rules and rebuild.
 
 
 ## From `markdown-formatting.md`
@@ -261,6 +226,8 @@ You can't write something plainly until you understand it. Vague, hedged, or jar
 ## Presenting a decision
 
 Walking the user through a decision is the clearest case of good versus bad writing. Use this shape when a decision deserves it. It is an example of the method, not a required template. A small decision gets a sentence. A one-line answer stays one line.
+
+Walk it through in prose. A decision that matters is not handed to the user through the multiple-choice question tool — options stripped to short labels lose the scope and the costs, and those are what the reader needs to decide. Keep that tool for small, well-scoped picks.
 
 The shape: the situation, the crux of the decision, the options and what each costs, then your recommendation and why.
 

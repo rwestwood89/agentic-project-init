@@ -56,7 +56,7 @@ else
 fi
 
 # No retired command names in the README catalog
-RETIRED="_my_code_review _my_code_quality _my_project_manage _my_audit_implementation _my_review_design"
+RETIRED="_my_code_review _my_code_quality _my_project_manage _my_audit_implementation _my_review_design _my_capture _my_memorize _my_recall _my_review_compact"
 FOUND_RETIRED=""
 for name in $RETIRED; do
     grep -qw -- "$name" "$README" && FOUND_RETIRED="$FOUND_RETIRED $name"
@@ -68,20 +68,48 @@ else
     FAIL=1
 fi
 
-# Product-ledger touch points stay wired (ADR 0008): the read rule, the lens discovery
-# surface, and the close write beat are prose lines a doc overhaul could silently drop.
-check_wired() {
-    local pattern="$1" file="$2" description="$3"
-    if grep -q -- "$pattern" "$SOURCE_DIR/$file"; then
-        echo -e "${GREEN}PASS: $description${NC}"
-    else
-        echo -e "${RED}FAIL: $description${NC}"
-        FAIL=1
-    fi
-}
-check_wired "product/INDEX.md" "claude-pack/rules/context-loading.md" "session-start rule reads the promise index"
-check_wired ".project/product/" "claude-pack/scripts/product-lens.md" "lens SOURCES include the promise ledger"
-check_wired "product.sh" "claude-pack/commands/_my_close.md" "close files promise entries via product.sh"
+# No pack surface names a CURRENT_WORK.md section that no longer exists. Deleting a
+# section while a command still writes to it is the orphaning class this guard catches:
+# `Recently Completed` had two writers, and `Session Notes` had none but shipped anyway.
+ORPHANED_SECTIONS="$(grep -rn 'Recently Completed\|Session Notes' \
+    "$SOURCE_DIR/claude-pack" "$SOURCE_DIR/project-pack" 2>/dev/null || true)"
+if [ -z "$ORPHANED_SECTIONS" ]; then
+    echo -e "${GREEN}PASS: no pack surface names a deleted CURRENT_WORK.md section${NC}"
+else
+    echo -e "${RED}FAIL: a pack surface still names a deleted CURRENT_WORK.md section${NC}"
+    echo "$ORPHANED_SECTIONS"
+    FAIL=1
+fi
+
+if grep -qi 'memory storage structure' "$SOURCE_DIR/docs/STRUCTURE.md"; then
+    echo -e "${RED}FAIL: docs/STRUCTURE.md still advertises memory storage${NC}"
+    FAIL=1
+else
+    echo -e "${GREEN}PASS: docs do not advertise memory storage${NC}"
+fi
+
+# The same bounded read, run against the shipped template: a freshly initialized project
+# must surface no completions at all. This is what the `[0-9]` anchor buys — a bracketed
+# placeholder heading is not a dated entry, in a new project or an old one.
+TEMPLATE_BOOT_READ="$(awk '/^## \[[0-9]/{n++; p=1} n>5{exit} /^### Deliverables/{p=0} /^---$/{p=0} p' \
+    "$SOURCE_DIR/project-pack/completed/CHANGELOG.md")"
+if [ -z "$TEMPLATE_BOOT_READ" ]; then
+    echo -e "${GREEN}PASS: the boot read surfaces nothing from a fresh project's CHANGELOG${NC}"
+else
+    echo -e "${RED}FAIL: the boot read surfaces a placeholder from the CHANGELOG template${NC}"
+    echo "$TEMPLATE_BOOT_READ"
+    FAIL=1
+fi
+
+# A freshly initialized project ships no placeholder a whole-file reader could mistake
+# for a completion. The boot read is protected by its `[0-9]` anchor; this protects the
+# human and the two on-demand readers, `_my_status` and `_my_project_find`.
+if grep -q '^## \[YYYY-MM-DD\]' "$SOURCE_DIR/project-pack/completed/CHANGELOG.md"; then
+    echo -e "${RED}FAIL: the CHANGELOG template still ships a placeholder entry${NC}"
+    FAIL=1
+else
+    echo -e "${GREEN}PASS: the CHANGELOG template ships no placeholder entry${NC}"
+fi
 
 # No pipeline-shape restatements outside the canonical pair
 # (claude-pack/rules/pipeline.md + claude-pack/commands/_my_pipeline.md, guarded by

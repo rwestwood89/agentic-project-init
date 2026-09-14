@@ -1,19 +1,17 @@
 {
-  "generated_at": "2026-09-03T19:45:28Z",
-  "source_revision": "b10c114",
-  "source_root": "/home/rwestwood/agentic-project-init",
+  "generated_at": "2026-09-14T00:44:44Z",
+  "source_revision": "9f7c465",
+  "source_root": "/home/reid/agentic-project-init",
   "included": {
     "command_skills": ["my-ask-me", "my-audit", "my-close", "my-concept", "my-concept-design", "my-concept-design-review", "my-design", "my-design-review", "my-epic-plan", "my-example-command", "my-git-manage", "my-handoff", "my-implement", "my-learning-test", "my-orchestrate", "my-pipeline", "my-plan", "my-ponytail", "my-pre-pr", "my-product-design", "my-project-find", "my-quick-edit", "my-research", "my-slop", "my-spec", "my-spec-review", "my-spike", "my-status", "my-wrap-up"],
-    "skills": ["my-mental-model", "show-me"],
+    "skills": ["my-mental-model", "my-mental-model-v2", "show-me"],
     "agents": ["example-agent"],
-    "hooks": [],
     "scripts": ["orchestrate-preamble-codex.md", "orchestrate-stage-codex.sh", "product-lens.md"],
     "command_skill_replacements": ["my-orchestrate"]
   },
   "excluded": {
-    "command_skills": ["my-capture", "my-memorize", "my-recall", "my-review-compact"],
-    "skills": [],
-    "agents": ["recall"],
-    "hooks": ["capture.sh", "parse-transcript.py", "precompact-capture.sh", "query-transcript.py"]
+    "command_skills": [],
+    "skills": ["convince-me"],
+    "agents": []
   }
 }

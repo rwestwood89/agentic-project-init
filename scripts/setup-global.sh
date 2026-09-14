@@ -1,6 +1,6 @@
 #!/bin/bash
 # Agentic Pack Global Setup
-# Installs commands, agents, hooks, skills, and rules to ~/.claude/
+# Installs commands, agents, skills, and rules to ~/.claude/
 #
 # Usage:
 #   ./setup-global.sh [--dry-run]
@@ -18,6 +18,9 @@ NC='\033[0m'
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SOURCE_DIR="$(dirname "$SCRIPT_DIR")"  # Parent of scripts/
 CLAUDE_PACK="$SOURCE_DIR/claude-pack"
+
+# shellcheck source=lib/settings-hooks.sh
+source "$SCRIPT_DIR/lib/settings-hooks.sh"
 
 # Version from git or file
 VERSION=$(git -C "$SOURCE_DIR" describe --tags 2>/dev/null || git -C "$SOURCE_DIR" rev-parse --short HEAD 2>/dev/null || echo "unknown")
@@ -123,7 +126,7 @@ if [ ! -d "$CLAUDE_PACK" ]; then
 fi
 
 # Create directories
-for subdir in commands agents hooks skills rules scripts; do
+for subdir in commands agents skills rules scripts; do
     create_dir "$TARGET_DIR/$subdir"
 done
 
@@ -142,15 +145,6 @@ for file in "$CLAUDE_PACK"/agents/*.md; do
     [ -f "$file" ] || continue
     filename=$(basename "$file")
     create_symlink "$file" "$TARGET_DIR/agents/$filename" "$filename"
-done
-
-# Symlink hooks
-echo ""
-echo "Setting up hooks..."
-for file in "$CLAUDE_PACK"/hooks/*; do
-    [ -f "$file" ] || continue
-    filename=$(basename "$file")
-    create_symlink "$file" "$TARGET_DIR/hooks/$filename" "$filename"
 done
 
 # Symlink skills
@@ -193,54 +187,16 @@ echo ""
 echo "Removing dead symlinks..."
 sweep_dead_symlinks
 
-# Configure settings.json (hook configuration)
+# Strip a PreCompact registration an earlier version of the pack wrote. The script it
+# points at no longer ships, so an install that ran before it was removed keeps firing a
+# dangling hook. See .project/active/retire-hidden-memories/spec.md.
 echo ""
-echo "Configuring hooks..."
-configure_hooks() {
-    local settings_file="$TARGET_DIR/settings.json"
-    local hook_path="$TARGET_DIR/hooks/precompact-capture.sh"
-
-    # New hook configuration
-    local hook_config='{
-  "hooks": {
-    "PreCompact": [
-      {
-        "matcher": "auto",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "'"$hook_path"'"
-          }
-        ]
-      }
-    ]
-  }
-}'
-
-    if [ "$DRY_RUN" = true ]; then
-        echo -e "${BLUE}[DRY RUN] Would configure hooks in $settings_file${NC}"
-        return
-    fi
-
-    if [ -f "$settings_file" ]; then
-        # Merge with existing - use jq if available
-        if command -v jq &> /dev/null; then
-            # Backup existing
-            cp "$settings_file" "$settings_file.bak"
-            # Merge configurations
-            jq -s '.[0] * .[1]' "$settings_file" <(echo "$hook_config") > "$settings_file.tmp"
-            mv "$settings_file.tmp" "$settings_file"
-            echo -e "${GREEN}  ✓ Merged hooks into existing settings.json${NC}"
-        else
-            echo -e "${YELLOW}  ⚠ jq not found - please manually add hook configuration${NC}"
-            echo -e "${YELLOW}    Add PreCompact hook pointing to: $hook_path${NC}"
-        fi
-    else
-        echo "$hook_config" > "$settings_file"
-        echo -e "${GREEN}  ✓ Created settings.json with hook configuration${NC}"
-    fi
-}
-configure_hooks
+echo "Removing legacy hook registration..."
+if [ "$DRY_RUN" = true ]; then
+    echo -e "${BLUE}[DRY RUN] Would remove any pack-written PreCompact hook from $TARGET_DIR/settings.json${NC}"
+else
+    cleanup_legacy_hooks "$TARGET_DIR/settings.json"
+fi
 
 # Write metadata files
 echo ""
@@ -254,33 +210,6 @@ else
     echo -e "${GREEN}  ✓ Source: $SOURCE_DIR${NC}"
     echo -e "${GREEN}  ✓ Version: $VERSION${NC}"
 fi
-
-# Write hook paths config
-write_hook_paths() {
-    local config_file="$TARGET_DIR/.hook-paths.json"
-    local hooks_dir="$CLAUDE_PACK/hooks"
-
-    if [ "$DRY_RUN" = true ]; then
-        echo -e "${BLUE}[DRY RUN] Would write hook paths to $config_file${NC}"
-        return
-    fi
-
-    cat > "$config_file" << EOF
-{
-  "version": 1,
-  "resolved_at": "$(date -Iseconds)",
-  "source": "$SOURCE_DIR",
-  "hooks": {
-    "query-transcript": "$hooks_dir/query-transcript.py",
-    "parse-transcript": "$hooks_dir/parse-transcript.py",
-    "capture": "$hooks_dir/capture.sh",
-    "precompact-capture": "$hooks_dir/precompact-capture.sh"
-  }
-}
-EOF
-    echo -e "${GREEN}  ✓ Hook paths: $config_file${NC}"
-}
-write_hook_paths
 
 # Next steps
 echo ""

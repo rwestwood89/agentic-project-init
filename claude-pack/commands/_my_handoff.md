@@ -16,5 +16,6 @@ Write a handoff document so a fresh agent can pick up where this session left of
      trust and what to re-verify.
 3. Redact secrets before writing: API keys, tokens, passwords, PII, customer data. Replace with `[REDACTED]`.
 4. Print the absolute path of the file you wrote so the user can share it.
+5. Pause when you are done writing and wait for further instruction. Writing the handoff is the whole job. If the user listed what comes next alongside the request, that belongs in the Focus section — do not go and do it.
 
 $ARGUMENTS

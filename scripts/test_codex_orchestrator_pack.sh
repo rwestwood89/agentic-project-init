@@ -14,6 +14,7 @@ ORCH="$ROOT/dist/codex/skills/my-orchestrate/SKILL.md"
 AGENTS="$ROOT/dist/codex/AGENTS.md"
 MANIFEST="$ROOT/dist/codex/manifest.json"
 SKILL_DIST="$ROOT/dist/codex/skills/my-mental-model"
+SKILL_V2_DIST="$ROOT/dist/codex/skills/my-mental-model-v2"
 
 fail() { echo -e "${RED}FAIL: $1${NC}"; exit 1; }
 pass() { echo -e "${GREEN}PASS: $1${NC}"; }
@@ -325,19 +326,36 @@ pass "Codex orchestrator replacement"
 
 # Directory skills ship as a unit: the whole pack tree reaches dist under the derived Codex name.
 [ -d "$SKILL_DIST" ] || fail "derived skill dir missing: $SKILL_DIST"
+[ -d "$SKILL_V2_DIST" ] || fail "derived v2 skill dir missing: $SKILL_V2_DIST"
 if [ -d "$ROOT/dist/codex/skills/_my_mental_model" ]; then
   fail "pack-side name leaked into dist"
 fi
-for f in SKILL.md design_synthesis.md visualize.md feedback/synthesis.md feedback/html.md; do
+if [ -d "$ROOT/dist/codex/skills/_my_mental_model_v2" ]; then
+  fail "pack-side v2 name leaked into dist"
+fi
+for f in SKILL.md design_synthesis.md review.md visualize.md feedback/synthesis.md feedback/html.md; do
   [ -f "$SKILL_DIST/$f" ] || fail "sibling missing from dist: $f"
+  [ -f "$SKILL_V2_DIST/$f" ] || fail "v2 sibling missing from dist: $f"
 done
 contains "$SKILL_DIST/SKILL.md" 'name: my-mental-model'
-jq -e '.included.skills == ["my-mental-model", "show-me"]' "$MANIFEST" >/dev/null \
-  || fail "manifest skills array is not exactly [my-mental-model, show-me]"
+contains "$SKILL_V2_DIST/SKILL.md" 'name: my-mental-model-v2'
+last_two_bytes="$(tail -c 2 "$SKILL_V2_DIST/SKILL.md" | od -An -t x1 | tr -d ' \n')"
+[ "$last_two_bytes" != "0a0a" ] || fail "generated native skill entry point has an extra blank line at EOF"
+jq -e '.included.skills == ["my-mental-model", "my-mental-model-v2", "show-me"]' "$MANIFEST" >/dev/null \
+  || fail "manifest skills array is not exactly [my-mental-model, my-mental-model-v2, show-me]"
 does_not_contain "$MANIFEST" 'example-skill'
 # The flat single-file skill lane is gone (D6), so a flat .md produces no skill on either runtime.
 does_not_contain "$ROOT/scripts/build-codex-pack.sh" 'skills" -maxdepth 1 -type f'
 pass "directory skill tree and derived name"
+
+# V2 is an independent experiment: its command identity and every writable project path differ
+# from v1, while the original entry point and namespace remain available unchanged.
+contains "$SKILL_V2_DIST/SKILL.md" '.project/mental-alignment-v2/runs'
+contains "$SKILL_V2_DIST/SKILL.md" '.project/mental-alignment-v2/feedback-synthesis.md'
+contains "$SKILL_V2_DIST/SKILL.md" '.project/mental-alignment-v2/feedback-html.md'
+does_not_contain "$SKILL_DIST/SKILL.md" '.project/mental-alignment-v2/'
+contains "$SKILL_DIST/SKILL.md" '.project/mental-alignment/runs'
+pass "mental-model v1 and v2 outputs are isolated"
 
 # The adapter ran: no marker survives, and the Codex vocabulary replaced the Claude vocabulary.
 if grep -rn 'harness-block' "$SKILL_DIST"; then
@@ -348,6 +366,42 @@ does_not_contain "$SKILL_DIST/SKILL.md" 'subagent_type'
 does_not_contain "$SKILL_DIST/SKILL.md" 'SendMessage'
 # A non-inheriting spawn must name fork_turns: "none" explicitly — the Codex default is "all".
 contains "$SKILL_DIST/SKILL.md" 'fork_turns: "none"'
+contains "$SKILL_DIST/SKILL.md" '#### Visual acceptance gate'
+contains "$SKILL_DIST/SKILL.md" 'inspect every image and visual component'
+contains "$SKILL_V2_DIST/SKILL.md" 'Advance only when your own judgment says the artifact is ready'
+contains "$SKILL_V2_DIST/SKILL.md" 'a clean review never grants a pass'
+contains "$SKILL_V2_DIST/SKILL.md" 'Treat it as evidence about the whole artifact'
+contains "$SKILL_V2_DIST/review.md" 'Do not rewrite the artifact'
+contains "$SKILL_V2_DIST/review.md" 'issue a readiness verdict'
+contains "$SKILL_V2_DIST/design_synthesis.md" 'Do not read shared feedback'
+contains "$SKILL_V2_DIST/design_synthesis.md" 'Exact names and definitions'
+contains "$SKILL_V2_DIST/design_synthesis.md" 'what it is, what role it plays, and what is true about it'
+contains "$SKILL_V2_DIST/design_synthesis.md" 'Explicit invariants'
+contains "$SKILL_V2_DIST/design_synthesis.md" 'conditions that must remain true across valid states and transitions'
+contains "$SKILL_V2_DIST/design_synthesis.md" 'Concrete code shapes'
+contains "$SKILL_V2_DIST/design_synthesis.md" 'actual data structures that define important types'
+contains "$SKILL_V2_DIST/design_synthesis.md" 'data models, signatures, and class structures'
+contains "$SKILL_V2_DIST/design_synthesis.md" 'meaningful real numbers'
+contains "$SKILL_V2_DIST/design_synthesis.md" 'Important stuff up front'
+contains "$SKILL_V2_DIST/design_synthesis.md" 'Use explicit references to later sections'
+contains "$SKILL_V2_DIST/design_synthesis.md" 'Use the right scope'
+contains "$SKILL_V2_DIST/design_synthesis.md" 'Definitions before measurements'
+contains "$SKILL_V2_DIST/design_synthesis.md" 'No invented rationale'
+contains "$SKILL_V2_DIST/design_synthesis.md" 'One mental model'
+contains "$SKILL_V2_DIST/design_synthesis.md" 'Unless it explicitly specifies the sequence'
+contains "$SKILL_V2_DIST/design_synthesis.md" 'Specific does not mean exhaustive'
+contains "$SKILL_V2_DIST/design_synthesis.md" 'Once the point has landed, stop'
+contains "$SKILL_V2_DIST/design_synthesis.md" 'An explainer, not a dossier'
+contains "$SKILL_V2_DIST/visualize.md" 'Do not read shared feedback'
+contains "$SKILL_V2_DIST/visualize.md" 'Important stuff up front'
+contains "$SKILL_V2_DIST/visualize.md" 'Use working references to later sections'
+contains "$SKILL_V2_DIST/visualize.md" 'a data model gets its fields and shapes'
+contains "$SKILL_V2_DIST/visualize.md" 'the HTML must not be the first place they appear'
+contains "$SKILL_V2_DIST/visualize.md" 'Self-contained visuals'
+contains "$SKILL_V2_DIST/visualize.md" 'Restyling the same words does not count'
+contains "$SKILL_V2_DIST/visualize.md" 'One explanatory spine'
+contains "$SKILL_V2_DIST/visualize.md" 'Real transitions'
+contains "$SKILL_V2_DIST/visualize.md" 'Aggressive subtraction'
 # The adapter reached a sibling, not only the entry point.
 contains "$SKILL_DIST/design_synthesis.md" 'fork_turns'
 # The reviewer's instruction file is a sibling too, and the review pass is dead without it.
@@ -401,6 +455,10 @@ setup_out="$(bash "$ROOT/scripts/setup-codex.sh" --dry-run)"
 echo "$setup_out" | grep -q '.codex/scripts' || fail "setup dry-run did not mention .codex/scripts"
 echo "$setup_out" | grep -q 'orchestrate-stage-codex.sh' || fail "setup dry-run did not include helper script"
 echo "$setup_out" | grep -q 'Global instructions' || fail "setup dry-run did not mention global instructions"
+does_not_contain "$ROOT/scripts/setup-codex.sh" 'DIST_DIR/hooks'
+does_not_contain "$ROOT/scripts/setup-codex.sh" 'codex_hooks'
+does_not_contain "$ROOT/scripts/build-codex-pack.sh" 'Check auto-memory'
+does_not_contain "$ROOT/scripts/build-codex-pack.sh" 'This file contains example rules'
 
 fresh_home="$tmpdir/home"
 mkdir -p "$fresh_home"

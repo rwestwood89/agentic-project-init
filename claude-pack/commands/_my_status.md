@@ -13,7 +13,7 @@ No mode flags. No fixed template. Adapt your output to what you find.
 ## Step 1: Read Project State
 
 Read these files:
-- `.project/CURRENT_WORK.md` — active items, recent completions, blockers
+- `.project/CURRENT_WORK.md` — what is active right now and what is up next
 - `.project/product/INDEX.md` — the product's implemented promises (skip if absent)
 - `.project/backlog/BACKLOG.md` — epic priorities and status
 - `.project/backlog/epic_*.md` — item-level status within each active epic
