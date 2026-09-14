@@ -50,6 +50,23 @@ single source, so it can't go stale here.
 
 ---
 
+## Knowledge Homes
+
+Four append-only registers hold durable knowledge that must survive across sessions and agents. Each has one routing question — ask it before reaching for the native memory store or any other location.
+
+| Register | Routing question | What belongs |
+|----------|-----------------|--------------|
+| `adr/` | Would a future agent re-derive the wrong thing or relitigate this decision? | Decisions and the reasoning behind them. Contracts, invariants, mechanism choices. |
+| `product/` | Is this an implemented promise a cold agent could miss or undo? | What the product guarantees — major use cases, public surfaces, cross-cutting contracts. |
+| `execution/` | Would a future agent spend real time rediscovering this behavior? | How a component, tool, or environment actually behaves, learned by doing. |
+| `feedback/` | Did the owner correct a pack prompt's output? | Wrong/Right/Learning entries, tagged by the pack target to fix upstream. |
+
+Each register's README defines its density bar and entry format. When in doubt, read the "Where it does not go" section in `execution/README.md` — it cross-references all four registers with examples.
+
+**The native memory store (`~/.claude/projects/.../memory/`) is not a knowledge home.** It is device-local, not git-tracked, and not owner-reviewed. If you're about to save something there, check whether it belongs in one of these registers first.
+
+---
+
 ## Key Files
 
 | File | Purpose |

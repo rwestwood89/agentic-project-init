@@ -96,11 +96,19 @@ Use `git mv` for all moves:
 **BACKLOG.md** (epic scope only):
 - Update the epic's entry: strikethrough the heading, add ✅, change status to `Complete (YYYY-MM-DD)`, add `Archived to: .project/completed/{path}`.
 
-### 4e. Report
+### 4e. Commit
+
+Stage all changes from steps 4a–4d and commit. Message format:
+
+```
+Close {item|epic}: {one-line summary}
+
+Archived to completed/{dest}. [Brief note of any records filed.]
+```
+
+### 4f. Report
 
 Show the user what was done: what was archived, what files were updated, and any next steps (e.g., suggesting epic close if all items are done).
-
-Do not auto-commit. Leave all changes staged.
 
 ---
 
