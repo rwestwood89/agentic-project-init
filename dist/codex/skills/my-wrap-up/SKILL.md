@@ -1,37 +1,30 @@
 ---
 name: my-wrap-up
-description: Summarize session work and update project context. Use when closing a session and refreshing .project/CURRENT_WORK.md or related docs.
+description: Update project state at session end and propose cheap records for confirmation. Use when closing a session and refreshing .project/CURRENT_WORK.md, the completion changelog, or the execution register.
 ---
 
 Generated from `claude-pack/commands/_my_wrap_up.md`. This is a command-derived Codex skill. Rebuild it instead of editing it by hand.
 
-Codex compatibility mode:
-
-- Memory capture, transcript indexing, and `MEMORY.md` updates are out of scope.
-- Restrict this workflow to project-state hygiene:
-  - review the session's work
-  - update `.project/CURRENT_WORK.md`
-  - update existing docs if needed
-  - summarize what changed
-- Ignore any source instructions that require `/_my_capture`, `/_my_memorize`, auto-memory, or transcript persistence.
-
-
 # Wrap Up
 
-**Purpose:** End-of-session command to persist context for future sessions. Updates CURRENT_WORK.md, MEMORY.md, and relevant docs so the next Claude session doesn't re-research what you just figured out.
+**Purpose:** End-of-session command that writes cheap records: current state, a completion no work item captured, and a fact learned by doing. Each has a tracked home that already exists.
 
 ## Usage
 
 ```
-`my-wrap-up`                   # review session and update all context files
+`my-wrap-up`                   # review the session, update state, propose records
 `my-wrap-up` --quick           # just update CURRENT_WORK.md status
 ```
 
 ## Why This Exists
 
-New Claude sessions only auto-load a few files (CLAUDE.md, `.claude/rules/`, auto-memory). Everything else requires discovery. If session learnings aren't distilled into these auto-loaded files, the next session will re-research the same things.
+Sessions die and take their context with them. Three things are worth keeping, and each has a home:
 
-This command closes the loop: work happens → wrap-up persists the knowledge → next session boots with it.
+- **What is active right now** → `.project/CURRENT_WORK.md`. The first file the next session reads.
+- **Important work that shipped without becoming a tracked item** → `.project/completed/CHANGELOG.md`. Work that goes through ``my-close`` lands there already. Work that never became a work item reaches the next session only if this command catches it.
+- **A fact about how this codebase or environment actually behaves, learned by doing** → `.project/execution/ENTRIES.md`.
+
+All three are records. A record is cheap and survives a mediocre entry. This command writes records and nothing else — curated documentation changes through the work-item lifecycle, not from a session summary.
 
 ## Instructions
 
@@ -39,69 +32,70 @@ This command closes the loop: work happens → wrap-up persists the knowledge �
 
 1. **Review the conversation** to identify what was worked on, decisions made, and problems solved this session. The conversation is the source of truth for what *this* session did.
 2. **Cross-check with git** — run `git diff --stat` and `git log --oneline -5` to validate. If the git log contains commits that don't match your conversation (e.g., from another concurrent session), ignore them — only summarize your own work.
-3. Read `.project/CURRENT_WORK.md` to understand the current state
+3. Read `.project/CURRENT_WORK.md` to understand the current state.
 4. Briefly summarize to the user: "Here's what happened this session: [summary]"
 
 ### Step 2. Update CURRENT_WORK.md
 
-Update `.project/CURRENT_WORK.md` to reflect the session's work:
+`.project/CURRENT_WORK.md` holds Active Work and Up Next. Update it to reflect the session:
 
-- **Move completed items** from "Active Work" to "Recently Completed" with date and status
-- **Update active items** with current status, blockers, next steps
-- **Add new items** if work was started but not finished
-- **Update "Up Next"** if priorities shifted
-- Keep entries concise — future Claude sessions will read this to get oriented
+- **Update active items** with current status, blockers, next steps. Append a bullet; don't rewrite what an earlier session left.
+- **Add new items** if work was started but not finished.
+- **Update "Up Next"** if priorities shifted.
+- Keep entries concise — the next session reads this to get oriented.
 
-### Step 3. Update Auto-Memory (MEMORY.md)
+Completed items are removed from Active Work by ``my-close``, which files the completion in the CHANGELOG. This file carries no history of its own.
 
-Check whether this session produced knowledge that would save a future session time:
+**If `--quick` was passed, skip Steps 3 and 4 and go straight to Step 5.**
 
-**Update auto-memory if you discovered:**
-- A gotcha or pitfall (API quirk, data format issue, edge case)
-- A convention or pattern that isn't documented
-- A decision that changes how things work
-- A bug fix whose root cause wasn't obvious
-- A key command or workflow that's easy to forget
+### Step 3. Propose Records — and Wait
 
-**Auto-memory location:** `~/.claude/projects/*/memory/MEMORY.md` (project-specific) or create a topic file in the same directory for detailed notes.
+Two candidates. Either, both, or neither may apply. **Write nothing in this step.**
 
-**Rules:**
-- Keep MEMORY.md under 200 lines (it's auto-loaded every session)
-- Distill, don't dump — write what you'd want to know, not what you did
-- Update "Recent Decisions" section with date and one-line summary
-- Remove stale entries that are no longer relevant
+**A light CHANGELOG entry** — an important change this session made that no work item captured. Work that went through ``my-close`` is already in the CHANGELOG; this catches what never became a tracked item. Judge it against that guidance: *important changes not captured by work items*. Routine edits, in-progress work, and anything still on the branch unfinished are not candidates.
 
-### Step 4. Update Docs (if applicable)
+**An execution-register entry** — a fact about how this codebase or environment behaves that you learned by doing, this session. You hold the session, so find candidates by asking yourself what cost real time and would cost the next agent the same. `.project/execution/README.md` carries the density bar and the boundary against the other homes; read it before proposing. If ``my-close`` already filed a fact this session, don't propose it again — both beats write to the same register.
 
-If the session involved changes that affect documented behavior:
+Show the user each candidate in the shape it would be written, and **stop and wait for confirmation.** Do not proceed to Step 4 until the user has answered.
 
-- **Architecture changes** → update `docs/architecture.md` or equivalent
-- **New commands/features** → update `docs/commands.md` or equivalent
-- **Operations changes** → update `docs/operations.md` or equivalent
-- **Bug fixes with non-obvious causes** → add to troubleshooting docs
+"Nothing to record" is a normal outcome and the common one. Say so and move to Step 5. Do not pad either register to have something to show.
 
-Only update docs that already exist. Don't create new docs unless the user asks.
+### Step 4. Write What Was Confirmed
 
-### Step 5. Report
+Write only what the user confirmed.
 
-Summarize what was updated:
+**The light CHANGELOG entry** goes at the **top** of `.project/completed/CHANGELOG.md`, above the newest existing entry. The file is ordered newest-first and session boot reads the first five entries; an entry appended at the bottom is invisible to it. Three fields, which is what the boot read takes:
+
+```markdown
+## [2026-09-11] - explicit-skill-scopes
+
+**Type**: Change
+
+### Summary
+Made the workflow shortcut skills explicit-only so they stop firing on unrelated prompts.
+```
+
+`Type: Change` is what distinguishes these from ``my-close``'s entries, which are `Item` or `Epic` and carry `Duration` and `Deliverables` as well.
+
+**The execution note** is appended to the **end** of `.project/execution/ENTRIES.md`, using the format in `.project/execution/README.md`. No script, no id — just the tagged heading, **Fact**, and **Evidence**. Never rewrite an existing entry.
+
+### Step 5. Stage, Show, Confirm
+
+1. **Stage all of the session's changes**, not just the files this command wrote — `git add -A`. The session ends with its work staged, records and code together.
+2. Show what is staged: `git status --short` and `git diff --cached --stat`.
+3. Summarize:
 
 ```
 Wrap-up complete:
 - CURRENT_WORK.md: [what changed]
-- MEMORY.md: [what was added/updated, or "no changes needed"]
-- Docs: [which files updated, or "none needed"]
+- CHANGELOG: [the light entry, or "none"]
+- Execution register: [the fact, or "none"]
+- Staged: [N files]
 ```
 
-If `--quick` was passed, only do Steps 2, 5, and 6.
+4. **Ask whether to commit, and wait.** Propose a commit message describing the session's work, following the project's CLAUDE.md conventions for message format and attribution. Commit only if the user says yes; otherwise leave everything staged and stop.
 
-### Step 6. Commit
-
-Commit the wrap-up changes to git:
-
-1. Stage the files that were updated (e.g., `.project/CURRENT_WORK.md`, docs)
-2. Commit with message: `chore: wrap-up session context`
-3. Do NOT push unless the user asks
+Never commit without asking.
 
 ---
 
@@ -109,7 +103,7 @@ Commit the wrap-up changes to git:
 - End of a work session before closing Claude
 - After completing a significant piece of work
 - After discovering something that burned time (so it doesn't burn time again)
-- When the user says "wrap up", "update docs", "save context", or similar
+- When the user says "wrap up", "save context", or similar
 
 **Related Commands:**
 - ``my-handoff`` — write a handoff doc so a fresh agent can continue mid-task

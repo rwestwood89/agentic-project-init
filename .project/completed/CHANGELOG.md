@@ -4,6 +4,71 @@ Historical record of completed work.
 
 ---
 
+## [2026-09-11] - session-bookkeeping
+
+**Type**: Item
+**Duration**: 2 days (2026-09-10 to 2026-09-11)
+
+### Summary
+Cut `CURRENT_WORK.md` to current state only — Active Work and Up Next, 241 lines down to 125 — and moved recent history to a bounded read of the newest five CHANGELOG entries at session boot, so orientation cost no longer grows with the archive. Rewrote `/_my_wrap_up` to write cheap records instead of documents: no `docs/` pass, no unasked commit, both records behind one propose-and-wait.
+
+### Deliverables
+- **Read side:** `claude-pack/rules/context-loading.md` — bounded `awk` over the newest 5 CHANGELOG entries as read 3, after the ADR 0008 ledger skim
+- **Write side:** `claude-pack/commands/_my_wrap_up.md` rewritten to five steps; light CHANGELOG entry for work that skipped `close`; execution-note beat; stage-and-show instead of commit
+- **Shape:** `.project/CURRENT_WORK.md` and `project-pack/CURRENT_WORK.md` cut to two sections; CHANGELOG template ships no placeholder and states the newest-first contract
+- **Codex:** wrap-up prompt prefix deleted, description override reworded, pack rebuilt and installed
+- **Artifacts:** spec.md, spec-review.md, design.md, design-review.md, product-lens.md, plan.md, audit.md
+
+---
+
+## [2026-09-11] - pipeline gates changed from stops to flags
+
+**Type**: Change
+**Duration**: 1 day
+
+### Summary
+Deleted six test assertions that greped command prompt files to prove an instruction was still present, and changed the product-lens `BLOCK` gate in `_my_close`, `_my_pre_pr`, and `_my_audit` from a hard stop to a flag. Both mechanisms treated prompt text as if it were code: a grep over a prompt cannot establish that an agent does the thing, and a stale review note in markdown was locking working code. An item that was finished and correct could not be closed because its audit notes had not been updated after the fixes landed.
+
+---
+
+## [2026-09-10] - retire-hidden-memories
+
+**Type**: Item
+**Duration**: 1 day (2026-09-09 to 2026-09-10)
+
+### Summary
+Removed the hidden memory and transcript subsystem that no longer served the product. Deleted its commands, agent, hooks, transcript tools, hidden stores, always-on example rule, generated output, and documentation. Existing global and vendored installations now remove the retired files and registrations without deleting user-owned configuration.
+
+### Deliverables
+- **Retired pack content:** four memory commands, the recall agent, four hook and transcript files, `example-rules.md`, and both hidden memory templates removed
+- **Lifecycle cleanup:** shared exact-name cleanup across global setup, project update, global uninstall, and project uninstall
+- **User-state protection:** mixed-hook, near-name hook, user-authored command, malformed JSON, and complete legacy-install regression coverage
+- **Prompt corrections:** `_my_handoff.md` pause behavior and prose-first decision guidance in `working-voice.md`
+- **Documentation and Codex:** shipped descriptions removed and `dist/codex/` rebuilt without the retired surfaces
+- **Artifacts:** spec.md, plan.md, product-lens.md, and audit.md archived under `.project/completed/20260910_retire-hidden-memories/`
+
+---
+
+## [2026-09-10] - execution-register
+
+**Type**: Item
+**Duration**: 1 day (2026-09-10 to 2026-09-10)
+
+### Summary
+Added a git-tracked, append-only register for execution facts — how this codebase and environment actually behave, discovered while working. Consolidated close's two separate scans (decisions, promises) into one record scan with three destinations. Removed the unused `Lessons Learned` CHANGELOG field. Shipped a triage prompt for sorting native memory entries into `.project/` homes.
+
+### Deliverables
+- **Register templates:** `project-pack/execution/{README.md,ENTRIES.md}` with density bar, seven worked examples, five-destination boundary, entry format, and no-reader statement
+- **Triage prompt:** `project-pack/TRIAGE_MEMORIES.md` seeded to `.project/TRIAGE_MEMORIES.md`
+- **Close restructure:** `claude-pack/commands/_my_close.md` — one record scan, three destinations (adr, product, execution)
+- **Installer protection:** `execution/ENTRIES.md` in `USER_DATA_FILES`; Test 9 in `test_init_project.sh`; `check_wired` guard in `test_docs.sh`
+- **ADR 0014:** execution facts leave the decision register (D8 ownership change)
+- **Codex:** rebuilt `dist/codex/skills/my-close/SKILL.md`
+- **Documentation:** register rows in `README.md` and `project-pack/README.md`; `feedback/` rows reworded
+- **Artifacts:** spec.md, design.md, design-review.md, plan.md, product-lens.md, audit.md
+
+---
+
 ## [2026-08-26] - feedback-capture-file
 
 **Type**: Item
@@ -18,9 +83,6 @@ Added a project-level feedback capture surface so agents can record corrections 
 - **Validation:** focused seeding, refresh, and preservation coverage in `scripts/test_init_project.sh`
 - **Documentation:** feedback surface documented in the root and project-pack READMEs
 - **Artifacts:** `spec.md` and `change.md`, archived under `.project/completed/20260826_feedback-capture-file/`
-
-### Lessons Learned
-- Separate refreshable instructions from append-only user data when `--force` updates templates, and test both behaviors in the same run.
 
 ---
 
@@ -39,9 +101,6 @@ Closed the pipeline's bottom-up learning gap: the top-down flow assumed the mech
 - **Codex:** both skills built + installed (`my-spike`, `my-learning-test`); description keys in `codex-overrides/config.sh`
 - **Docs:** README command table rows, CLAUDE.md "De-risking" section
 - **Artifacts:** spec.md, spec-review.md, design.md, plan.md, audit.md (Certify), findings.md + `probe_yaml_description.py` (Phase-1 live spike: leading `*`/`**` breaks Codex SKILL.md YAML, mid-value colons are safe)
-
-### Lessons Learned
-- [TODO: Add lessons learned]
 
 ---
 
@@ -64,9 +123,6 @@ Redesigned the workflow pipeline to close gaps in traceability, certification, a
 - **Specs:** 7 items with specs, 4 items with designs
 - **Archived to:** `.project/completed/20260701_epic_workflow_v2.md`
 
-### Lessons Learned
-- [TODO: Add lessons learned]
-
 ---
 
 ## [2025-12-30] - codebase-organization
@@ -83,10 +139,6 @@ Established the repository structure with separate `claude-pack/` for Claude Cod
 - `.claude/` symlinks for this repo
 - `design.md` and `plan.md` documentation
 
-### Lessons Learned
-- Symlink approach works well for testing what you ship
-- Separating claude-pack and project-pack provides cleaner organization
-
 ---
 
 ## [2025-12-30] - init-audit
@@ -100,10 +152,5 @@ Conducted initial audit of `init-project.sh` for epic EPIC-001. Epic was later s
 ### Deliverables
 - `spec.md` - Audit methodology
 - `audit-report.md` - Comprehensive findings (useful as reference)
-
-### Lessons Learned
-- Don't over-engineer: Claude Code already has project initialization capabilities
-- Simpler approach: check for CLAUDE.md and suggest `/init` if missing
-- Audit work wasn't wasted - informed the simpler solution
 
 ---

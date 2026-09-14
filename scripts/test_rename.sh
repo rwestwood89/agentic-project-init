@@ -37,7 +37,7 @@ echo ""
 echo "Checking cross-references in commands..."
 # Look for /command patterns that are NOT preceded by _my_
 # Exclude lines that are comments (start with #) or are in code blocks
-OLD_REFS=$(grep -rE "/(research|spec|design|plan|implement|code-review|code-quality|git-manage|project-manage|project-find|quick-edit|capture|recall|memorize|review-compact)([^_a-zA-Z]|$)" "$CLAUDE_PACK/commands/" --include="*.md" 2>/dev/null | grep -v "_my_" | grep -v "^[^:]*:#" || true)
+OLD_REFS=$(grep -rE "/(research|spec|design|plan|implement|code-review|code-quality|git-manage|project-manage|project-find|quick-edit)([^_a-zA-Z]|$)" "$CLAUDE_PACK/commands/" --include="*.md" 2>/dev/null | grep -v "_my_" | grep -v "^[^:]*:#" || true)
 
 if [ -n "$OLD_REFS" ]; then
     echo -e "${RED}FAIL: Found old-style references:${NC}"
@@ -48,22 +48,9 @@ echo -e "${GREEN}PASS: No old-style references found in commands${NC}"
 
 echo ""
 
-# Check hook files
-echo "Checking hook files..."
-# Look for /memorize as a command reference (with backticks, quotes, or word boundary), not "memorized" as a word
-HOOK_REFS=$(grep -E '`/memorize`|"/memorize"|/memorize[^a-zA-Z]' "$CLAUDE_PACK/hooks/"* 2>/dev/null | grep -v "_my_" || true)
-if [ -n "$HOOK_REFS" ]; then
-    echo -e "${RED}FAIL: Found old-style /memorize references in hooks:${NC}"
-    echo "$HOOK_REFS"
-    exit 1
-fi
-echo -e "${GREEN}PASS: Hook files updated${NC}"
-
-echo ""
-
 # Check documentation
 echo "Checking documentation files..."
-DOC_REFS=$(grep -rE "/(research|spec|design|plan|implement|code-review|code-quality|git-manage|project-manage|project-find|quick-edit|capture|recall|memorize|review-compact)([^_a-zA-Z]|$)" "$CLAUDE_PACK/claude-md-checklist.md" "$CLAUDE_PACK/agents/" --include="*.md" 2>/dev/null | grep -v "_my_" | grep -v "^[^:]*:#" || true)
+DOC_REFS=$(grep -rE "/(research|spec|design|plan|implement|code-review|code-quality|git-manage|project-manage|project-find|quick-edit)([^_a-zA-Z]|$)" "$CLAUDE_PACK/claude-md-checklist.md" "$CLAUDE_PACK/agents/" --include="*.md" 2>/dev/null | grep -v "_my_" | grep -v "^[^:]*:#" || true)
 if [ -n "$DOC_REFS" ]; then
     echo -e "${RED}FAIL: Found old-style references in documentation:${NC}"
     echo "$DOC_REFS"

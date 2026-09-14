@@ -11,7 +11,7 @@ Add a "Session Start" section near the top of your CLAUDE.md that tells new sess
 
 Before starting any non-trivial task, read the relevant context files:
 
-1. **Always read first:** `.project/CURRENT_WORK.md` — active work, recent changes, decisions
+1. **Always read first:** `.project/CURRENT_WORK.md` — what is active right now and what is up next
 2. **[Area-specific docs]** — point to your project's key documentation files
 ```
 

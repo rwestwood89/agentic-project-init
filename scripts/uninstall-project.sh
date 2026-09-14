@@ -12,6 +12,12 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/legacy-vendored-files.sh
+source "$SCRIPT_DIR/lib/legacy-vendored-files.sh"
+# shellcheck source=lib/settings-hooks.sh
+source "$SCRIPT_DIR/lib/settings-hooks.sh"
+
 FORCE=false
 
 while [[ $# -gt 0 ]]; do
@@ -81,28 +87,30 @@ if [ "$HAS_VENDORED" = true ]; then
     echo ""
     echo "Removing vendored .claude/ content..."
 
+    cleanup_legacy_hooks ".claude/settings.json"
+
     # Remove known vendored files (preserve user files)
 
-    # Remove _my_* commands
+    # Remove commands that the current pack owns by exact filename.
     if [ -d ".claude/commands" ]; then
-        for f in .claude/commands/_my_*.md; do
-            [ -f "$f" ] && rm "$f" && echo -e "${GREEN}  ✓ Removed: commands/$(basename "$f")${NC}"
+        for source_file in "$SCRIPT_DIR"/../claude-pack/commands/_my_*.md; do
+            [ -f "$source_file" ] || continue
+            command_name=$(basename "$source_file")
+            if [ -f ".claude/commands/$command_name" ]; then
+                rm ".claude/commands/$command_name"
+                echo -e "${GREEN}  ✓ Removed: commands/$command_name${NC}"
+            fi
         done
     fi
 
     # Remove known agent files
     if [ -d ".claude/agents" ]; then
-        for f in recall.md example-agent.md; do
+        for f in example-agent.md; do
             [ -f ".claude/agents/$f" ] && rm ".claude/agents/$f" && echo -e "${GREEN}  ✓ Removed: agents/$f${NC}"
         done
     fi
 
-    # Remove known hook files
-    if [ -d ".claude/hooks" ]; then
-        for f in precompact-capture.sh capture.sh parse-transcript.py query-transcript.py; do
-            [ -f ".claude/hooks/$f" ] && rm ".claude/hooks/$f" && echo -e "${GREEN}  ✓ Removed: hooks/$f${NC}"
-        done
-    fi
+    cleanup_legacy_vendored_files ".claude"
 
     # Remove known skill directories
     if [ -d ".claude/skills" ]; then
@@ -111,20 +119,9 @@ if [ "$HAS_VENDORED" = true ]; then
         done
     fi
 
-    # Remove known rule files
-    if [ -d ".claude/rules" ]; then
-        for f in example-rules.md; do
-            [ -f ".claude/rules/$f" ] && rm ".claude/rules/$f" && echo -e "${GREEN}  ✓ Removed: rules/$f${NC}"
-        done
-    fi
-
     # Remove marker file
     rm -f .claude/.agentic-pack-vendored
     echo -e "${GREEN}  ✓ Removed vendor marker${NC}"
-
-    # Remove hook paths config
-    rm -f .claude/.hook-paths.json
-    echo -e "${GREEN}  ✓ Removed hook paths config${NC}"
 
     # Remove settings.json backup if it exists
     rm -f .claude/settings.json.bak

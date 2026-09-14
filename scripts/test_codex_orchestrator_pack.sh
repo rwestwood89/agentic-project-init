@@ -455,6 +455,10 @@ setup_out="$(bash "$ROOT/scripts/setup-codex.sh" --dry-run)"
 echo "$setup_out" | grep -q '.codex/scripts' || fail "setup dry-run did not mention .codex/scripts"
 echo "$setup_out" | grep -q 'orchestrate-stage-codex.sh' || fail "setup dry-run did not include helper script"
 echo "$setup_out" | grep -q 'Global instructions' || fail "setup dry-run did not mention global instructions"
+does_not_contain "$ROOT/scripts/setup-codex.sh" 'DIST_DIR/hooks'
+does_not_contain "$ROOT/scripts/setup-codex.sh" 'codex_hooks'
+does_not_contain "$ROOT/scripts/build-codex-pack.sh" 'Check auto-memory'
+does_not_contain "$ROOT/scripts/build-codex-pack.sh" 'This file contains example rules'
 
 fresh_home="$tmpdir/home"
 mkdir -p "$fresh_home"

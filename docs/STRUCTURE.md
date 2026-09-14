@@ -5,7 +5,7 @@ This document explains how this repository is organized to solve the meta-proble
 ## The Challenge
 
 We need to:
-1. Develop Claude Code templates (commands, hooks, agents)
+1. Develop Claude Code templates (commands, agents, skills)
 2. Develop project management templates
 3. Use those same tools to organize our own development
 4. Keep "what we ship" separate from "what we use to develop"
@@ -17,7 +17,6 @@ agentic-project-init/
 │
 ├── claude-pack/                  # CLAUDE CODE CONFIGURATION
 │   ├── commands/                 # Slash commands
-│   ├── hooks/                    # Event hooks
 │   ├── agents/                   # Specialized agents
 │   ├── rules/                    # Project guidelines
 │   └── skills/                   # Skills
@@ -26,12 +25,10 @@ agentic-project-init/
 │   ├── README.md                 # → .project/ in target projects
 │   ├── backlog/
 │   ├── active/
-│   ├── completed/
-│   └── memories/
+│   └── completed/
 │
 ├── .claude/                      # SYMLINKS for this repo's use
 │   ├── commands -> ../claude-pack/commands
-│   ├── hooks -> ../claude-pack/hooks
 │   ├── agents -> ../claude-pack/agents
 │   ├── settings.json             # Repo-specific (not symlinked)
 │   └── settings.local.json       # Local overrides (gitignored)
@@ -54,9 +51,8 @@ agentic-project-init/
 This is the distributable package. Everything here gets installed in target projects.
 
 Contents become `.claude/*` in target projects via symlinks:
-- `commands/` - Slash commands (memory management, project management)
-- `hooks/` - Event hooks (capture, parse-transcript, etc.)
-- `agents/` - Specialized agents (recall agent, etc.)
+- `commands/` - Slash commands (the `/_my_*` pipeline)
+- `agents/` - Specialized agents
 - `rules/` - Project guidelines
 - `skills/` - Specialized capabilities
 
@@ -65,7 +61,6 @@ Contents become `.claude/*` in target projects via symlinks:
 Becomes `.project/` in target projects (copied, not symlinked):
 - Project management workflow templates
 - Backlog structure
-- Memory storage structure
 
 ### `.claude/` - Symlinked for Development
 
@@ -81,7 +76,6 @@ We use symlinks so that:
 Actual project management for this repository:
 - Our backlog
 - Our work items
-- Our memories
 
 This is NOT the template. The template is in `project-pack/`.
 
@@ -101,9 +95,9 @@ This is NOT the template. The template is in `project-pack/`.
 
 ### Developing Templates
 
-1. Edit files in `claude-pack/` (commands, hooks, agents, project)
+1. Edit files in `claude-pack/` (commands, agents, rules, skills)
 2. Changes are immediately available via symlinks
-3. Test by using the commands/hooks normally
+3. Test by using the commands normally
 4. Commit to `claude-pack/` directory
 
 ### Using for This Repo's Development
@@ -141,7 +135,7 @@ A: Then we'd have to copy/sync to a distributable location. With `claude-pack/` 
 
 **Q: Why is `.project/` not symlinked like `.claude/`?**
 
-A: `.project/` contains project-specific content (actual backlog items, memories). We want to USE the template to organize this repo, but the content is repo-specific. So we copy the template structure but don't share the content.
+A: `.project/` contains project-specific content (actual backlog items, work in progress). We want to USE the template to organize this repo, but the content is repo-specific. So we copy the template structure but don't share the content.
 
 **Q: What about `settings.json`?**
 
