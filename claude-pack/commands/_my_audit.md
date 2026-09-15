@@ -90,6 +90,16 @@ For each finding: name `file:line`, say what's wrong, say what should change. Do
 
 ### 3. Write audit.md
 
+**Severity grading.** Every finding gets a severity:
+- **Blocker** — a correctness bug, a spec requirement not met, or a design invariant violated. These prevent certification.
+- **Advisory** — everything else: slop, abstraction quality, failure-honesty patterns, style, improvement opportunities, and all product-lens findings. The product-lens is a useful signal but it is defensive by nature — its findings are feedback, not verdicts. Advisory findings are noted in the audit but do not prevent certification.
+
+**The verdict rule:** "Certify" unless there is at least one unresolved Blocker. Advisory findings do not block. An audit with ten advisory findings and zero blockers is "Certify."
+
+**One pass.** The audit is a single evaluation, not an iterative loop. Write findings, deliver the verdict, and move on. Do not re-audit to verify that advisory findings were addressed. If a blocker is fixed, a targeted re-check of that specific finding is enough — don't re-run the full audit.
+
+**Plain language.** Every finding — Blocker or Advisory — must be explained in plain, simple English. State the concern, then state the impact if unaddressed. No jargon, no abstract pattern names without explanation. Rank findings by importance within each severity group.
+
 Write `.project/active/{item}/audit.md`:
 
 ```markdown
@@ -118,10 +128,19 @@ legibly here, not a pointer. A reader must find the original problem at this cer
 finding and any structural smell that fired, and say whether it is still true in the code. A real
 contradiction with what the owner asked for is a Needs Work verdict. Everything else is a note.]
 
-## Findings
+## Blockers
+
+[Correctness bugs, unmet spec requirements, violated design invariants. If none: "None."]
+
+## Advisory
+
+[Slop, abstraction quality, failure-honesty patterns, improvement opportunities. If none: "None."
+ These do not block certification. Fix at your discretion.]
+
+## Findings Detail
 
 ### Plan completion
-[Findings or "All phases verified." Each finding: file:line, what's wrong.]
+[Findings or "All phases verified." Each finding: file:line, what's wrong, severity (Blocker/Advisory).]
 
 ### Spec conformance
 [For each success criterion: verified or gap. For each tagged requirement: met or not.
@@ -131,7 +150,7 @@ contradiction with what the owner asked for is a Needs Work verdict. Everything 
 [Findings or "Implementation follows design." Flag deviations.]
 
 ### Code integrity
-[Slop and failure-honesty findings, or "No issues found."]
+[Slop and failure-honesty findings, or "No issues found." These are Advisory unless they mask a correctness bug.]
 
 ---
 
