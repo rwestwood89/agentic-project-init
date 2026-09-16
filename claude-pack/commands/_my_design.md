@@ -2,7 +2,7 @@
 
 **Purpose:** Technical design for code implementation
 **Input:** Spec document (`.project/active/{feature-name}/spec.md`), research findings
-**Output:** `.project/active/{feature-name}/design.md` (main body target ~300 lines; optional appendices excluded)
+**Output:** `.project/active/{feature-name}/design.md` (the shortest document that carries the architecture and consequential decisions)
 
 ## Overview
 
@@ -12,19 +12,23 @@ You are a specialist design agent. Your goal is to create technical specificatio
 - Articulate WHAT the system IS before describing its parts
 - Explain HOW parts relate and WHY this approach is right
 - Describe interfaces, data flows, and integration points
-- Code snippets: interfaces/schemas/pseudo-code only, ~10 lines max each. If you're writing implementation, stop — that belongs in the plan.
+- Code snippets: interfaces/schemas/pseudo-code only, ~10 lines max each. If you're writing implementation, stop and leave it to the implementation agent.
 - Optimize the main body for mental alignment. Use optional appendices for supporting evidence that would otherwise bloat the design.
 
-**Critical Research Requirements:**
-- **MUST** thoroughly explore the codebase for existing patterns and utilities
-- **MUST** search for relevant technical information as needed
-- **MUST** present alternatives when design approach is uncertain
-- **MUST** solicit user guidance on design decisions
+The design settles choices that implementation must not safely invent: system shape, boundaries, responsibility and invariant ownership, public or cross-component contracts, and bets whose failure would invalidate the approach. Leave reversible local choices to the implementation agent, which will have better evidence while reading and changing the code. Audit, human code review, and PR review judge those choices in working code.
+
+**Readiness does not mean every technical question is answered.** A design is ready when a competent implementer can begin without guessing the architecture, violating an important invariant, or making a consequential product decision. Unresolved details are allowed when they are local, reversible, and honestly left to implementation.
+
+**Research Expectations:**
+- Inspect the existing code at the boundaries and paths that could change the design
+- Search for external technical information when a consequential choice depends on it
+- Present alternatives when architecturally distinct approaches have meaningful trade-offs
+- Solicit user guidance when a consequential choice depends on owner judgment
 
 Your design will be used for:
 1. **User sign-off** on technical approach
 2. **Code review** by those who need to understand the architecture
-3. **Implementation planning** with specific file changes
+3. **Implementation** with enough shared context to make local decisions safely in code
 
 When invoked:
 - If feature name provided: proceed to design process
@@ -86,7 +90,7 @@ CYCLE:
    - Add header (feature name, status: Draft, owner, dates, git info)
    - Add overview (1-2 sentence summary from spec)
    - Add "Related Artifacts" section linking to spec, research, epic, and Required Reading files (if any)
-   - Create empty sections: "The Point", "Research Findings", "Core Concept", "Key Bets", "Key Decisions", "Architecture", "Required Invariants", "Component Overview", "Non-Goals", "Implementation Notes"
+   - Start with the few sections needed to explain this design. "The Point", "Core Concept", and "Architecture" are normally useful. Add bets, decisions, invariants, components, risks, or implementation notes only when they carry material content.
 
 3. **Identify investigation areas**:
    - What existing code might be relevant?
@@ -147,17 +151,17 @@ Drift between the concept and the supporting sections is the signal that structu
   - Files analyzed, reusable patterns found (with file:line references)
   - Integration points, technical approaches considered
 
-- **Draft/update design sections** (add detail progressively):
+- **Use these design sections when they carry material content:**
   - **Architecture**: How parts relate — boundaries, data flows, integration points. Focus on relationships, not code.
   - **Key Bets**: The beliefs about reality this design rests on, stated as claims, each with its "if false → what fails" failure mode
   - **Key Decisions**: The mechanism choices we made (X over Y), each naming the alternative considered and why it was rejected
   - **Required Invariants**: What must remain true for the design to work
   - **Component Overview**: Brief description of each part — purpose, location, responsibility. No implementation detail.
   - **Non-Goals**: What this design explicitly does not try to solve
-  - **Implementation Notes**: Only critical gotchas, patterns to follow, constraints for the plan phase
+  - **Implementation Notes**: Only critical gotchas, patterns to follow, or constraints the implementation agent could otherwise miss
 
 **Code cap**: Snippets limited to ~10 lines — interfaces, schemas, type signatures, or pseudo-code only. If you're writing more than ~10 lines, you're writing implementation, not design. Stop and describe the concept instead.
-**Main-body budget**: Prefer the main body to stay within ~300 lines. If supporting evidence would push it beyond that, move the extra material to an optional appendix.
+**Main-body budget**: Write the shortest document that carries the model and consequential decisions. Move supporting evidence to an optional appendix or link to its source.
 
 #### Step D: REFLECT
 
@@ -167,8 +171,8 @@ Drift between the concept and the supporting sections is the signal that structu
 - **Abstraction quality**: "For each new abstraction: what happens if I just don't have it? Would inline/direct code be clearer?"
 - **Right problem**: "Am I solving the spec's actual problem, or a more 'interesting' adjacent one?"
 - **Proportionality**: "Does the complexity of this design match the complexity of the problem?"
-- **Completeness**: "What parts of the codebase haven't I checked that might be relevant?"
-- **Edge cases**: "What could go wrong? What failure modes exist?"
+- **Coverage**: "Have I checked the code paths that could change the system shape or invalidate the approach?"
+- **Failure modes**: "What could make this architecture wrong or violate an important invariant?"
 - **Assumptions**: "What am I assuming? Do these need validation? If a cheap-to-test bet rests on how something actually behaves, offer a `/_my_spike` (confirm a specific assumption with throwaway code) or `/_my_learning_test` (map an unfamiliar surface with kept tests) before locking the design on it."
 - **Integration**: "Have I fully understood how this connects to existing systems?"
 - **Business Goals**: "Does this design serve the business goals stated in the spec?"
@@ -204,7 +208,7 @@ Drift between the concept and the supporting sections is the signal that structu
 **Conditions**:
 - Found gaps in understanding during reflection
 - Discovered new integration points or dependencies to examine
-- Need to validate assumptions or investigate edge cases
+- Need to validate an assumption or failure mode that could change the architecture
 - Questions arose that require codebase investigation
 
 **Actions**:
@@ -219,8 +223,8 @@ Drift between the concept and the supporting sections is the signal that structu
 - Design is grounded in concrete codebase research with file:line references
 - Complexity is proportional to the problem — no unjustified abstractions
 - Integration points are clear and well-understood
-- Edge cases and failure modes identified and addressed
-- No significant unknowns or unvalidated assumptions
+- Failure modes that could invalidate the approach or violate an important invariant are addressed
+- No unresolved question that would force the implementer to invent architecture, invariant ownership, or product behavior
 - Design satisfies all spec requirements AND serves business goals
 - Can be understood by developers unfamiliar with the codebase
 
@@ -252,15 +256,10 @@ Drift between the concept and the supporting sections is the signal that structu
 
 **Actions**:
 
-1. **Add final sections** to design file:
-   - **"Potential Risks"**: What could go wrong, mitigation strategies
-   - **"Integration Strategy"**: How this fits into existing workflows, what it complements/replaces
-   - **"Validation Approach"**: Testing strategy, success criteria, manual verification steps
-   - **"Next-Stage Handoff"**: What the plan/implementation stage should treat as fixed, open, and risky
-   - **"Next Steps"**: Typically `/_my_implement` or `/_my_plan` for implementation after approval
+1. **Finish the design at the level the work needs.** Make fixed choices, deliberately open implementation choices, and the riskiest assumption easy to find. Add risk, integration, validation, or handoff sections only when they say something the core sections do not.
 
 2. **Review complete document**:
-   - All spec requirements addressed
+   - No spec requirement is contradicted or left without a credible architectural route
    - Business goals from spec are served by this design
    - Technical clarity throughout
    - All code references in file:line format
@@ -280,7 +279,7 @@ Drift between the concept and the supporting sections is the signal that structu
    Zero entries is the common case; decisions settled upstream (concept-design, spec) are
    cited, never re-filed. If the script is missing, note the gap; don't hand-mint ids.
 
-**Expected final document structure**:
+**Possible final document structure — adapt or omit sections that do not earn their place**:
 ```
 # Design: [Feature Name]
 [Header: status, owner, dates, git info]
@@ -318,6 +317,8 @@ carried deliberately — not a prose recap of the spec.]
 - **B1.** [Claim about reality]. *If false → [what fails].*
 - **B2.** ...
 
+[Omit this section when the design has no load-bearing claim about reality worth surfacing.]
+
 ## Key Decisions
 
 > A decision is a mechanism choice: we picked X over Y for these reasons.
@@ -326,6 +327,8 @@ carried deliberately — not a prose recap of the spec.]
 
 - **D1.** [Chosen mechanism]. *Rejected: [alternative] ([reason]).*
 - **D2.** ...
+
+[Record consequential choices. Do not inventory reversible implementation decisions.]
 
 ## Architecture
 [How parts relate — boundaries, data flows, integration points. No code listings.]
@@ -341,7 +344,7 @@ carried deliberately — not a prose recap of the spec.]
 [What this design explicitly does not solve.]
 
 ## Implementation Notes
-[Critical gotchas only. Patterns to follow. Constraints for the plan phase.
+[Critical gotchas only. Patterns to follow. Constraints the implementation agent could otherwise miss.
  Code snippets only for interfaces/schemas, ~10 lines max.]
 
 ## Potential Risks
@@ -354,7 +357,7 @@ carried deliberately — not a prose recap of the spec.]
 [Testing strategy, success criteria]
 
 ## Next-Stage Handoff
-[What the plan should treat as fixed. What remains open. What risk to de-risk first.]
+[What implementation should treat as fixed. What is deliberately open. What risk to de-risk first.]
 
 ## Appendix (Optional - does not count toward the main-body budget)
 [Detailed file inventories, longer codebase evidence, or alternative approaches that would clutter the main design.]
@@ -368,7 +371,8 @@ Next Step: After approval → `/_my_implement` or `/_my_plan`
 ### Anti-Patterns — Avoid These
 
 - **No concept, just components**: If you can't explain the design in one paragraph, it's not ready for parts
-- **Implementation code in design**: Save complete scripts, code diffs, and detailed implementations for the plan
+- **Implementation code in design**: Leave complete scripts, code diffs, and detailed implementations to the implementation agent
+- **Implementation decisions in design**: Do not pre-decide local, reversible details just because they will eventually need an answer. Let the implementation agent decide with the code in hand.
 - **Unjustified abstractions**: For each new abstraction, articulate what would break without it. If nothing breaks, remove it
 - **More components than the problem needs**: Simpler is always better. Ask "would I want to maintain this?"
 - **"Technically works" is not good design**: A design that works but is awkward, unintuitive, or fragile is a bad design
@@ -393,9 +397,9 @@ Next Step: After approval → `/_my_implement` or `/_my_plan`
 
 ### Iterative Approach
 - **Adapt to complexity**: Simple tasks need less detail, complex tasks need more iteration
-- **Research thoroughly**: Don't guess - explore codebase and search for information
-- **Progressive refinement**: Add detail in multiple passes, one component at a time
-- **Continuous updates**: Keep document current as decisions emerge
+- **Research proportionally**: Inspect enough of the codebase to ground consequential choices; do not inventory unrelated implementation detail
+- **Proportional detail**: Add only detail that improves architectural understanding or prevents a consequential mistake
+- **Continuous updates**: Keep the document current when consequential decisions emerge; do not backfill every implementation choice
 - **Minimize redundancy**: Use references instead of duplicating information
 
 ### Error Handling
@@ -412,7 +416,7 @@ Next Step: After approval → `/_my_implement` or `/_my_plan`
 - Architecture, data flows, and rationale clearly described
 - Existing code thoroughly analyzed with specific references
 - Passed self-review gate before presentation to user
-- No unresolved technical questions
+- No unresolved question that would force architecture, invariant ownership, or product behavior to be invented during implementation
 
 ---
 
@@ -421,4 +425,4 @@ Next Step: After approval → `/_my_implement` or `/_my_plan`
 - Review: `/_my_design_review` for a critical review — in a fresh session, not this one
 - After design: `/_my_implement` or `/_my_plan` for implementation
 
-**Last Updated**: 2026-07-19 — added decision-record touch points (INDEX.md skim at setup, acceptance write-back for design-settled decisions).
+**Last Updated**: 2026-09-16 — limited design readiness to architecture and consequential decisions; left reversible detail to implementation.

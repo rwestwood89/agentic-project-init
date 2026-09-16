@@ -120,4 +120,3 @@ Do not auto-commit. Leave all changes staged.
 **Last Updated**: 2026-09-10 — consolidated decision and promise scans into one record scan with three destinations (adr, product, execution); removed the per-item learnings field from CHANGELOG.
 
 User-provided arguments are supplied when this skill is invoked.
-

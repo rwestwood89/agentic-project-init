@@ -38,7 +38,7 @@ declare -A COMMAND_SKILL_DESCRIPTIONS=(
   ["research"]="Research a topic or code area deeply and save findings. Use when you need investigation before design or implementation."
   ["design-review"]="Critically review a design document before implementation. Use when you need flaws, risks, or open questions surfaced."
   ["spike"]="Write a throwaway probe to de-risk a known assumption, then feed the finding back into the pipeline. Use when you have a clear goal and one specific thing to confirm by running code."
-  ["spec"]="Uncover and capture the problem, success criteria, and known requirements through critical questioning. Use when a feature or change needs its requirements clarified and documented before design."
+  ["spec"]="Capture a work item's intent, then clarify its success criteria and known needs. Use when a feature or change needs to be understood and documented before design."
   ["spec-review"]="Adversarially review a spec before it becomes the design contract. Use when a spec needs a devil's-advocate audit for faithfulness, problem framing, and pipeline risk."
   ["wrap-up"]="Update project state at session end and propose cheap records for confirmation. Use when closing a session and refreshing .project/CURRENT_WORK.md, the completion changelog, or the execution register."
 )

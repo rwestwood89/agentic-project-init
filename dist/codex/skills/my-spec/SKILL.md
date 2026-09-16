@@ -1,73 +1,47 @@
 ---
 name: my-spec
-description: Uncover and capture the problem, success criteria, and known requirements through critical questioning. Use when a feature or change needs its requirements clarified and documented before design.
+description: Capture a work item's intent, then clarify its success criteria and known needs. Use when a feature or change needs to be understood and documented before design.
 ---
 
 Generated from `claude-pack/commands/_my_spec.md`. This is a command-derived Codex skill. Rebuild it instead of editing it by hand.
 
 # Spec Command
 
-**Purpose:** Uncover and capture the problem, the success criteria, and the requirements we actually know
-**Input:** A feature idea, bug, user story, or rough need — anything from one line to a long constraint list
+**Purpose:** Capture the intent for a work item and settle what it needs to accomplish
+**Input:** A feature idea, bug, user story, or rough need
 **Output:** `.project/active/{feature-name}/spec.md`
 
-## Overview
+## What Good Looks Like
 
-You are a requirements specialist. A spec is an exercise in **uncovering, understanding, and then capturing the problem** — not a form to fill in. Deep, critical thinking is the job.
+Capture in plain English, and with the richness supplied by the owner and surrounding context, what this work item is for. Preserve the problem, desired end state, reasoning, constraints, examples, and named referents that matter. Structure should make the intent easier to use, not replace it with a compressed restatement.
 
-Your posture:
+Collect additional context as needed to understand what the owner is looking for. Investigate facts in the codebase or environment yourself. Ask the owner about decisions, not facts you can discover.
 
-> **Aggressive about the problem. Conservative about the solution.**
+After the intent is captured, use questioning rounds to settle the remaining spec-level decisions. Record additional need statements with provenance. Use EARS phrasing when it makes a trigger, state, or response clearer; use ordinary plain English when it does not.
 
-Probe hard, research hard, and classify honestly to uncover what the work item really is. That is encouraged. Committing to a solution the user didn't ask for is not. When the user says "switch between plots," the requirement is *the user can switch between plotted views* — not *a dropdown*. Capture the outcome; leave the mechanism to design.
+Be aggressive about understanding the problem and conservative about inventing a solution. Preserve a mechanism or standard the owner actually required. Do not introduce one they did not.
 
-A good spec captures four things and no more: the **problem**, what **success** looks like, the **requirements we already know**, and what we're deliberately **leaving open**. Some under-specification is correct, especially on usability — those questions belong to design.
+## Capture and Context
 
-When invoked:
-- If a description is provided: start the process below.
-- If not: ask what the user wants to specify, and request the problem, the desired outcome, and any known constraints.
+Read the request and every source it names in full. If the item belongs to an epic, read its Required Reading as primary input. Read `.project/CURRENT_WORK.md`, relevant project docs, and the code at the seams needed to understand the request.
 
-## Process
+Write the initial Problem section before questioning. It is a faithful working capture of the owner's intent, not a one-sentence summary. Keep the owner's level of detail where that detail carries meaning. Mark owner-given examples and referents with their force under the capture-fidelity rule.
 
-### Stage 1: Understand and uncover
+Research gaps that can be answered from code, data, or the environment. Use a fresh-context `explorer` subagent for broad codebase questions. Offer a spike or learning test when actual behavior must be observed. Do not ask the owner to supply discoverable facts.
 
-1. **Read the request completely.** Note every detail; lose nothing. If the user references research (`.project/research/{file}`) or existing code, read it fully.
-2. **Read light context** if relevant: `.project/CURRENT_WORK.md`, `CLAUDE.md` conventions.
-3. **Read Required Reading from the epic** if this item belongs to one. Look for the item in the epic's Backlog Items section and read the files listed under its `**Required Reading**:` field. These are the shaping-tier files (concepts, concept-designs, research) that carry the original intent for this item. Treat them as **primary input** — they inform requirements and success criteria. If a listed file doesn't exist, note it as missing context rather than failing. If the item has no epic or no Required Reading listed, skip this step.
-4. **Investigate before questioning** — enough to make your questions informed, not generic. For a trivial ask, this is a glance. For a real feature, use a fresh-context `explorer` subagent to find existing patterns, integration points, and constraints. Don't over-research a one-line ticket.
-5. **Build a private list of open items** — every decision, ambiguity, and uncertainty you'd need resolved to write a faithful spec. You will rank and work this list in Stage 2. Do not put it in the artifact.
+## Questioning Rounds
 
-### Stage 2: The questioning loop
+Map the unsettled spec decisions as a tree. The **frontier** is every material decision whose prerequisites are already settled. Ask the whole frontier in one round; do not ask a question whose answer depends on another unresolved question in that round.
 
-This replaces any fixed "questions" section. Questioning is a method, not a slot.
+Number each question. Explain what the answer changes, give the realistic options and their costs, and recommend an answer when you have one. The owner makes decisions; you investigate facts.
 
-**Rank by leverage, don't fill a quota.** Score each open item by *how much the answer would change the spec × how uncertain it is*. Ask only the high-leverage ones. **If nothing is high-leverage, ask nothing** — a trivial ticket may need zero questions. Never manufacture questions to seem thorough.
+After each response, update the working capture, recompute the frontier, and ask the next round. Stop when the intent, success conditions, and known needs are clear enough for design. Put safe-to-defer mechanism and usability choices in Open Questions rather than interrogating the owner about implementation.
 
-**Ask one at a time, in prose.** Highest-leverage first. Do not use the multiple-choice tool. Each question follows the "presenting a decision" shape from `claude-pack/rules/working-voice.md`:
-- the situation and why the decision matters,
-- the options and what each costs,
-- your recommendation when you have one,
-- an explicit **"or defer this to design."**
+If the request and context already settle the work item, ask no questions.
 
-**Re-rank after every answer.** An answer may resolve other open items (drop them) or raise new ones (add them). The next question responds to what the user just said. Loop until everything left is safe to defer.
+## Write the Spec
 
-**Deferring files, it doesn't drop.** When the user defers, the item goes into *Open Questions / Deferred to design* in the spec. Deferral is lossless.
-
-**Offer research, don't guess.** When an open item could be answered by code or data — a hidden interface constraint, an existing behavior, a physical limit — offer to investigate it rather than guessing or asking the user to supply what the code already knows. Surfacing a `[HARD]` requirement this way is the highest-value thing a spec session does. When the unknown is *behavioral* — how a library, tool, or data format actually acts — reading code may not settle it; offer to write code to find out: a ``my-spike`` to confirm a specific assumption with throwaway code, or a ``my-learning-test`` to map an unfamiliar surface with kept tests. Still an offer, never a gate.
-
-A light "here's the problem as I understand it" reflection before or during the loop is good for confirming direction. Keep it short; it is an alignment check, not a template.
-
-### Stage 3: Write the spec
-
-1. **Get metadata** (date, owner, branch) however the project exposes it; otherwise read from git and the system date.
-2. **Create the feature directory:** `mkdir -p .project/active/{feature-name}`.
-3. **Update CURRENT_WORK.md.** Add the new item to the Active Work section so the project directory knows the item exists immediately, not only after wrap-up. A one-line entry is enough: the item name, its epic (if any), and "spec in progress."
-4. **Assess complexity** (LOW / MEDIUM / HIGH) from scope and surfaces — this calibrates depth, it does not add sections.
-5. **Write `.project/active/{feature-name}/spec.md`** using the lean core below. If the item belongs to an epic, add the epic reference and Required Reading files to the Related Artifacts section so the downstream pipeline can trace the provenance.
-
-**Depth tracks the input.** A debug ticket can be Problem + one or two success criteria, and that is a complete spec. A heavy, constrained feature grows the Known Requirements catalog. Do not pad a thin item to look like a big one. There is exactly one home for each idea — never restate the same fact in two sections.
-
-#### The lean core
+Create `.project/active/{feature-name}/spec.md`, add the item to `.project/CURRENT_WORK.md`, and use the smallest subset of this structure that faithfully carries the work:
 
 ```markdown
 # Spec: [Feature Name]
@@ -78,114 +52,51 @@ A light "here's the problem as I understand it" reflection before or during the 
 **Complexity:** [LOW | MEDIUM | HIGH]
 **Branch:** [Branch name if applicable]
 
----
-
 ## Problem
 
-[What's wrong or needed, and why it's worth doing now. One place. State the
-current pain and the gap plainly. Do not split this across multiple "why"
-sections — this is the only one. Where the problem carries a governing
-obligation with decision force, grade it by source authority (capture-fidelity)
-so the point's authority travels downstream, not just its wording.]
+[The work item's intent in plain English: current situation, problem, desired end state, and the context needed to understand why this work matters. Match the richness of the source material.]
 
 ## Success Criteria
 
-[What "done" changes, as outcomes. Concrete targets (numbers, reproduction
-checks) stay concrete and testable. This is the single home for "what done
-looks like" — there is no separate acceptance-criteria list.]
-
-- [ ] [Outcome 1]
-- [ ] [Outcome 2]
+- [ ] [Observable outcome that shows the intended change exists.]
 
 ## Known Requirements
 
-[Only what we have actually decided must be true. Each item carries exactly
-one tag. Omit this section entirely if the ask has no hard requirements yet.]
-
-- **[HARD]** [Forced by an interface, physics, or an existing system. Non-negotiable.]
-- **[NEED]** [An outcome a stakeholder actually stated. Stated as an outcome —
-  a reader must not mistake it for an implementation choice. An outcome you
-  inferred rather than heard is **[INFERRED]**, not [NEED].]
-- **[INFERRED]** [Implied by the ask, not stated by the user. Tagged so the
-  reviewer can scan for and confirm your inferences.]
-- **[INHERITED]** [Absorbed from an upstream artifact (concept, prior spec),
-  not independently validated here. Cite the source. Not [HARD] — its authority
-  is a document, not reality. See `claude-pack/rules/capture-fidelity.md`.]
+- **[HARD]** [Forced by an external interface, physics, or existing system.]
+- **[NEED]** [Owner-stated need. Preserve its stated force.]
+- **[INFERRED]** [Agent-derived need.]
+- **[INHERITED]** [Need carried from an upstream artifact, with source.]
 
 ## Non-Goals
 
-- [What this work item deliberately does not try to solve.]
+- [Deliberate scope boundary, if one matters.]
 
 ## Open Questions / Deferred to design
 
-- [Anything intentionally left open — especially usability and mechanism
-  choices. Deferred items from the questioning loop land here.]
-
----
+- [Unsettled choice that is safe for design or implementation.]
 
 ## Related Artifacts
 
-- **Epic:** `.project/backlog/epic_{name}.md` (if this item belongs to an epic)
-- **Required Reading:** [List the files from the epic's Required Reading for this item, if any]
-- **Research:** `.project/research/{file}.md` (if any)
+- **Epic:** [if any]
+- **Required Reading:** [if any]
+- **Research:** [if any]
+- **Product Lens:** `.project/active/{feature-name}/product-lens.md`
 - **Design:** `.project/active/{feature-name}/design.md` (to be created)
-
----
-
-**Next Steps:** After approval, proceed to ``my-design``.
 ```
 
-### Stage 4: Review and present
+The Problem carries the intent. Success Criteria say what observable change means the work succeeded. Known Requirements add statements that constrain the work beyond that narrative; they are not a second rewrite of the entire request.
 
-Before presenting, check:
-- Does each fact live in exactly one section? (No "why" repeated four times; no outcome repeated as a requirement.)
-- Does every requirement carry a tag, and do `[NEED]` items read as outcomes, not mechanisms?
-- Does every `[INHERITED]` item cite its upstream source, and is each `[NEED]` one the owner actually stated (not an inference that should be `[INFERRED]`)?
-- Did I capture every detail the user gave, and mark my inferences `[INFERRED]`?
-- Is the depth proportional to the ask — thin where the input was thin?
-- Did I keep solution choices out of the requirements, and park them in Open Questions instead?
+Use `[NEED]` only for owner-stated needs, `[INFERRED]` for your conclusions, `[INHERITED]` with its source, and `[HARD]` only for a real external constraint. EARS is optional: use it where event/state/response structure removes ambiguity, not as a translation exercise for every requirement.
 
-**Run the product-lens on the drafted spec.** The spec is a place scope narrows, so an
-independent check re-derives the point here. Spawn a fresh-context `default` subagent whose entire
-instruction set is `$HOME/.codex/scripts/product-lens.md` (pack source:
-`claude-pack/scripts/product-lens.md`). SOURCES = the repo's durable product statements
-(`README`, `docs/`, `.project/adr/`, `.project/product/` index-first) plus any owner-verbatim
-in the concept / Required Reading;
-WORK = the drafted spec, especially Problem and Success Criteria. It checks both directions —
-does the spec contradict or narrow the point, and does it omit an obligation the point requires?
-Append its verdict block (ledger format, product-lens spec §3) to
-`.project/active/{feature-name}/product-lens.md` (append-only), and add a one-line pointer to the
-spec's Related Artifacts. An unresolved owner/`[HARD]` contradiction blocks the spec until
-dispositioned; a lower-authority or can't-find finding needs a visible disposition and may
-proceed. Do not embed the findings in the spec body — the pointer is enough.
+## Check and Present
 
-If the item belongs to an epic, **always** record the parent epic in this item's ledger — write
-`Epic: <id>` in the first block — whether or not the epic has a finding yet. This unconditional
-record is what lets ship gates and audit find the epic's live gate even for a BLOCK the epic raises
-*after* this item exists (a reference written only when a finding already exists would miss late
-epic findings). Then, for any epic finding that already exists, add a one-line **reference** — the
-finding and its **original source grade preserved exactly** (an owner/`[HARD]` finding stays
-owner/`[HARD]`; never downgrade at the hop) — *not* a restatement (copying duplicates and drifts,
-smell 1). The epic file stays the source of truth; gates resolve `Epic: <id>` against the epic's
-live gate. An epic BLOCK is not cleared by item creation.
+Before presenting, compare the spec directly with the request and its sources. The intent should still be recognizable at the same richness. Check that examples, referents, numbers, and named standards retained their force; inferred needs are not presented as owner statements; and open implementation choices did not harden into requirements.
 
-Then present the spec, take feedback, and iterate.
+Spawn a fresh-context `default` subagent whose entire instruction set is `$HOME/.codex/scripts/product-lens.md` (pack source: `claude-pack/scripts/product-lens.md`). Give it the repo's durable product sources plus owner-verbatim shaping material as SOURCES, and the drafted spec as WORK. Append its ledger block to `.project/active/{feature-name}/product-lens.md`. An unresolved owner/`[HARD]` contradiction blocks; lower-authority findings receive a visible disposition and may proceed.
 
-## Guidelines
+If the item belongs to an epic, record `Epic: <id>` in the item's first product-lens block even when the epic has no current finding. Reference existing epic findings without copying them, preserving their source grade, so later gates can resolve the epic's live state.
 
-- **Aggressive about the problem, conservative about the solution.** Uncover relentlessly; don't invent mechanisms.
-- **One home per idea.** The structure prevents redundancy; rely on it instead of restating.
-- **Tag honestly.** `[HARD]` only when something truly forces it. Default a desire to `[NEED]`, phrased as an outcome.
-- **Under-specification is allowed.** Usability and mechanism questions belong in design. File them in Open Questions and move on.
-- **Don't manufacture content.** No quota of questions, no quota of requirements. If it isn't load-bearing, leave it out.
+Present the spec, take corrections, and update the artifact. After approval, proceed to ``my-design``; use ``my-product-design`` first when the consumer-facing behavior needs separate attention. Use ``my-spec-review`` only when an adversarial review adds confidence.
 
----
-
-**Related Commands:**
-- Before spec: ``my-research`` for deeper exploration
-- After spec (optional): ``my-product-design`` for experience/interaction design on UX-heavy items
-- After spec: ``my-design`` for technical design
-- Review: ``my-spec-review`` for an adversarial audit before design — in a fresh session, not this one
-
-**Last Updated**: 2026-07-06
+**Last Updated:** 2026-09-16 — centered plain-English intent capture and frontier-based questioning rounds.
 

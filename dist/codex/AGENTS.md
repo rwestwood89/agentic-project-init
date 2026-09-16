@@ -275,4 +275,3 @@ When calling `spawn_agent`:
 - Use `fork_turns: "none"` for fresh explorer, reviewer, and product-lens agents unless inherited
   conversation history is specifically required.
 
-
