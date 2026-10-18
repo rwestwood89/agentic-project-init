@@ -15,6 +15,8 @@
 #   --timeout <sec>   wall-clock timeout      (default: 600)
 #   --perm <mode>     permission mode         (default: acceptEdits; implement/pre_pr/spike/learning_test
 #                                              auto-use bypassPermissions; resume reuses the run's mode)
+#   --add-dir <dir>   extra directory the stage may access, e.g. a sibling repo (repeatable;
+#                                              resume reuses the run's dirs)
 #   --log-dir <dir>   raw JSON/stderr log dir (default: ./.orchestrate-logs)
 #   --preamble <file> preamble to inject      (default: orchestrate-preamble.md beside this script)
 #   --dry-run         print composed prompt + claude argv, do not call claude
@@ -25,7 +27,7 @@ set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 die() { echo "orchestrate-stage: $*" >&2; exit 1; }
-usage() { sed -n '2,21p' "${BASH_SOURCE[0]}" >&2; exit 2; }
+usage() { sed -n '2,23p' "${BASH_SOURCE[0]}" >&2; exit 2; }
 
 [ $# -ge 1 ] || usage
 MODE="$1"; shift
@@ -35,6 +37,7 @@ BUDGET=10
 TIMEOUT=600
 PERM="acceptEdits"
 PERM_SET=0
+ADD_DIRS=()
 LOGDIR="./.orchestrate-logs"
 PREAMBLE="$SCRIPT_DIR/orchestrate-preamble.md"
 DRYRUN=0
@@ -52,6 +55,8 @@ while [ $# -gt 0 ]; do
     --budget)   BUDGET="$2";   shift 2 ;;
     --timeout)  TIMEOUT="$2";  shift 2 ;;
     --perm)     PERM="$2"; PERM_SET=1; shift 2 ;;
+    --add-dir)  [ -d "$2" ] || die "--add-dir not a directory: $2"
+                ADD_DIRS+=("$(cd "$2" && pwd)"); shift 2 ;;
     --log-dir)  LOGDIR="$2";   shift 2 ;;
     --preamble) PREAMBLE="$2"; shift 2 ;;
     --dry-run)  DRYRUN=1;      shift ;;
@@ -72,6 +77,10 @@ PERMDIR="$LOGDIR/sessions"
 if [ "$MODE" = "resume" ] && [ "$PERM_SET" = "0" ] && [ -f "$PERMDIR/$SID.perm" ]; then
   PERM="$(cat "$PERMDIR/$SID.perm")"
 fi
+# Likewise for extra directories: a resume without --add-dir keeps the run's.
+if [ "$MODE" = "resume" ] && [ "${#ADD_DIRS[@]}" -eq 0 ] && [ -f "$PERMDIR/$SID.dirs" ]; then
+  mapfile -t ADD_DIRS < "$PERMDIR/$SID.dirs"
+fi
 
 # The prompt body (stage args, or the resume message) comes from stdin.
 BODY="$(cat)"
@@ -87,6 +96,7 @@ else
 fi
 
 CLAUDE_ARGS=(-p --model "$MODEL" --output-format json --permission-mode "$PERM" --max-budget-usd "$BUDGET")
+for d in "${ADD_DIRS[@]}"; do CLAUDE_ARGS+=(--add-dir "$d"); done
 [ "$MODE" = "resume" ] && CLAUDE_ARGS+=(--resume "$SID")
 
 if [ "$DRYRUN" = "1" ]; then
@@ -109,12 +119,14 @@ RC=$?
 [ "$RC" -ne 0 ]   && die "claude exited $RC (raw: $RAW, stderr: $ERR)"
 
 # Lift the final result object (tolerating a leading stdin-warning line) and emit compact JSON.
-python3 - "$RAW" "$PERMDIR" "$PERM" <<'PY'
+python3 - "$RAW" "$PERMDIR" "$PERM" "${ADD_DIRS[@]}" <<'PY'
 import json, os, sys
 raw = open(sys.argv[1]).read()
-i = raw.find('[{')
-data = json.loads(raw[i:] if i >= 0 else raw)
-res = [e for e in data if e.get("type") == "result"]
+# claude emits a single result object today; older builds emitted an array of events.
+starts = [j for j in (raw.find('[{'), raw.find('{')) if j >= 0]
+data = json.loads(raw[min(starts):] if starts else raw)
+events = data if isinstance(data, list) else [data]
+res = [e for e in events if isinstance(e, dict) and e.get("type") == "result"]
 if not res:
     sys.exit(1)
 r = res[0]
@@ -123,6 +135,8 @@ if sid and "/" not in sid:
     os.makedirs(sys.argv[2], exist_ok=True)
     with open(os.path.join(sys.argv[2], sid + ".perm"), "w") as f:
         f.write(sys.argv[3])
+    with open(os.path.join(sys.argv[2], sid + ".dirs"), "w") as f:
+        f.write("".join(d + "\n" for d in sys.argv[4:]))
 print(json.dumps({
     "session_id": sid,
     "result": r.get("result", ""),

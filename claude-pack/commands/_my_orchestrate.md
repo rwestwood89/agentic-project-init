@@ -37,6 +37,8 @@ MSG
 Each call returns JSON; read the `result` field — the stage's final message, in prose. It either
 finished (ends with `ARTIFACT: <path>`) or is asking you something. Keep the `session_id` to resume.
 A resume reuses the permission mode its run started with; do not pass `--perm` on resume.
+If a stage needs to read another repo (e.g. a sibling the work item depends on), pass
+`--add-dir <path>` on `run`; the resume keeps it.
 `<stage>` is any `/_my_*` command name; read a command's own doc when you want to know what it does.
 
 ## Running the pipeline
