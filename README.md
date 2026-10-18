@@ -225,7 +225,7 @@ Initialize a project with the `.project/` template.
 - `--no-track` - Add `.project` to `.gitignore` (don't commit project state)
 - `--include-claude` - Copy (vendor) commands to `.claude/` instead of using global
 - `--include-codex` - Copy Codex skills, agents, helpers, and rules into this project
-- `--force` - Refresh project templates while preserving accumulated project data and owner-authored Codex assets
+- `--force` - Refresh project templates and vendored `.claude/` files while preserving accumulated project data, edited vendored files, and owner-authored Codex assets
 - `--source <path>` - Override source location
 
 **Modes:**
@@ -268,7 +268,7 @@ Remove `.project/` and vendored content from a project.
 **What it does:**
 - Removes `.project/` directory
 - Cleans `.project` from `.gitignore` if present
-- If vendored, removes agentic-pack files from `.claude/` (preserves user files)
+- If vendored, removes agentic-pack files from `.claude/` (preserves user files and vendored files you edited)
 - Removes inventoried Codex assets and the managed `AGENTS.md` block, preserving owner files and text; this also works when `.project/` is already absent
 
 ## Project Structure After Init
@@ -322,6 +322,8 @@ For projects that need to be fully self-contained (e.g., to share with others wh
 ```
 
 This copies all commands to `.claude/` in the project. The project works independently of the global installation.
+
+`.claude/.agentic-pack-inventory` records each file the pack installed, with a hash of its installed bytes. Rerunning with `--include-claude` adds new pack files and removes retired ones. Adding `--force` also refreshes outdated pack files. A file you edited, or one the pack never installed, is kept with a warning. A project vendored before the inventory existed is adopted on its next run: its pack-named files count as pack-installed, so `--force` refreshes them. Commit first if you have edited them.
 
 ### Per-project Codex installation
 

@@ -17,6 +17,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib/legacy-vendored-files.sh"
 # shellcheck source=lib/settings-hooks.sh
 source "$SCRIPT_DIR/lib/settings-hooks.sh"
+# shellcheck source=lib/claude-vendor.sh
+source "$SCRIPT_DIR/lib/claude-vendor.sh"
 
 FORCE=false
 DRY_RUN=false
@@ -105,34 +107,39 @@ if [ "$HAS_VENDORED" = true ]; then
 
     cleanup_legacy_hooks ".claude/settings.json"
 
-    # Remove known vendored files (preserve user files)
+    # The inventory names exactly what the pack installed; installs that predate it
+    # fall back to removal by known pack filenames.
+    if [ -f ".claude/$CLAUDE_VENDOR_INVENTORY" ]; then
+        uninstall_claude_pack ".claude"
+        cleanup_legacy_vendored_files ".claude"
+    else
+        # Remove commands that the current pack owns by exact filename.
+        if [ -d ".claude/commands" ]; then
+            for source_file in "$SCRIPT_DIR"/../claude-pack/commands/_my_*.md; do
+                [ -f "$source_file" ] || continue
+                command_name=$(basename "$source_file")
+                if [ -f ".claude/commands/$command_name" ]; then
+                    rm ".claude/commands/$command_name"
+                    echo -e "${GREEN}  ✓ Removed: commands/$command_name${NC}"
+                fi
+            done
+        fi
 
-    # Remove commands that the current pack owns by exact filename.
-    if [ -d ".claude/commands" ]; then
-        for source_file in "$SCRIPT_DIR"/../claude-pack/commands/_my_*.md; do
-            [ -f "$source_file" ] || continue
-            command_name=$(basename "$source_file")
-            if [ -f ".claude/commands/$command_name" ]; then
-                rm ".claude/commands/$command_name"
-                echo -e "${GREEN}  ✓ Removed: commands/$command_name${NC}"
-            fi
-        done
-    fi
+        # Remove known agent files
+        if [ -d ".claude/agents" ]; then
+            for f in example-agent.md; do
+                [ -f ".claude/agents/$f" ] && rm ".claude/agents/$f" && echo -e "${GREEN}  ✓ Removed: agents/$f${NC}"
+            done
+        fi
 
-    # Remove known agent files
-    if [ -d ".claude/agents" ]; then
-        for f in example-agent.md; do
-            [ -f ".claude/agents/$f" ] && rm ".claude/agents/$f" && echo -e "${GREEN}  ✓ Removed: agents/$f${NC}"
-        done
-    fi
+        cleanup_legacy_vendored_files ".claude"
 
-    cleanup_legacy_vendored_files ".claude"
-
-    # Remove known skill directories
-    if [ -d ".claude/skills" ]; then
-        for d in _my_mental_model _my_mental_model_v2 show-me; do
-            [ -d ".claude/skills/$d" ] && rm -rf ".claude/skills/$d" && echo -e "${GREEN}  ✓ Removed: skills/$d${NC}"
-        done
+        # Remove known skill directories
+        if [ -d ".claude/skills" ]; then
+            for d in _my_mental_model _my_mental_model_v2 show-me; do
+                [ -d ".claude/skills/$d" ] && rm -rf ".claude/skills/$d" && echo -e "${GREEN}  ✓ Removed: skills/$d${NC}"
+            done
+        fi
     fi
 
     # Remove marker file

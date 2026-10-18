@@ -226,6 +226,100 @@ if [ "$(jq -r '.hooks.PreCompact[0].hooks | length' .claude/settings.json)" != "
     exit 1
 fi
 echo -e "${GREEN}PASS: vendored upgrade removes retired files and preserves user state${NC}"
+
+# The inventory decides ownership: pack files refresh under --force, edited files survive.
+INVENTORY=.claude/.agentic-pack-inventory
+sha() { sha256sum "$1" | cut -d' ' -f1; }
+# Pretend a file was installed by an older pack version with the given content.
+install_as_old_pack() {
+    local rel="$1" content="$2"
+    mkdir -p ".claude/$(dirname "$rel")"
+    printf '%s\n' "$content" > ".claude/$rel"
+    awk -F'\t' -v OFS='\t' -v p="$rel" '$1 != p' "$INVENTORY" > "$INVENTORY.tmp"
+    printf '%s\t%s\n' "$rel" "$(sha ".claude/$rel")" >> "$INVENTORY.tmp"
+    mv "$INVENTORY.tmp" "$INVENTORY"
+}
+
+if ! grep -q "^skills/show-me/SKILL.md	" "$INVENTORY"; then
+    echo -e "${RED}FAIL: inventory does not record vendored skill files${NC}"
+    exit 1
+fi
+if grep -q "_my_custom.md" "$INVENTORY"; then
+    echo -e "${RED}FAIL: inventory claims a user-authored command${NC}"
+    exit 1
+fi
+echo -e "${GREEN}PASS: inventory records pack files only${NC}"
+
+install_as_old_pack "commands/_my_research.md" "old pack research"
+install_as_old_pack "skills/show-me/SKILL.md" "old pack skill"
+install_as_old_pack "commands/_my_plan.md" "old pack plan"
+printf '%s\n' 'owner edit' >> .claude/commands/_my_plan.md
+install_as_old_pack "commands/_my_retired.md" "retired pack command"
+install_as_old_pack "skills/retired-skill/SKILL.md" "retired pack skill"
+install_as_old_pack "rules/retired-edited.md" "retired pack rule"
+printf '%s\n' 'owner edit' >> .claude/rules/retired-edited.md
+
+"$INIT_SCRIPT" --source "$SOURCE_DIR" --include-claude > /dev/null
+if ! grep -q "old pack research" .claude/commands/_my_research.md; then
+    echo -e "${RED}FAIL: plain rerun refreshed a vendored file${NC}"
+    exit 1
+fi
+if [ -e .claude/commands/_my_retired.md ] || [ -e .claude/skills/retired-skill ]; then
+    echo -e "${RED}FAIL: rerun kept files the pack retired${NC}"
+    exit 1
+fi
+if [ ! -f .claude/rules/retired-edited.md ]; then
+    echo -e "${RED}FAIL: rerun removed an edited retired file${NC}"
+    exit 1
+fi
+echo -e "${GREEN}PASS: plain rerun retires unmodified files and refreshes nothing${NC}"
+
+"$INIT_SCRIPT" --source "$SOURCE_DIR" --include-claude --force > /dev/null
+if ! cmp -s .claude/commands/_my_research.md "$SOURCE_DIR/claude-pack/commands/_my_research.md" || \
+   ! cmp -s .claude/skills/show-me/SKILL.md "$SOURCE_DIR/claude-pack/skills/show-me/SKILL.md"; then
+    echo -e "${RED}FAIL: --force did not refresh vendored pack files${NC}"
+    exit 1
+fi
+if ! grep -q "owner edit" .claude/commands/_my_plan.md || ! grep -q "user command" .claude/commands/_my_custom.md; then
+    echo -e "${RED}FAIL: --force overwrote an edited or user-authored file${NC}"
+    exit 1
+fi
+echo -e "${GREEN}PASS: --force refreshes pack files and keeps edited ones${NC}"
+
+# A vendored install from before the inventory: --force adopts and refreshes pack-named files.
+TEST_DIR="$TEST_BASE/test4-legacy"
+mkdir -p "$TEST_DIR/.claude/commands" "$TEST_DIR/.claude/skills/show-me"
+cd "$TEST_DIR"
+git init -q
+echo "vendored" > .claude/.agentic-pack-vendored
+printf '%s\n' 'stale research' > .claude/commands/_my_research.md
+printf '%s\n' 'stale skill' > .claude/skills/show-me/SKILL.md
+"$INIT_SCRIPT" --source "$SOURCE_DIR" --include-claude > /dev/null
+if ! grep -q "stale research" .claude/commands/_my_research.md; then
+    echo -e "${RED}FAIL: plain rerun refreshed a pre-inventory vendored file${NC}"
+    exit 1
+fi
+"$INIT_SCRIPT" --source "$SOURCE_DIR" --include-claude --force > /dev/null
+if ! cmp -s .claude/commands/_my_research.md "$SOURCE_DIR/claude-pack/commands/_my_research.md" || \
+   ! cmp -s .claude/skills/show-me/SKILL.md "$SOURCE_DIR/claude-pack/skills/show-me/SKILL.md"; then
+    echo -e "${RED}FAIL: --force did not refresh a pre-inventory vendored install${NC}"
+    exit 1
+fi
+echo -e "${GREEN}PASS: --force adopts and refreshes a pre-inventory vendored install${NC}"
+
+# Without the vendor marker, a pack-named file is the owner's, even under --force.
+TEST_DIR="$TEST_BASE/test4-owner"
+mkdir -p "$TEST_DIR/.claude/commands"
+cd "$TEST_DIR"
+git init -q
+printf '%s\n' 'owner research' > .claude/commands/_my_research.md
+"$INIT_SCRIPT" --source "$SOURCE_DIR" --include-claude --force > /dev/null
+if ! grep -q "owner research" .claude/commands/_my_research.md || \
+   grep -q "^commands/_my_research.md	" .claude/.agentic-pack-inventory; then
+    echo -e "${RED}FAIL: --force claimed an owner-authored file${NC}"
+    exit 1
+fi
+echo -e "${GREEN}PASS: owner-authored files are never claimed${NC}"
 echo ""
 
 # Test 5: Mutual exclusion
