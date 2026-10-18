@@ -683,6 +683,50 @@ generated skill. Leave user-authored skill directories untouched.
 - [ ] `scripts/test_codex_orchestrator_pack.sh` installs a managed fixture skill, removes it from
       the fixture distribution, reruns setup, and asserts the installed directory is gone
 
+### [BL-011] Per-project Codex install
+
+**Priority:** P1
+**Status:** Backlog
+**Estimate:** M
+**Category:** Tooling / Setup
+**Affected Files:** `scripts/init-project.sh`, `scripts/uninstall-project.sh`, `scripts/setup-codex.sh` (shared install helpers), `scripts/build-codex-pack.sh` (script paths), `scripts/test_init_project.sh`, `scripts/test_codex_orchestrator_pack.sh`, `README.md`
+
+#### Problem
+
+`init-project.sh --include-claude` copies the pack into a project's `.claude/`, but Codex has no equivalent. The only Codex install is `setup-codex.sh`, and it is global: skills go to `~/.agents/skills/`, roles to `~/.codex/agents/`, and the rules to `~/.codex/AGENTS.md`. [OWNER] The owner wants the Codex pack installable into a single project, the way the Claude pack already is.
+
+Observed 2026-10-18 in `~/src/agentic-mbse`: the project has a copied `.claude/` (marker `.claude/.agentic-pack-vendored`) and no global Claude install. So the `_my_*` workflow works in Claude Code and is absent in Codex. Running `setup-codex.sh` would fix that only by applying the pack's `AGENTS.md` rules to every Codex session on the machine.
+
+#### Proposed Solution
+
+[AGENT] Add an `--include-codex` option to `init-project.sh`, usable alone or with `--include-claude`. It installs `dist/codex/` into the project's Codex discovery paths:
+
+- Skills: `dist/codex/skills/<name>/` → `.agents/skills/<name>/`, where Codex discovers repo-level skills.
+- Roles: `dist/codex/agents/*.toml` → `.codex/agents/`, registered in `.codex/config.toml`.
+- Rules: the `dist/codex/AGENTS.md` content goes into the project's `AGENTS.md` as a managed block between begin/end markers, the same way `setup-codex.sh` manages `~/.codex/AGENTS.md`. Owner text outside the block is preserved.
+- Scripts: `dist/codex/scripts/*` → a project path. The generated skills hardcode `$HOME/.codex/scripts/` (for example `dist/codex/skills/my-orchestrate/SKILL.md:82`, `dist/codex/skills/my-audit/SKILL.md:46`), so either the build emits a path that works in both install modes or the installer rewrites it.
+- A marker such as `.codex/.agentic-pack-vendored`, so reruns upgrade in place and `uninstall-project.sh` removes only managed files.
+
+Reuse `setup-codex.sh`'s ownership rules (managed-file detection, skipping user-authored skill directories, `--dry-run`, `--force`) instead of writing a second set. Move them into `scripts/lib/` and have both scripts call them. BL-010's removal fix should land in that shared code.
+
+Precedent: agentic-mbse already does a per-project Codex install with these paths (`src/agentic_mbse/cli/installation.py`: skills at `.agents/skills/`, roles at `.codex/agents/` registered in `.codex/config.toml`, instructions in `AGENTS.md`).
+
+#### Open Questions
+
+- If a project has the pack installed for Codex and the global `setup-codex.sh` has also run, Codex sees two copies of each skill. Should init warn, or should the docs present the two installs as alternatives?
+- If the project's `AGENTS.md` or `.codex/config.toml` is a symlink or owner-managed elsewhere, should init leave it alone with a warning (agentic-mbse's rule for `.codex/config.toml`)?
+
+#### Acceptance Criteria
+
+- [ ] `init-project.sh --include-codex` in a fresh project installs every `dist/codex/skills/*` directory under `.agents/skills/`, every role under `.codex/agents/` with a registration in `.codex/config.toml`, and the rules block in `AGENTS.md`
+- [ ] Nothing is written under `~/.codex/` or `~/.agents/`
+- [ ] Generated skills that call pack scripts work in a project install with no global install present
+- [ ] A rerun after a pack update replaces managed files, removes managed skills that left the distribution, and leaves user-authored skills and owner text in `AGENTS.md` and `.codex/config.toml` untouched
+- [ ] `--dry-run` reports every change and writes nothing
+- [ ] `uninstall-project.sh` removes the managed Codex files and the `AGENTS.md` block, and keeps everything else
+- [ ] `scripts/test_init_project.sh` covers install, upgrade, and uninstall with `--include-codex`
+- [ ] README documents the option next to `--include-claude`
+
 ---
 
 ## P2 - Medium Priority
