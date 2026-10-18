@@ -13,7 +13,8 @@
 #   --model <m>       stage model            (default: $ORCH_MODEL, else opus)
 #   --budget <usd>    per-call spend cap      (default: 10)
 #   --timeout <sec>   wall-clock timeout      (default: 600)
-#   --perm <mode>     permission mode         (default: acceptEdits; implement/pre_pr auto-use bypassPermissions)
+#   --perm <mode>     permission mode         (default: acceptEdits; implement/pre_pr/spike/learning_test
+#                                              auto-use bypassPermissions; resume reuses the run's mode)
 #   --log-dir <dir>   raw JSON/stderr log dir (default: ./.orchestrate-logs)
 #   --preamble <file> preamble to inject      (default: orchestrate-preamble.md beside this script)
 #   --dry-run         print composed prompt + claude argv, do not call claude
@@ -24,7 +25,7 @@ set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 die() { echo "orchestrate-stage: $*" >&2; exit 1; }
-usage() { sed -n '2,20p' "${BASH_SOURCE[0]}" >&2; exit 2; }
+usage() { sed -n '2,21p' "${BASH_SOURCE[0]}" >&2; exit 2; }
 
 [ $# -ge 1 ] || usage
 MODE="$1"; shift
@@ -64,6 +65,14 @@ if [ "$MODE" = "run" ] && [ "$PERM_SET" = "0" ]; then
   case "$STAGE" in implement|pre_pr|spike|learning_test) PERM="bypassPermissions" ;; esac
 fi
 
+# A resumed session keeps the mode it was started with, so a resume never silently loses the
+# permissions its stage needs and the orchestrator never has to request an escalation.
+case "${SID:-}" in */*|.*) die "invalid session id '$SID'" ;; esac
+PERMDIR="$LOGDIR/sessions"
+if [ "$MODE" = "resume" ] && [ "$PERM_SET" = "0" ] && [ -f "$PERMDIR/$SID.perm" ]; then
+  PERM="$(cat "$PERMDIR/$SID.perm")"
+fi
+
 # The prompt body (stage args, or the resume message) comes from stdin.
 BODY="$(cat)"
 
@@ -100,8 +109,8 @@ RC=$?
 [ "$RC" -ne 0 ]   && die "claude exited $RC (raw: $RAW, stderr: $ERR)"
 
 # Lift the final result object (tolerating a leading stdin-warning line) and emit compact JSON.
-python3 - "$RAW" <<'PY'
-import json, sys
+python3 - "$RAW" "$PERMDIR" "$PERM" <<'PY'
+import json, os, sys
 raw = open(sys.argv[1]).read()
 i = raw.find('[{')
 data = json.loads(raw[i:] if i >= 0 else raw)
@@ -109,8 +118,13 @@ res = [e for e in data if e.get("type") == "result"]
 if not res:
     sys.exit(1)
 r = res[0]
+sid = r.get("session_id")
+if sid and "/" not in sid:
+    os.makedirs(sys.argv[2], exist_ok=True)
+    with open(os.path.join(sys.argv[2], sid + ".perm"), "w") as f:
+        f.write(sys.argv[3])
 print(json.dumps({
-    "session_id": r.get("session_id"),
+    "session_id": sid,
     "result": r.get("result", ""),
     "cost": round(r.get("total_cost_usd", 0), 4),
     "is_error": bool(r.get("is_error")),
