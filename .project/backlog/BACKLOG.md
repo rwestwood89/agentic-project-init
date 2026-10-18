@@ -686,10 +686,10 @@ generated skill. Leave user-authored skill directories untouched.
 ### [BL-011] Per-project Codex install
 
 **Priority:** P1
-**Status:** Backlog
+**Status:** Implemented (2026-10-18)
 **Estimate:** M
 **Category:** Tooling / Setup
-**Affected Files:** `scripts/init-project.sh`, `scripts/uninstall-project.sh`, `scripts/setup-codex.sh` (shared install helpers), `scripts/build-codex-pack.sh` (script paths), `scripts/test_init_project.sh`, `scripts/test_codex_orchestrator_pack.sh`, `README.md`
+**Affected Files:** `scripts/init-project.sh`, `scripts/uninstall-project.sh`, `scripts/setup-codex.sh`, `scripts/lib/codex-install.py` (shared install engine), `scripts/build-codex-pack.sh` (script paths), `scripts/test_init_project.sh`, `scripts/test_codex_orchestrator_pack.sh`, `scripts/test_codex_project_install.py`, `scripts/test_codex_native_discovery.py`, `README.md`
 
 #### Problem
 
@@ -702,30 +702,38 @@ Observed 2026-10-18 in `~/src/agentic-mbse`: the project has a copied `.claude/`
 [AGENT] Add an `--include-codex` option to `init-project.sh`, usable alone or with `--include-claude`. It installs `dist/codex/` into the project's Codex discovery paths:
 
 - Skills: `dist/codex/skills/<name>/` → `.agents/skills/<name>/`, where Codex discovers repo-level skills.
-- Roles: `dist/codex/agents/*.toml` → `.codex/agents/`, registered in `.codex/config.toml`.
+- Roles: `dist/codex/agents/*.toml` → `.codex/agents/`, discovered natively. Current Codex no longer needs role registrations in `.codex/config.toml`; native discovery was verified with CLI 0.163.0 in a trusted project. Existing project configuration is left untouched.
 - Rules: the `dist/codex/AGENTS.md` content goes into the project's `AGENTS.md` as a managed block between begin/end markers, the same way `setup-codex.sh` manages `~/.codex/AGENTS.md`. Owner text outside the block is preserved.
 - Scripts: `dist/codex/scripts/*` → a project path. The generated skills hardcode `$HOME/.codex/scripts/` (for example `dist/codex/skills/my-orchestrate/SKILL.md:82`, `dist/codex/skills/my-audit/SKILL.md:46`), so either the build emits a path that works in both install modes or the installer rewrites it.
 - A marker such as `.codex/.agentic-pack-vendored`, so reruns upgrade in place and `uninstall-project.sh` removes only managed files.
 
-Reuse `setup-codex.sh`'s ownership rules (managed-file detection, skipping user-authored skill directories, `--dry-run`, `--force`) instead of writing a second set. Move them into `scripts/lib/` and have both scripts call them. BL-010's removal fix should land in that shared code.
+Reuse `setup-codex.sh`'s ownership rules (managed-file detection, skipping user-authored skill directories, `--dry-run`, `--force`) instead of writing a second set. The implementation shares ownership, rendering, upgrades, and uninstall through `scripts/lib/codex-install.py`, called by both shell entry points. BL-010's removal fix should land in that shared code.
 
 Precedent: agentic-mbse already does a per-project Codex install with these paths (`src/agentic_mbse/cli/installation.py`: skills at `.agents/skills/`, roles at `.codex/agents/` registered in `.codex/config.toml`, instructions in `AGENTS.md`).
 
-#### Open Questions
+#### Resolved Design Decisions
 
-- If a project has the pack installed for Codex and the global `setup-codex.sh` has also run, Codex sees two copies of each skill. Should init warn, or should the docs present the two installs as alternatives?
-- If the project's `AGENTS.md` or `.codex/config.toml` is a symlink or owner-managed elsewhere, should init leave it alone with a warning (agentic-mbse's rule for `.codex/config.toml`)?
+- Init warns when it detects the global pack, and the README presents global and project installs as alternatives. No global content is changed by project installation.
+- Symlinked destinations and redirected parents are preserved with diagnostics. An unsafe inventory destination fails before initialization. `.codex/config.toml` is never edited. Malformed rules markers fail before installing assets.
 
 #### Acceptance Criteria
 
-- [ ] `init-project.sh --include-codex` in a fresh project installs every `dist/codex/skills/*` directory under `.agents/skills/`, every role under `.codex/agents/` with a registration in `.codex/config.toml`, and the rules block in `AGENTS.md`
-- [ ] Nothing is written under `~/.codex/` or `~/.agents/`
-- [ ] Generated skills that call pack scripts work in a project install with no global install present
-- [ ] A rerun after a pack update replaces managed files, removes managed skills that left the distribution, and leaves user-authored skills and owner text in `AGENTS.md` and `.codex/config.toml` untouched
-- [ ] `--dry-run` reports every change and writes nothing
-- [ ] `uninstall-project.sh` removes the managed Codex files and the `AGENTS.md` block, and keeps everything else
-- [ ] `scripts/test_init_project.sh` covers install, upgrade, and uninstall with `--include-codex`
-- [ ] README documents the option next to `--include-claude`
+- [x] `init-project.sh --include-codex` in a fresh project installs every `dist/codex/skills/*` directory under `.agents/skills/`, every role under `.codex/agents/` with native Codex discovery (no `.codex/config.toml` edits), and the rules block in `AGENTS.md`
+- [x] Nothing is written under `~/.codex/` or `~/.agents/`
+- [x] Generated skills that call pack scripts work in a project install with no global install present
+- [x] A rerun after a pack update replaces managed files, removes managed skills that left the distribution, and leaves user-authored skills and owner text in `AGENTS.md` and `.codex/config.toml` untouched
+- [x] `--dry-run` reports every change and writes nothing
+- [x] `uninstall-project.sh` removes the managed Codex files and the `AGENTS.md` block, and keeps everything else
+- [x] `scripts/test_init_project.sh` covers install, upgrade, and uninstall with `--include-codex`
+- [x] README documents the option next to `--include-claude`
+
+
+#### Implementation and Validation
+
+- Generated distribution paths use explicit tokens rendered for the selected scope. Project skill references resolve relative to their installed skill directory, so moved checkouts remain usable without the source pack or global setup.
+- The installed inventory tracks successful ownership; removed generated skills are also detected for pre-inventory global installs (BL-010). Skill directories remain complete managed bundles; owner-authored entry points and replaced helper scripts are preserved.
+- `init-project.sh --force` keeps its template-update semantics and does not overwrite owner-authored Codex collisions. `--no-track --include-codex` is supported. Combined Claude/Codex installation is covered.
+- Verification: initializer suite including ten isolated lifecycle tests, Codex pack regression suite, documentation checks, Claude global setup suite, and `git diff --check`. The optional native discovery smoke test captures tool definitions through a local mock endpoint; no real model is contacted and no agent is spawned.
 
 ---
 

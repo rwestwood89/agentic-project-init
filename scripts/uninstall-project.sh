@@ -1,9 +1,9 @@
 #!/bin/bash
 # Agentic Project Uninstall
-# Removes .project/ and optionally vendored .claude/ from a project
+# Removes .project/ and managed vendored Claude/Codex assets from a project
 #
 # Usage:
-#   ./uninstall-project.sh [--force]
+#   ./uninstall-project.sh [--force] [--dry-run]
 
 set -e
 
@@ -19,15 +19,18 @@ source "$SCRIPT_DIR/lib/legacy-vendored-files.sh"
 source "$SCRIPT_DIR/lib/settings-hooks.sh"
 
 FORCE=false
+DRY_RUN=false
 
 while [[ $# -gt 0 ]]; do
     case $1 in
         --force) FORCE=true; shift ;;
+        --dry-run) DRY_RUN=true; shift ;;
         -h|--help)
-            echo "Usage: $0 [--force]"
+            echo "Usage: $0 [--force] [--dry-run]"
             echo ""
             echo "Options:"
             echo "  --force    Skip confirmation prompts"
+            echo "  --dry-run  Report removal without changing files"
             echo "  -h, --help Show this help message"
             exit 0
             ;;
@@ -40,7 +43,7 @@ echo "========================="
 echo ""
 
 # Check for .project/
-if [ ! -d ".project" ]; then
+if [ ! -d ".project" ] && [ ! -f ".codex/.agentic-pack-vendored" ]; then
     echo -e "${YELLOW}No .project/ directory found in current directory.${NC}"
     exit 0
 fi
@@ -52,9 +55,10 @@ if [ -f ".claude/.agentic-pack-vendored" ]; then
 fi
 
 # Confirmation
-if [ "$FORCE" != true ]; then
+if [ "$FORCE" != true ] && [ "$DRY_RUN" != true ]; then
     echo "This will remove:"
-    echo "  - .project/ directory and all contents"
+    echo "  - .project/ directory and all contents, if present"
+    [ ! -f .codex/.agentic-pack-vendored ] || echo "  - Managed Codex assets and project rules"
     if [ "$HAS_VENDORED" = true ]; then
         echo "  - Vendored agentic-pack content from .claude/"
     fi
@@ -65,6 +69,18 @@ if [ "$FORCE" != true ]; then
         echo "Cancelled."
         exit 0
     fi
+fi
+
+# Codex uninstall depends on its installed inventory, not the current distribution.
+if [ -f .codex/.agentic-pack-vendored ]; then
+    codex_args=(--source "$SCRIPT_DIR/.." --project "$PWD" --uninstall)
+    [ "$DRY_RUN" != true ] || codex_args+=(--dry-run)
+    python3 "$SCRIPT_DIR/lib/codex-install.py" "${codex_args[@]}"
+fi
+if [ "$DRY_RUN" = true ]; then
+    [ ! -d .project ] || echo "[DRY RUN] Would remove .project/ and its .gitignore entry"
+    [ "$HAS_VENDORED" != true ] || echo "[DRY RUN] Would remove vendored Claude content"
+    exit 0
 fi
 
 # Remove .project/

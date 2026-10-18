@@ -32,7 +32,8 @@ Copied to `.project/` in target projects:
 ### `scripts/` - Setup Scripts
 
 - **setup-global.sh** - One-time global installation to `~/.claude/`
-- **init-project.sh** - Per-project initialization
+- **setup-codex.sh** - Optional user-level Codex installation
+- **init-project.sh** - Per-project initialization, including optional Claude and Codex vendoring
 - **uninstall-global.sh** - Remove global installation
 - **uninstall-project.sh** - Remove from a project
 
@@ -223,6 +224,8 @@ Initialize a project with the `.project/` template.
 - `--dry-run` - Show what would be done without making changes
 - `--no-track` - Add `.project` to `.gitignore` (don't commit project state)
 - `--include-claude` - Copy (vendor) commands to `.claude/` instead of using global
+- `--include-codex` - Copy Codex skills, agents, helpers, and rules into this project
+- `--force` - Refresh project templates while preserving accumulated project data and owner-authored Codex assets
 - `--source <path>` - Override source location
 
 **Modes:**
@@ -232,8 +235,10 @@ Initialize a project with the `.project/` template.
 | Default | `~/.claude/` (global) | Tracked in git |
 | `--no-track` | `~/.claude/` (global) | Not tracked |
 | `--include-claude` | `.claude/` (vendored) | Tracked in git |
+| `--include-codex` | `.agents/skills/`, `.codex/`, root `AGENTS.md` | Tracked by default |
+| `--include-claude --include-codex` | Both project installations | Tracked in git |
 
-**Note:** `--no-track` and `--include-claude` cannot be used together.
+**Note:** `--no-track` and `--include-claude` cannot be used together. `--no-track --include-codex` is supported: only `.project/` is added to `.gitignore`.
 
 ### uninstall-global.sh
 
@@ -253,16 +258,18 @@ Remove global installation from `~/.claude/`.
 Remove `.project/` and vendored content from a project.
 
 ```bash
-./scripts/uninstall-project.sh [--force]
+./scripts/uninstall-project.sh [--force] [--dry-run]
 ```
 
 **Options:**
 - `--force` - Skip confirmation prompt
+- `--dry-run` - Report removals without changing files
 
 **What it does:**
 - Removes `.project/` directory
 - Cleans `.project` from `.gitignore` if present
 - If vendored, removes agentic-pack files from `.claude/` (preserves user files)
+- Removes inventoried Codex assets and the managed `AGENTS.md` block, preserving owner files and text; this also works when `.project/` is already absent
 
 ## Project Structure After Init
 
@@ -315,6 +322,31 @@ For projects that need to be fully self-contained (e.g., to share with others wh
 ```
 
 This copies all commands to `.claude/` in the project. The project works independently of the global installation.
+
+### Per-project Codex installation
+
+Build the Codex distribution once, then initialize the target project. Python 3.9 or later is required for installation.
+
+```bash
+cd /path/to/agentic-project-init
+./scripts/build-codex-pack.sh
+cd /path/to/your-project
+/path/to/agentic-project-init/scripts/init-project.sh --include-codex
+# Or install both runtimes:
+/path/to/agentic-project-init/scripts/init-project.sh --include-claude --include-codex
+```
+
+The installer copies skills into `.agents/skills/`, standalone agents into `.codex/agents/`, and helpers into `.codex/scripts/`. It adds pack rules inside a managed block in root `AGENTS.md`, preserving surrounding owner text. `.codex/.agentic-pack-vendored` records the installed assets for upgrades and uninstall. Commit these paths to share a self-contained project; moving the checkout does not require reinstalling. No files are written under `~/.codex/` or `~/.agents/`.
+
+Restart Codex in the trusted project and invoke `$my-pipeline` to start. Native agent discovery was verified with Codex CLI 0.163.0; no role registrations are added to `.codex/config.toml`. See the official [skills](https://learn.chatgpt.com/docs/build-skills) and [custom agent](https://learn.chatgpt.com/docs/agent-configuration/subagents) documentation.
+
+Rerun `init-project.sh --include-codex` after rebuilding an updated pack. Managed skill directories are complete bundles: their files are refreshed and stale files are removed, so keep personal customizations in separate skills. Removed managed skills, agents, and helpers are retired. Owner-authored collisions and symlinked destinations are skipped with a diagnostic. Existing `.codex/config.toml` is left untouched, and `--force` retains its project-template meaning rather than authorizing replacement of owner skills.
+
+Use `--dry-run` to preview installation or upgrade. `uninstall-project.sh --dry-run` previews removal; `uninstall-project.sh` removes `.project/` and vendored pack assets after confirmation. Modified helper scripts and skills whose entry points have been replaced with owner content are preserved.
+
+Treat project and user-level installations as alternatives. `setup-codex.sh` remains available for user-level installation, but installing both can show duplicate skills; project init warns when it detects the global pack. A root `AGENTS.override.md` shadows the installed rules and also produces a warning. Pack rules use about 18 KB of Codex's default 32 KiB instruction budget; projects with extensive instructions may need to adjust `project_doc_max_bytes`. See [instruction discovery](https://learn.chatgpt.com/docs/agent-configuration/agents-md).
+
+Installer lifecycle tests run with `bash scripts/test_init_project.sh`. For an optional native discovery check on a machine with Codex installed, run `python3 scripts/test_codex_native_discovery.py`; it uses a temporary trusted project and a local mock endpoint without calling a real model.
 
 ## Migration from Submodule Approach
 

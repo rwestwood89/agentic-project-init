@@ -290,7 +290,7 @@ set -e
 echo "$parsed" | grep -q '"is_error":true' || fail "failure fixture did not mark is_error"
 pass "JSONL parser fixtures"
 
-contains "$ORCH" '~/.codex/scripts/orchestrate-stage-codex.sh'
+contains "$ORCH" '__AGENTIC_CODEX_SCRIPTS__/orchestrate-stage-codex.sh'
 contains "$ORCH" '\$my-pipeline'
 contains "$ORCH" '\$my-spike'
 contains "$ORCH" '\$my-learning-test'
@@ -411,7 +411,7 @@ contains "$SKILL_DIST/SKILL.md" 'claude-pack/skills/_my_mental_model'
 pass "harness blocks substituted across the tree"
 
 contains "$AGENTS" '\$my-pipeline'
-contains "$AGENTS" '$HOME/.agents/skills/my-pipeline/SKILL.md'
+contains "$AGENTS" '__AGENTIC_CODEX_SKILLS__/my-pipeline/SKILL.md'
 contains "$AGENTS" 'Stages are quality tools, not mandatory ceremony'
 contains "$AGENTS" 'record the verification'
 contains "$AGENTS" 'fork_turns: "all"'

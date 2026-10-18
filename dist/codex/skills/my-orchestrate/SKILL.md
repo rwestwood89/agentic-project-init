@@ -79,11 +79,11 @@ text(result.output);
 Use these helper command shapes inside the cell:
 
 ```bash
-~/.codex/scripts/orchestrate-stage-codex.sh run <stage> --timeout T <<'ARGS'
+__AGENTIC_CODEX_SCRIPTS__/orchestrate-stage-codex.sh run <stage> --timeout T <<'ARGS'
 ...
 ARGS
 
-~/.codex/scripts/orchestrate-stage-codex.sh resume <session_id> --timeout T <<'MSG'
+__AGENTIC_CODEX_SCRIPTS__/orchestrate-stage-codex.sh resume <session_id> --timeout T <<'MSG'
 ...
 MSG
 ```
@@ -146,4 +146,4 @@ Common stages: `$my-concept-design-review`, `$my-epic-plan`, `$my-spec`, `$my-sp
 
 De-risking stages: `$my-spike`, `$my-learning-test`.
 
-Mechanism: `~/.codex/scripts/orchestrate-stage-codex.sh`.
+Mechanism: `__AGENTIC_CODEX_SCRIPTS__/orchestrate-stage-codex.sh`.

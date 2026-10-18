@@ -138,7 +138,7 @@ high-quality, auditable work for the risk in front of you.
 - When the owner explicitly invokes `$my-quick-edit`, a small, scoped code change can skip the pipeline. Do not use it for routine documentation or `.project` artifact edits.
 
 **For the full flow and when/how to use each stage, run `$my-pipeline`** (or read
-`$HOME/.agents/skills/my-pipeline/SKILL.md`).
+`__AGENTIC_CODEX_SKILLS__/my-pipeline/SKILL.md`).
 
 
 ## From `workflow-accountability.md`

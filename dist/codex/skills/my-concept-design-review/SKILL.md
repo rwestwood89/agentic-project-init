@@ -62,7 +62,7 @@ If those disagree, surface the conflict. Do not silently make current behavior t
 
 Spawn a **fresh subagent in the ponytail role**. This is mandatory for every review.
 
-The ponytail role is defined by `$HOME/.agents/skills/my-ponytail/SKILL.md`. Require the subagent
+The ponytail role is defined by `__AGENTIC_CODEX_SKILLS__/my-ponytail/SKILL.md`. Require the subagent
 to read it in full, then apply its lazy-senior posture and deletion-first ladder at **ultra
 intensity**, adapted to architecture. Do not invoke or modify the ponytail session mode.
 The subagent has one job: return a written architectural challenge for this concept.
