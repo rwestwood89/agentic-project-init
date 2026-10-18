@@ -218,6 +218,8 @@ fi
 
 # Add a user command inside the pack's namespace; name alone does not make it pack-owned.
 echo "user claude content" > ".claude/commands/_my_custom.md"
+# An owner's edit to a vendored file makes it theirs.
+echo "owner edit" >> ".claude/commands/_my_plan.md"
 
 # Add files written by the retired vendored pack plus a user hook that must survive.
 mkdir -p .claude/hooks .claude/agents .claude/rules
@@ -258,6 +260,16 @@ if [ -f ".claude/commands/_my_research.md" ]; then
     exit 1
 fi
 echo -e "${GREEN}PASS: Vendored commands removed${NC}"
+
+if [ -e ".claude/skills/convince-me" ] || [ -e ".claude/skills/show-me" ] || [ -e ".claude/.agentic-pack-inventory" ]; then
+    echo -e "${RED}FAIL: Vendored skills or inventory survived uninstall${NC}"
+    exit 1
+fi
+if ! grep -q "owner edit" ".claude/commands/_my_plan.md"; then
+    echo -e "${RED}FAIL: Uninstall removed an edited vendored file${NC}"
+    exit 1
+fi
+echo -e "${GREEN}PASS: Inventoried files removed, edited file kept${NC}"
 
 for retired_path in \
     .claude/commands/_my_capture.md \

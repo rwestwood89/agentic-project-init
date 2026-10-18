@@ -39,7 +39,7 @@ while [[ $# -gt 0 ]]; do
             echo "  --no-track       Add .project to .gitignore (don't track in git)"
             echo "  --include-claude Copy claude-pack/ to .claude/ (vendor commands)"
             echo "  --include-codex  Copy Codex skills, agents, helpers, and project rules"
-            echo "  --force          Update template files (preserves user data)"
+            echo "  --force          Update template files (preserves user data and edited vendored files)"
             echo "  --source <path>  Override source location"
             echo "  -h, --help       Show this help message"
             echo ""
@@ -48,6 +48,8 @@ while [[ $# -gt 0 ]]; do
             echo "The --force option updates documentation and templates but never touches:"
             echo "  CURRENT_WORK.md, backlog/BACKLOG.md, completed/CHANGELOG.md,"
             echo "  feedback/ENTRIES.md, execution/ENTRIES.md"
+            echo "With --include-claude it refreshes vendored .claude/ files the pack"
+            echo "installed, keeping any you edited and any the pack did not install."
             exit 0
             ;;
         *) echo -e "${RED}Unknown option: $1${NC}"; exit 1 ;;
@@ -73,6 +75,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib/settings-hooks.sh"
 # shellcheck source=lib/legacy-vendored-files.sh
 source "$SCRIPT_DIR/lib/legacy-vendored-files.sh"
+# shellcheck source=lib/claude-vendor.sh
+source "$SCRIPT_DIR/lib/claude-vendor.sh"
 
 # Determine source directory
 if [ -z "$SOURCE_DIR" ]; then
@@ -258,49 +262,7 @@ if [ "$INCLUDE_CLAUDE" = true ]; then
         fi
     fi
 
-    copy_claude_pack() {
-        # Create directory structure
-        for subdir in commands agents skills rules scripts; do
-            if [ "$DRY_RUN" = true ]; then
-                echo -e "${BLUE}[DRY RUN] Would create: .claude/$subdir/${NC}"
-            else
-                mkdir -p ".claude/$subdir"
-            fi
-        done
-
-        # Copy files (skip existing)
-        for subdir in commands agents skills rules scripts; do
-            src_dir="$CLAUDE_PACK/$subdir"
-            [ -d "$src_dir" ] || continue
-
-            for file in "$src_dir"/*; do
-                [ -e "$file" ] || continue
-                filename=$(basename "$file")
-                target=".claude/$subdir/$filename"
-
-                if [ -e "$target" ]; then
-                    if [ "$DRY_RUN" = true ]; then
-                        echo -e "${YELLOW}[DRY RUN] Would skip (exists): $subdir/$filename${NC}"
-                    else
-                        echo -e "${YELLOW}  ⚠ Exists: $subdir/$filename${NC}"
-                    fi
-                else
-                    if [ "$DRY_RUN" = true ]; then
-                        echo -e "${GREEN}[DRY RUN] Would copy: $subdir/$filename${NC}"
-                    else
-                        cp -Rp "$file" "$target"
-                        echo -e "${GREEN}  ✓ $subdir/$filename${NC}"
-                    fi
-                fi
-            done
-        done
-
-        # Write marker file for uninstall detection
-        if [ "$DRY_RUN" != true ]; then
-            echo "vendored" > ".claude/.agentic-pack-vendored"
-        fi
-    }
-    copy_claude_pack
+    vendor_claude_pack "$CLAUDE_PACK" ".claude"
 fi
 
 # Success message
