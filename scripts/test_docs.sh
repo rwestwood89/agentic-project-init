@@ -37,6 +37,7 @@ check_section "_my_" "_my_ prefix documented"
 check_section "Migration" "Migration guide present"
 check_section "--dry-run" "--dry-run option documented"
 check_section "--include-claude" "--include-claude option documented"
+check_section "--include-codex" "--include-codex option documented"
 check_section "--no-track" "--no-track option documented"
 check_section "Command Reference" "Command reference section present"
 

@@ -147,7 +147,7 @@ Before presenting, check:
 
 **Run the product-lens on the drafted spec.** The spec is a place scope narrows, so an
 independent check re-derives the point here. Spawn a fresh-context `default` subagent whose entire
-instruction set is `$HOME/.codex/scripts/product-lens.md` (pack source:
+instruction set is `__AGENTIC_CODEX_SCRIPTS__/product-lens.md` (pack source:
 `claude-pack/scripts/product-lens.md`). SOURCES = the repo's durable product statements
 (`README`, `docs/`, `.project/adr/`, `.project/product/` index-first) plus any owner-verbatim
 in the concept / Required Reading;

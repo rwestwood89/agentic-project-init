@@ -58,6 +58,8 @@ cleanup() {
     rm -rf "$TEST_BASE"
 }
 trap cleanup EXIT
+export HOME="$TEST_BASE/home"
+mkdir -p "$HOME"
 
 echo "Using test directory: $TEST_BASE"
 echo ""
@@ -390,5 +392,7 @@ else
     exit 1
 fi
 echo ""
+
+python3 "$SCRIPT_DIR/test_codex_project_install.py"
 
 echo -e "${GREEN}All tests passed!${NC}"

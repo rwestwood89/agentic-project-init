@@ -146,7 +146,7 @@ codex_name_for_skill_dir() {
 # lane-specific pass after this one (D8).
 apply_common_substitutions() {
     perl -0pe '
-        s{~/\.claude/scripts/product-lens\.md}{\$HOME/.codex/scripts/product-lens.md}g;
+        s{~/\.claude/scripts/product-lens\.md}{__AGENTIC_CODEX_SCRIPTS__/product-lens.md}g;
         s{Use `Task` tool with `subagent_type=general-purpose`}{Use a fresh-context `default` subagent}g;
         s{Use `Task` tool with `subagent_type=Explore`}{Use a fresh-context `explorer` subagent}g;
         s{Use `Agent` tool with `subagent_type=Explore`}{Use a fresh-context `explorer` subagent}g;
@@ -170,7 +170,7 @@ sanitize_command_body_for_skill() {
     export COMMAND_SKILL_PREFIX
 
     strip_frontmatter "$file" | apply_common_substitutions | perl -0pe '
-        s{~/\.claude/commands/_my_ponytail\.md}{\$HOME/.agents/skills/my-ponytail/SKILL.md}g;
+        s{~/\.claude/commands/_my_ponytail\.md}{__AGENTIC_CODEX_SKILLS__/my-ponytail/SKILL.md}g;
         s{/_my_([a-z_]+)}{
             my $n = $1;
             $n =~ tr/_/-/;
@@ -300,7 +300,7 @@ sanitize_rule_body_for_codex() {
     export COMMAND_SKILL_PREFIX
 
     strip_frontmatter "$file" | apply_common_substitutions | perl -0pe '
-        s{~/.claude/commands/_my_pipeline\.md}{\$HOME/.agents/skills/my-pipeline/SKILL.md}g;
+        s{~/.claude/commands/_my_pipeline\.md}{__AGENTIC_CODEX_SKILLS__/my-pipeline/SKILL.md}g;
         s{/_my_\*}{\$my-*}g;
         s{/_my_([a-z_]+)}{
             my $n = $1;
@@ -542,7 +542,7 @@ if [ -d "$OVERRIDES_DIR/scripts" ]; then
 fi
 
 # Shared subagent specs (product-lens, mental-model builder): referenced on demand by the
-# skills at $HOME/.codex/scripts/<name>.md (see the path rewrites in
+# skills through __AGENTIC_CODEX_SCRIPTS__ (rendered by the shared installer; see
 # sanitize_command_body_for_skill). Copied from the single source in claude-pack/scripts so
 # the Codex layer cannot drift from it.
 for shared_spec in product-lens.md; do

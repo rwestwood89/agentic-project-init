@@ -1,9 +1,9 @@
 #!/bin/bash
 # Agentic Project Initialization
-# Copies .project/ to target project, optionally vendors .claude/
+# Copies .project/ to target project, optionally vendors Claude and Codex assets
 #
 # Usage:
-#   ./init-project.sh [--no-track] [--include-claude] [--source <path>] [--dry-run]
+#   ./init-project.sh [--no-track] [--include-claude] [--include-codex] [--source <path>] [--dry-run]
 
 set -e
 
@@ -18,6 +18,7 @@ NC='\033[0m'
 DRY_RUN=false
 NO_TRACK=false
 INCLUDE_CLAUDE=false
+INCLUDE_CODEX=false
 FORCE_UPDATE=false
 SOURCE_DIR=""
 
@@ -27,6 +28,7 @@ while [[ $# -gt 0 ]]; do
         --dry-run) DRY_RUN=true; shift ;;
         --no-track) NO_TRACK=true; shift ;;
         --include-claude) INCLUDE_CLAUDE=true; shift ;;
+        --include-codex) INCLUDE_CODEX=true; shift ;;
         --force) FORCE_UPDATE=true; shift ;;
         --source) SOURCE_DIR="$2"; shift 2 ;;
         -h|--help)
@@ -36,6 +38,7 @@ while [[ $# -gt 0 ]]; do
             echo "  --dry-run        Show what would be done without making changes"
             echo "  --no-track       Add .project to .gitignore (don't track in git)"
             echo "  --include-claude Copy claude-pack/ to .claude/ (vendor commands)"
+            echo "  --include-codex  Copy Codex skills, agents, helpers, and project rules"
             echo "  --force          Update template files (preserves user data)"
             echo "  --source <path>  Override source location"
             echo "  -h, --help       Show this help message"
@@ -95,6 +98,14 @@ fi
 
 PROJECT_PACK="$SOURCE_DIR/project-pack"
 CLAUDE_PACK="$SOURCE_DIR/claude-pack"
+
+# Install before .project creation so invalid distributions and malformed rules fail early.
+# --force retains its template-refresh meaning; it does not authorize skill collisions.
+if [ "$INCLUDE_CODEX" = true ]; then
+    codex_args=(--source "$SOURCE_DIR" --project "$PWD")
+    [ "$DRY_RUN" != true ] || codex_args+=(--dry-run)
+    python3 "$SCRIPT_DIR/lib/codex-install.py" "${codex_args[@]}"
+fi
 
 echo -e "${GREEN}Agentic Project Initialization${NC}"
 echo "==============================="
@@ -297,17 +308,23 @@ echo ""
 echo -e "${GREEN}✓ Project initialization complete!${NC}"
 echo ""
 echo "Next steps:"
-if [ "$INCLUDE_CLAUDE" = true ]; then
+if [ "$INCLUDE_CLAUDE" = true ] && [ "$INCLUDE_CODEX" = true ]; then
+    echo "1. Commit .claude, .agents/skills, .codex, AGENTS.md, and .project"
+    echo "2. Restart Claude Code and Codex to load the installed workflows"
+elif [ "$INCLUDE_CLAUDE" = true ]; then
     echo "1. Commit changes: git add .claude .project && git commit -m 'Add agentic templates'"
     echo "2. Restart Claude Code to pick up commands"
     echo "3. Commands available as /_my_<command>"
+elif [ "$INCLUDE_CODEX" = true ]; then
+    echo "1. Commit .agents/skills, .codex, AGENTS.md, and the desired .project files"
+    echo "2. Restart Codex in this trusted project; invoke skills as \$my-<name>"
 else
     echo "1. Commit changes: git add .project && git commit -m 'Add project management'"
     echo "2. Commands are available globally as /_my_<command>"
 fi
 
 # Check for CLAUDE.md
-if [ ! -f "CLAUDE.md" ]; then
+if [ "$INCLUDE_CODEX" != true ] && [ ! -f "CLAUDE.md" ]; then
     echo ""
     echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo -e "${YELLOW}Tip: No CLAUDE.md found.${NC}"

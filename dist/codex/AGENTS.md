@@ -85,6 +85,10 @@ If you discovered something that would save a future session time:
 1. Suggest running `$my-wrap-up` to persist context
 2. Or at minimum, update `.project/CURRENT_WORK.md` with the current status
 
+## Durable Knowledge Goes in Project Registers, Not Memory
+
+Before saving to the native memory store, check whether it belongs in a `.project/` knowledge home instead — decisions in `adr/`, product promises in `product/`, discovered behaviors in `execution/`, pack-prompt corrections in `feedback/`. The routing table is in `.project/README.md` under "Knowledge Homes." The memory store is device-local and not owner-reviewed; the registers are git-tracked and durable.
+
 ## Don't Re-Research What's Already Documented
 
 Before exploring the codebase to understand how something works, check:
@@ -134,7 +138,7 @@ high-quality, auditable work for the risk in front of you.
 - When the owner explicitly invokes `$my-quick-edit`, a small, scoped code change can skip the pipeline. Do not use it for routine documentation or `.project` artifact edits.
 
 **For the full flow and when/how to use each stage, run `$my-pipeline`** (or read
-`$HOME/.agents/skills/my-pipeline/SKILL.md`).
+`__AGENTIC_CODEX_SKILLS__/my-pipeline/SKILL.md`).
 
 
 ## From `workflow-accountability.md`
