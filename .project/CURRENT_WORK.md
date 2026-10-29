@@ -1,10 +1,16 @@
 # Current Work
 
-**Last Updated**: 2026-09-13
+**Last Updated**: 2026-09-16
 
 ---
 
 ## Active Work
+
+### spec-capture-fidelity — preserve the task before structuring it
+- **Implemented 2026-09-16; behavioral validation pending.** `my-spec` is 94 lines, down from 183. It first captures the work item's intent in plain English at the richness supplied by the owner and context, then questions in rounds over the current decision frontier, then records additional needs with provenance and optional EARS phrasing where it adds clarity. Facts are investigated; owner attention is spent on decisions. The lean artifact shape and product-lens remain, while the prior prescriptive questioning loop and repeated capture prohibitions are gone. Authored and generated Codex surfaces pass focused pack, docs, pipeline-sync, and diff checks. Artifact: `.project/active/spec-capture-fidelity/change.md`.
+
+### design-review-materiality — stop coding implementation in markdown
+- **Implemented 2026-09-16; behavioral validation pending.** The design prompt now treats architecture, invariant ownership, consequential contracts, and expensive-to-reverse choices as its readiness boundary while leaving local reversible calls to implementation. The design-review prompt is 105 lines instead of 275, uses a material blocker bar, treats structural smells as signals rather than automatic verdicts, separates non-blocking implementation/audit watchpoints, and requires currently visible blockers to be reported together. The plan, implementation, audit, and shared product-lens prompts were deliberately left unchanged pending real usage or A/B evidence. Authored and generated Codex surfaces are installed; focused pack, docs, pipeline-sync, and diff checks pass. Artifact: `.project/active/design-review-materiality/change.md`.
 
 ### mental-model-v2 — owner-informed coordinator gate
 - **Concept drafted 2026-09-06.** Reframes the coordinator as the judge and gate for every artifact iteration while keeping the fresh reviewer as isolated historical-feedback memory. Includes role and prompt coverage, full lifecycle, and a current-versus-v2 keep/transform/cut comparison. Artifact: `.project/concepts/mental-model-v2.md`.
