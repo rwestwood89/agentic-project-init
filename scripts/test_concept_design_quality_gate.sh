@@ -66,7 +66,7 @@ contains "$GUIDE" '/_my_concept_design_review'
 pass "user-facing command docs present"
 
 [ -f "$GENERATED_REVIEW" ] || fail "generated Codex concept-design review skill missing"
-contains "$GENERATED_REVIEW" '$HOME/.agents/skills/my-ponytail/SKILL.md'
+contains "$GENERATED_REVIEW" '__AGENTIC_CODEX_SKILLS__/my-ponytail/SKILL.md'
 if grep -qF 'claude-pack/commands`my-ponytail`' "$GENERATED_REVIEW"; then
   fail "generated ponytail source reference is malformed"
 fi
